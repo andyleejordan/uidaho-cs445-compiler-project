@@ -1,0 +1,20 @@
+* Tasks
+** TODO C++ // comments
+** TODO Handle libraries
+*** TODO cstdlib
+*** TODO cmath
+*** TODO ctime
+*** TODO cstring
+*** TODO fstream
+*** TODO iostream
+*** TODO string
+*** TODO iomanip
+** TODO Handle one level of #include "file"
+** TODO Handle =using namespace std;=
+** TODO C++ keywords
+*** TODO class
+*** TODO private, public, protected, friend
+*** TODO bool, true, false
+*** TODO new, delete
+*** TODO this
+*** TODO virtual
