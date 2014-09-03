@@ -11,32 +11,27 @@ IS       (u|U|l|L)*
 QUOTE    \"
 TICK     \'
 
-%top{
+%{
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
+
 #include "cgram.tab.h"
 
 extern int yylineno;
 extern int yychar;
+
+void comment();
 %}
 
 %%
 
   /* eat whitespace */
-[ \t\v\f\n]+              { }
+[ \t\v\f\n]+            { }
 
   /* comments */
-<INITIAL>{
-  "/*"                  BEGIN(COMMENT);
-}
-<COMMENT>{
-  "*/"                  BEGIN(0);
-  [^*\n]+               ;
-  "*"[^/]               ;
-  \n                    ;
-}
+"/*"                    { comment(); }
 
   /* keywords */
 "..."                   { return ELIPSIS; }
@@ -82,8 +77,7 @@ extern int yychar;
 {D}*"."{D}+{FS}?        { return FCON; }
 {D}+"."{D}*{FS}?        { return FCON; }
 
-L?{QUOTE}(\\.|[^\{QUOTE}])*{QUOTE}
-                        { return STRING; }
+L?{QUOTE}(\\.|[^\{QUOTE}])*{QUOTE}  { return STRING; }
 
   /* operators */
 ">>="                   { return SRASN; }
@@ -136,35 +130,28 @@ L?{QUOTE}(\\.|[^\{QUOTE}])*{QUOTE}
 .                       { return BAD_TOKEN; }
 %%
 
-void lexerr(char *s)
-{
-	errors++;
-
-	fprintf(stderr, "%s: lexical error", s);
-
-	/* to do: add mechanism for reporting file name and line number */
-
-	fprintf(stderr, ", token = \"%s\"\n", yytext);
-}
-
-/*
- * Return 1 if done, 0 if yyin points at more input
- */
 int yywrap()
 {
-   return 1;
+  return 1;
 }
 
-void handle_include()
+void comment()
 {
-   char *newfilename = malloc(strlen(yytext)+1-strlen("#include \"\""));
-   saved_yyin = yyin;
-   char *fname = strchr(yytext, '\"')+1;
-   fname[strlen(fname)-1] = '\0';
-fprintf(stdout, "included filename '%s'\n", fname); fflush(stdout);
-   yyin = fopen(fname,"r");
-   if (yyin == NULL) {
-     lexerr("cannot open include file");
-     exit(1);
-   }
+  /* comment consumption code also from Jutta Degener */
+  char c, c1;
+
+ loop:
+  while ((c = input()) != '*' && c != 0)
+    {
+      putchar(c);
+    }
+  if ((c1 = input()) != '/' && c != 0)
+    {
+      unput(c1);
+      goto loop;
+    }
+  if (c != 0)
+    {
+      putchar(c1);
+    }
 }
