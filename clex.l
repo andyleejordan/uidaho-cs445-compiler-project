@@ -1,3 +1,6 @@
+%option warn nodefault
+%option yylineno
+
 /* macros borrowed from Jutta Degener
    http://www.lysator.liu.se/c/ANSI-C-grammar-l.html */
 D        [0-9]
@@ -8,25 +11,15 @@ IS       (u|U|l|L)*
 QUOTE    \"
 TICK     \'
 
-%{
+%top{
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
 #include "cgram.tab.h"
 
-extern YYSTYPE yylval;
+extern int yylineno;
 extern int yychar;
-
-void lexerr(char *s);
-void handle_include();
-
-/* #define DEBUG */
-
-int line_num = 1;
-int errors;
-int included_iostream = 0;
-FILE *saved_yyin;
 %}
 
 %%
