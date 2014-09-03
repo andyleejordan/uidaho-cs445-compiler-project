@@ -1,12 +1,12 @@
-O        [0-7]
+/* macros borrowed from Jutta Degener
+   http://www.lysator.liu.se/c/ANSI-C-grammar-l.html */
 D        [0-9]
 L        [a-zA-Z_]
 H        [a-fA-F0-9]
-E        [Ee][+-]?{D}+
 FS       (f|F|l|L)
-IS       (u|U|l|L)
-W        [ \t\f]*
-LIT      \"(\\.|[^\\"])*\"
+IS       (u|U|l|L)*
+QUOTE    \"
+TICK     \'
 
 %{
 #include <stdio.h>
@@ -31,9 +31,23 @@ FILE *saved_yyin;
 
 %%
 
-\n                      { line_num++; }
-[ \t\f]+                { }
+  /* eat whitespace */
+[ \t\v\f\n]+              { }
 
+  /* comments */
+<INITIAL>{
+  "/*"                  BEGIN(COMMENT);
+}
+<COMMENT>{
+  "*/"                  BEGIN(0);
+  [^*\n]+               ;
+  "*"[^/]               ;
+  \n                    ;
+}
+
+  /* keywords */
+"..."                   { return ELIPSIS; }
+"auto"                  { return AUTO; }
 "break"                 { return BREAK; }
 "case"                  { return CASE; }
 "char"                  { return CHAR; }
@@ -66,34 +80,19 @@ FILE *saved_yyin;
 "volatile"              { return VOLATILE; }
 "while"                 { return WHILE; }
 
-{L}({L}|{D})*           { return IDENTIFIER; }
+  /* constants */
+{D}+{IS}?               { return ICON; }
 
+"'"(\\.|[^\{TICK}])+"'" { return CCON; }
 
-0[xX]{H}+{IS}?          { lexerr("Hex not supported\n"); }
+{D}+{FS}?               { return FCON; }
+{D}*"."{D}+{FS}?        { return FCON; }
+{D}+"."{D}*{FS}?        { return FCON; }
 
-0{O}+{IS}?              { lexerr("Octal not supported\n"); }
+L?{QUOTE}(\\.|[^\{QUOTE}])*{QUOTE}
+                        { return STRING; }
 
-{D}+{IS}?               {
-			  return ICON; }
-
-'(\\.|[^\\'])+'         {
-			  return CCON;
-			}
-
-{D}+{E}{FS}?            {
-			  return FCON; }
-{D}*"."{D}+({E})?{FS}?  {
-			  return FCON; }
-{D}+"."{D}*({E})?{FS}?  {
-			  return FCON; }
-
-{LIT}                   {
-			  return STRING; }
-
-"#include"[ ]*\"[^\\"]+\"  { handle_include(); }
-
-"#include <iostream>"   { included_iostream = 1; }
-
+  /* operators */
 ">>="                   { return SRASN; }
 "<<="                   { return SLASN; }
 "+="                    { return PLASN; }
@@ -128,7 +127,7 @@ FILE *saved_yyin;
 "."                     { return DOT; }
 "&"                     { return AND; }
 "!"                     { return BANG; }
-"~"                     { return NOT; }
+"~"                     { return TILDE; }
 "-"                     { return MINUS; }
 "+"                     { return PLUS; }
 "*"                     { return MUL; }
@@ -139,6 +138,9 @@ FILE *saved_yyin;
 "^"                     { return ER; }
 "|"                     { return OR; }
 "?"                     { return QUEST; }
+
+{L}({L}|{D})*           { return IDENTIFIER; }
+.                       { return BAD_TOKEN; }
 %%
 
 void lexerr(char *s)
