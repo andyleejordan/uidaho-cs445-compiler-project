@@ -19,9 +19,6 @@ TICK     \'
 
 #include "cgram.tab.h"
 
-extern int yylineno;
-extern int yychar;
-
 void comment();
 %}
 
