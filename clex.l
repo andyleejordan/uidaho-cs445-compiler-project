@@ -125,6 +125,7 @@ L?{QUOTE}(\\.|[^\{QUOTE}])*{QUOTE}  { return STRING; }
 
 {L}({L}|{D})*           { return IDENTIFIER; }
 .                       { return BAD_TOKEN; }
+<<EOF>>                 { return -1; }
 %%
 
 int yywrap()
