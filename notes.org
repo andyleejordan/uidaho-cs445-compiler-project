@@ -1,6 +1,14 @@
 * Tasks
+** TODO Finish [[http://www2.cs.uidaho.edu/~jeffery/courses/445/hw1.html][Homework #1]]
+** TODO ask Dr. J about yytoken
+** TODO ask Dr. J about =int* sval=
+** TODO return -1 for lexical errors
+** TODO parse STRING constants
+- strip surrounding quotes
+- replace escaped characters
+- see [[http://flex.sourceforge.net/manual/How-do-I-expand-backslash_002descape-sequences-in-C_002dstyle-quoted-strings_003f.html#How-do-I-expand-backslash_002descape-sequences-in-C_002dstyle-quoted-strings_003f][manual]]
 ** TODO C++ // comments
-** TODO Handle libraries
+** TODO libraries
 *** TODO cstdlib
 *** TODO cmath
 *** TODO ctime
@@ -9,8 +17,9 @@
 *** TODO iostream
 *** TODO string
 *** TODO iomanip
-** TODO Handle one level of #include "file"
-** TODO Handle =using namespace std;=
+** TODO #include "file"
+- see [[http://flex.sourceforge.net/manual/Multiple-Input-Buffers.html#Multiple-Input-Buffers][manual]]
+** TODO =using namespace std=
 ** TODO C++ keywords
 *** TODO class
 *** TODO private, public, protected, friend
@@ -18,3 +27,6 @@
 *** TODO new, delete
 *** TODO this
 *** TODO virtual
+** TODO proper memory management
+- see [[http://flex.sourceforge.net/manual/Memory-Management.html#Memory-Management][manual]]
+- free linked list of tokens
