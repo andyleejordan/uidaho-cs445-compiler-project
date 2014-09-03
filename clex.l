@@ -1,5 +1,6 @@
 %option warn nodefault
 %option yylineno
+%x COMMENT
 
 /* macros borrowed from Jutta Degener
    http://www.lysator.liu.se/c/ANSI-C-grammar-l.html */
@@ -18,8 +19,6 @@ TICK     \'
 #include <ctype.h>
 
 #include "cgram.tab.h"
-
-void comment();
 %}
 
 %%
@@ -28,7 +27,12 @@ void comment();
 [ \t\v\f\n]+            { }
 
   /* comments */
-"/*"                    { comment(); }
+"/*"                    BEGIN(COMMENT);
+<COMMENT>{
+[^*]*                   /* eat comment in chunks */
+"*"+[^*/]*              /* eat the lone star */
+"*"+"/"                 BEGIN(INITIAL);
+}
 
   /* keywords */
 "..."                   { return ELIPSIS; }
@@ -131,25 +135,4 @@ L?{QUOTE}(\\.|[^\{QUOTE}])*{QUOTE}  { return STRING; }
 int yywrap()
 {
   return 1;
-}
-
-void comment()
-{
-  /* comment consumption code also from Jutta Degener */
-  char c, c1;
-
- loop:
-  while ((c = input()) != '*' && c != 0)
-    {
-      putchar(c);
-    }
-  if ((c1 = input()) != '/' && c != 0)
-    {
-      unput(c1);
-      goto loop;
-    }
-  if (c != 0)
-    {
-      putchar(c1);
-    }
 }
