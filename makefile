@@ -1,27 +1,23 @@
+BIN=120++
+SOURCES=main.c lex.yy.c
+OBJECTS=$(SOURCES:.c=.o)
+
+LEX=flex
 CC=gcc
-CFLAGS=-c -g
+CFLAGS=-g -Wall
+LDFLAGS=
+RM=rm -f
 
-120++: 120++.o lex.yy.o
-	$(CC) -o 120++ 120++.o lex.yy.o
+all: $(BIN)
 
-120++.o: 120++.c
-	$(CC) $(CFLAGS) 120++.c
+$(BIN): $(OBJECTS)
+	$(CC) $(LDFLAGS) $^ -o $@
 
-lex.yy.o: lex.yy.c
-	$(CC) $(CFLAGS) lex.yy.c
+.c.o:
+	$(CC) $(CFLAGS) -c $< -o $@
 
 lex.yy.c: clex.l cgram.tab.h
-	flex clex.l
+	$(LEX) $<
 
-## phase 2: ignore for now
-
-#c: main.o cgram.tab.o lex.yy.o
-#	cc -o c main.o cgram.tab.o lex.yy.o
-
-#cgram.tab.o: cgram.tab.c
-#	cc -c -DYYDEBUG cgram.tab.c
-
-#cgram.tab.c: cgram.y
-#	bison -d -v cgram.y
-
-#cgram.tab.h: cgram.tab.c
+clean:
+	$(RM) $(BIN) $(OBJECTS)
