@@ -40,25 +40,34 @@ void create_token(int category);
 }
 
   /* keywords */
-"..."                   { create_token(ELIPSIS); return ELIPSIS; }
 "auto"                  { create_token(AUTO); return AUTO; }
+"bool"                  { create_token(BOOL); return BOOL; }
 "break"                 { create_token(BREAK); return BREAK; }
 "case"                  { create_token(CASE); return CASE; }
 "char"                  { create_token(CHAR); return CHAR; }
+"class"                 { create_token(CLASS); return CLASS; }
 "const"                 { create_token(CONST); return CONST; }
 "continue"              { create_token(CONTINUE); return CONTINUE; }
 "default"               { create_token(DEFAULT); return DEFAULT; }
+"delete"                { create_token(DELETE); return DELETE; }
 "do"                    { create_token(DO); return DO; }
 "double"                { create_token(DOUBLE); return DOUBLE; }
+"..."                   { create_token(ELIPSIS); return ELIPSIS; }
 "else"                  { create_token(ELSE); return ELSE; }
 "enum"                  { create_token(ENUM); return ENUM; }
 "extern"                { create_token(EXTERN); return EXTERN; }
+"false"                 { create_token(FALSE); return FALSE; }
 "float"                 { create_token(FLOAT); return FLOAT; }
 "for"                   { create_token(FOR); return FOR; }
+"friend"                { create_token(FRIEND); return FRIEND; }
 "goto"                  { create_token(GOTO); return GOTO; }
 "if"                    { create_token(IF); return IF; }
 "int"                   { create_token(INT); return INT; }
 "long"                  { create_token(LONG); return LONG; }
+"new"                   { create_token(NEW); return NEW; }
+"private"               { create_token(PRIVATE); return PRIVATE; }
+"protected"             { create_token(PROTECTED); return PROTECTED; }
+"public"                { create_token(PUBLIC); return PUBLIC; }
 "register"              { create_token(REGISTER); return REGISTER; }
 "return"                { create_token(RETURN); return RETURN; }
 "short"                 { create_token(SHORT); return SHORT; }
@@ -67,9 +76,12 @@ void create_token(int category);
 "static"                { create_token(STATIC); return STATIC; }
 "struct"                { create_token(STRUCT); return STRUCT; }
 "switch"                { create_token(SWITCH); return SWITCH; }
+"this"                  { create_token(THIS); return THIS; }
+"true"                  { create_token(TRUE); return TRUE; }
 "typedef"               { create_token(TYPEDEF); return TYPEDEF; }
 "union"                 { create_token(UNION); return UNION; }
 "unsigned"              { create_token(UNSIGNED); return UNSIGNED; }
+"virtual"               { create_token(VIRTUAL); return VIRTUAL; }
 "void"                  { create_token(VOID); return VOID; }
 "volatile"              { create_token(VOLATILE); return VOLATILE; }
 "while"                 { create_token(WHILE); return WHILE; }
