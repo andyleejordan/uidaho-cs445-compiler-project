@@ -4,18 +4,17 @@
 - yytoken is used so that yylex() can allocate tokens independent of
   main() but allow main() to build them into a list (soon, tree)
 ** DONE ask Dr. J about =int *sval=
-- the answer was unclear but I can use capture groups to parase my C
+- the answer was unclear but I can use capture groups to parse my C
   string for me
 *** TODO parse STRING constants
 - strip surrounding quotes
 - replace escaped characters
-- see
-  [[http://flex.sourceforge.net/manual/How-do-I-expand-backslash_002descape-sequences-in-C_002dstyle-quoted-strings_003f.html#How-do-I-expand-backslash_002descape-sequences-in-C_002dstyle-quoted-strings_003f][manual]]
+- see [[http://flex.sourceforge.net/manual/How-do-I-expand-backslash_002descape-sequences-in-C_002dstyle-quoted-strings_003f.html#How-do-I-expand-backslash_002descape-sequences-in-C_002dstyle-quoted-strings_003f][manual]]
 ** TODO yywrap and EOF
 ** TODO #include "file"
 - see [[http://flex.sourceforge.net/manual/Multiple-Input-Buffers.html#Multiple-Input-Buffers][manual]]
 ** TODO return -1 for lexical errors
-** TODO C++ // comments
+** DONE C++ // comments
 ** TODO libraries
 *** TODO cstdlib
 *** TODO cmath
@@ -27,13 +26,13 @@
 *** TODO iomanip
 ** TODO =using namespace std=
 - use separate 'using' and 'namespace' keywords
-** TODO C++ keywords
-*** TODO class
-*** TODO private, public, protected, friend
-*** TODO bool, true, false
-*** TODO new, delete
-*** TODO this
-*** TODO virtual
+** DONE C++ keywords
+*** DONE class
+*** DONE private, public, protected, friend
+*** DONE bool, true, false
+*** DONE new, delete
+*** DONE this
+*** DONE virtual
 ** TODO proper memory management
 - see [[http://flex.sourceforge.net/manual/Memory-Management.html#Memory-Management][manual]]
 - free linked list of tokens
