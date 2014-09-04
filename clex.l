@@ -2,8 +2,6 @@
 %option yylineno
 %x COMMENT
 
-/* macros borrowed from Jutta Degener
-   http://www.lysator.liu.se/c/ANSI-C-grammar-l.html */
 D        [0-9]
 L        [a-zA-Z_]
 H        [a-fA-F0-9]
@@ -21,10 +19,11 @@ TICK     \'
 #include "token.h"
 #include "cgram.tab.h"
 
-extern token_t* yytoken;
-extern char* filename;
+extern struct token *yytoken;
+extern char *filename;
+
 /* allocates and prepares token, saving pointer into yytoken */
-void create_token(int);
+void create_token(int category);
 %}
 
 %%
@@ -138,33 +137,35 @@ L?{QUOTE}(\\.|[^\{QUOTE}])*{QUOTE}  { create_token(STRING); return STRING; }
 <<EOF>>                 { return -1; }
 %%
 
+  /* TODO improve this */
 int yywrap()
 {
-  return 1;
+	return 1;
 }
 
 void create_token(int category)
 {
-  yytoken = malloc(sizeof(token_t));
+	yytoken = malloc(sizeof(*yytoken));
 
-  yytoken->category = category;
-  yytoken->lineno = yylineno;
+	yytoken->category = category;
+	yytoken->lineno = yylineno;
 
-  yytoken->text = calloc(strlen(yytext)+1, sizeof(char));
-  strcpy(yytoken->text, yytext);
+	yytoken->text = calloc(strlen(yytext)+1, sizeof(char));
+	strcpy(yytoken->text, yytext);
 
-  yytoken->filename = calloc(strlen(filename)+1, sizeof(char));
-  strcpy(yytoken->filename, filename);
+	yytoken->filename = calloc(strlen(filename)+1, sizeof(char));
+	strcpy(yytoken->filename, filename);
 
-  if (yytoken->category == ICON) { yytoken->ival = atoi(yytext); }
-  if (yytoken->category == STRING)
-      {
-	  yytoken->sval = calloc(strlen(yytext)+1, sizeof(char));
-	  strcpy(yytoken->sval, yytext);
-	  /* TODO parse escaped characters */
-      }
+	if (yytoken->category == ICON)
+		yytoken->ival = atoi(yytext);
+
+	if (yytoken->category == STRING) {
+		yytoken->sval = calloc(strlen(yytext)+1, sizeof(char));
+		strcpy(yytoken->sval, yytext);
+		/* TODO parse escaped characters */
+	}
 
 #ifdef DEBUG
-  printf("line %d - category %d - lexeme: %s\n", yytoken->lineno, yytoken->category, yytoken->text);
+	printf("line %d - category %d - lexeme: %s\n", yytoken->lineno, yytoken->category, yytoken->text);
 #endif
 }

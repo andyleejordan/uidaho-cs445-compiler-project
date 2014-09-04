@@ -6,58 +6,55 @@
 #include "cgram.tab.h"
 
 int yylex();
-extern FILE* yyin;
+extern FILE *yyin;
 
-token_t* yytoken = NULL;
-char* filename = NULL;
-tokenlist_t* head = NULL;
+struct token *yytoken = NULL;
+char *filename = NULL;
+struct tokenlist *head = NULL;
 
 /* TODO return yywrap value*/
 int parse_file()
-  {
-    while(1)
-      {
-	int category = yylex();
-	if (category < 0) { return category; }
-	head = tokenlist_prepend(yytoken, head);
-      }
-  }
-
-int main(int argc, char** argv)
 {
-  if (argc == 1)
-    {
-      filename = "stdin";
-      yyin = stdin;
-      parse_file();
-    }
-  else
-    {
-      for (int i = 1; i < argc; ++i)
-	{
-	  filename = argv[i];
-	  yyin = fopen(filename, "r");
-	  parse_file();
+	while (1) {
+		int category = yylex();
+		if (category < 0)
+			return category;
+		head = tokenlist_prepend(yytoken, head);
 	}
-    }
+}
 
-  printf("Category\tText\tLineno\tFilename\tIval/Sval\n");
-  tokenlist_t* cur = head;
-  while (cur != NULL)
-    {
-      printf("%d\t%s\t%d\t%s",
-	     cur->data->category,
-	     cur->data->text,
-	     cur->data->lineno,
-	     cur->data->filename);
-      if (cur->data->category == ICON)
-	{ printf("\t%d", cur->data->ival); }
-      else if (cur->data->category == STRING)
-	{ printf("\t%s", cur->data->sval); }
-      printf("\n");
-      cur = cur->next;
-    }
+int main(int argc, char **argv)
+{
+	if (argc == 1) {
+		filename = "stdin";
+		yyin = stdin;
+		parse_file();
+	} else {
+		for (int i = 1; i < argc; ++i) {
+			filename = argv[i];
+			yyin = fopen(filename, "r");
+			parse_file();
+		}
+	}
 
-  /* TODO free memory */
-  return 0;
+	printf("Category\tText\tLineno\tFilename\tIval/Sval\n");
+	struct tokenlist *tmp = head;
+	while (tmp != NULL) {
+		printf("%d\t%s\t%d\t%s",
+		       tmp->data->category,
+		       tmp->data->text,
+		       tmp->data->lineno,
+		       tmp->data->filename);
+
+		if (tmp->data->category == ICON)
+			printf("\t%d", tmp->data->ival);
+		else if (tmp->data->category == STRING)
+			printf("\t%s", tmp->data->sval);
+
+		printf("\n");
+		tmp = tmp->next;
+	}
+
+	/* TODO free memory */
+	return 0;
 }

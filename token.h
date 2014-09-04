@@ -3,23 +3,23 @@
 
 #include <stdlib.h>
 
-typedef struct token
+struct token
 {
   int category;
   int lineno;
-  char* text;
-  char* filename;
+  char *text;
+  char *filename;
   int ival;
-  char* sval;
-} token_t;
+  char *sval;
+};
 
-typedef struct tokenlist
+struct tokenlist
 {
-  struct token* data;
-  struct tokenlist* next;
-} tokenlist_t;
+  struct token *data;
+  struct tokenlist *next;
+};
 
 /* prepends token to list and returns pointer to new head of list */
-tokenlist_t* tokenlist_prepend(token_t*, tokenlist_t*);
+struct tokenlist *tokenlist_prepend(struct token *token, struct tokenlist *list);
 
 #endif /* TOKEN_H */

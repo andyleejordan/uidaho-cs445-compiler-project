@@ -2,10 +2,11 @@
 
 #include "token.h"
 
-tokenlist_t* tokenlist_prepend(token_t* token, tokenlist_t* list)
+struct tokenlist *tokenlist_prepend(struct token *token, struct tokenlist *list)
 {
-  tokenlist_t* t = malloc(sizeof(tokenlist_t));
-  t->data = token;
-  t->next = list;
-  return t;
+  struct tokenlist *tmp = malloc(sizeof(*tmp));
+  /* TODO if (tmp == NULL) something */
+  tmp->data = token;
+  tmp->next = list;
+  return tmp;
 }
