@@ -64,6 +64,7 @@ void create_token(int category);
 "if"                    { create_token(IF); return IF; }
 "int"                   { create_token(INT); return INT; }
 "long"                  { create_token(LONG); return LONG; }
+"namespace"             { create_token(NAMESPACE); return NAMESPACE; }
 "new"                   { create_token(NEW); return NEW; }
 "private"               { create_token(PRIVATE); return PRIVATE; }
 "protected"             { create_token(PROTECTED); return PROTECTED; }
@@ -81,6 +82,7 @@ void create_token(int category);
 "typedef"               { create_token(TYPEDEF); return TYPEDEF; }
 "union"                 { create_token(UNION); return UNION; }
 "unsigned"              { create_token(UNSIGNED); return UNSIGNED; }
+"using"                 { create_token(USING); return USING; }
 "virtual"               { create_token(VIRTUAL); return VIRTUAL; }
 "void"                  { create_token(VOID); return VOID; }
 "volatile"              { create_token(VOLATILE); return VOLATILE; }
