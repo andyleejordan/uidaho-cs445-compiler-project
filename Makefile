@@ -1,5 +1,5 @@
 BIN=120++
-SOURCES=main.c lex.yy.c
+SOURCES=main.c token.c lex.yy.c
 OBJECTS=$(SOURCES:.c=.o)
 
 LEX=flex

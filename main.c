@@ -2,74 +2,24 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "token.h"
 #include "cgram.tab.h"
 
 int yylex();
 extern FILE* yyin;
-extern int yylineno;
-extern char* yytext;
 
-typedef struct token
-{
-  int category;
-  int lineno;
-  char* text;
-  char* filename;
-  int ival;
-  char* sval;
-} token_t;
-
-typedef struct tokenlist
-{
-  struct token* data;
-  struct tokenlist* next;
-} tokenlist_t;
-
-/* prepends token to list and returns pointer to new head of list */
-tokenlist_t* tokenlist_prepend(token_t* tok, tokenlist_t* list)
-{
-  tokenlist_t* cur = malloc(sizeof(tokenlist_t));
-  cur->data = tok;
-  cur->next = list;
-  return cur;
-}
-
+token_t* yytoken = NULL;
+char* filename = NULL;
 tokenlist_t* head = NULL;
 
 /* TODO return yywrap value*/
-int parse_file(char* filename)
+int parse_file()
   {
     while(1)
       {
-	token_t* tok = malloc(sizeof(token_t));
-
-	tok->category = yylex();
-	tok->lineno = yylineno;
-	tok->text = calloc(strlen(yytext)+1, sizeof(char));
-	strcpy(tok->text, yytext);
-	tok->filename = calloc(strlen(filename)+1, sizeof(char));
-	strcpy(tok->filename, filename);
-
-	if (tok->category == ICON) { tok->ival = atoi(yytext); }
-	if (tok->category == STRING)
-	  {
-	    tok->sval = calloc(strlen(yytext)+1, sizeof(char));
-	    strcpy(tok->sval, yytext);
-	    /* TODO parse escaped characters */
-	  }
-
-#ifdef DEBUG
-	printf("line %d - category %d - lexeme: %s\n", tok->lineno, tok->category, tok->text);
-#endif
-
-	/* TODO handle EOF better */
-	if (tok->category == -1)
-	  {
-	    free(tok);
-	    return -1;
-	  }
-
-	head = tokenlist_prepend(tok, head);
+	int category = yylex();
+	if (category < 0) { return category; }
+	head = tokenlist_prepend(yytoken, head);
       }
   }
 
@@ -77,16 +27,17 @@ int main(int argc, char** argv)
 {
   if (argc == 1)
     {
+      filename = "stdin";
       yyin = stdin;
-      parse_file("stdin");
+      parse_file();
     }
   else
     {
       for (int i = 1; i < argc; ++i)
 	{
-	  char* filename = argv[i];
+	  filename = argv[i];
 	  yyin = fopen(filename, "r");
-	  parse_file(filename);
+	  parse_file();
 	}
     }
 
