@@ -3,7 +3,7 @@
 ** DONE ask Dr. J about yytoken
 - yytoken is used so that yylex() can allocate tokens independent of
   main() but allow main() to build them into a list (soon, tree)
-** DONE ask Dr. J about =int* sval=
+** DONE ask Dr. J about =int *sval=
 - the answer was unclear but I can use capture groups to parase my C
   string for me
 *** TODO parse STRING constants
@@ -40,3 +40,4 @@
 ** TODO Iterate through list backwards
 - stop being lazy and double link the damn thing
 ** TODO Print with better formatting to match his
+** TODO Cleanup calls to =create_token(TOKEN); return TOKEN=
