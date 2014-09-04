@@ -1,3 +1,4 @@
+/* -*- mode: flex; -*- */
 %option warn nodefault
 %option yylineno
 %x COMMENT
