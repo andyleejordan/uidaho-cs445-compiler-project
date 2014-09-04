@@ -1,12 +1,20 @@
 * Tasks
 ** TODO Finish [[http://www2.cs.uidaho.edu/~jeffery/courses/445/hw1.html][Homework #1]]
-** TODO ask Dr. J about yytoken
-** TODO ask Dr. J about =int* sval=
-** TODO return -1 for lexical errors
-** TODO parse STRING constants
+** DONE ask Dr. J about yytoken
+- yytoken is used so that yylex() can allocate tokens independent of
+  main() but allow main() to build them into a list (soon, tree)
+** DONE ask Dr. J about =int* sval=
+- the answer was unclear but I can use capture groups to parase my C
+  string for me
+*** TODO parse STRING constants
 - strip surrounding quotes
 - replace escaped characters
-- see [[http://flex.sourceforge.net/manual/How-do-I-expand-backslash_002descape-sequences-in-C_002dstyle-quoted-strings_003f.html#How-do-I-expand-backslash_002descape-sequences-in-C_002dstyle-quoted-strings_003f][manual]]
+- see
+  [[http://flex.sourceforge.net/manual/How-do-I-expand-backslash_002descape-sequences-in-C_002dstyle-quoted-strings_003f.html#How-do-I-expand-backslash_002descape-sequences-in-C_002dstyle-quoted-strings_003f][manual]]
+** TODO yywrap and EOF
+** TODO #include "file"
+- see [[http://flex.sourceforge.net/manual/Multiple-Input-Buffers.html#Multiple-Input-Buffers][manual]]
+** TODO return -1 for lexical errors
 ** TODO C++ // comments
 ** TODO libraries
 *** TODO cstdlib
@@ -17,9 +25,8 @@
 *** TODO iostream
 *** TODO string
 *** TODO iomanip
-** TODO #include "file"
-- see [[http://flex.sourceforge.net/manual/Multiple-Input-Buffers.html#Multiple-Input-Buffers][manual]]
 ** TODO =using namespace std=
+- use separate 'using' and 'namespace' keywords
 ** TODO C++ keywords
 *** TODO class
 *** TODO private, public, protected, friend
@@ -30,3 +37,6 @@
 ** TODO proper memory management
 - see [[http://flex.sourceforge.net/manual/Memory-Management.html#Memory-Management][manual]]
 - free linked list of tokens
+** TODO Iterate through list backwards
+- stop being lazy and double link the damn thing
+** TODO Print with better formatting to match his
