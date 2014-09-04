@@ -7,8 +7,6 @@ L        [a-zA-Z_]
 H        [a-fA-F0-9]
 FS       (f|F|l|L)
 IS       (u|U|l|L)*
-QUOTE    \"
-TICK     \'
 
 %{
 #include <stdio.h>
@@ -77,13 +75,13 @@ void create_token(int category);
   /* constants */
 {D}+{IS}?               { create_token(ICON); return ICON; }
 
-"'"(\\.|[^\{TICK}])+"'" { create_token(CCON); return CCON; }
+\'(\\.|[^"'"])+\'       { create_token(CCON); return CCON; }
 
 {D}+{FS}?               { create_token(FCON); return FCON; }
 {D}*"."{D}+{FS}?        { create_token(FCON); return FCON; }
 {D}+"."{D}*{FS}?        { create_token(FCON); return FCON; }
 
-L?{QUOTE}(\\.|[^\{QUOTE}])*{QUOTE}  { create_token(STRING); return STRING; }
+L?\"(\\.|[^"\""])*\"    { create_token(STRING); return STRING; }
 
   /* operators */
 ">>="                   { create_token(SRASN); return SRASN; }
