@@ -30,6 +30,7 @@ void create_token(int category);
 [ \t\v\f\n]+            { }
 
   /* comments */
+"//".*$                 { }
 "/*"                    BEGIN(COMMENT);
 <COMMENT>{
 [^*]*                   /* eat comment in chunks */
