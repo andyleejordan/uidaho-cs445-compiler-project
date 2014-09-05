@@ -5,18 +5,18 @@
 
 struct token
 {
-  int category;
-  int lineno;
-  char *text;
-  char *filename;
-  int ival;
-  char *sval;
+	int category;
+	int lineno;
+	char *text;
+	char *filename;
+	int ival;
+	char *sval;
 };
 
 struct tokenlist
 {
-  struct token *data;
-  struct tokenlist *next;
+	struct token *data;
+	struct tokenlist *next;
 };
 
 /* prepends token to list and returns pointer to new head of list */
