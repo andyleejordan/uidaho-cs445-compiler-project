@@ -6,7 +6,7 @@
 ** DONE ask Dr. J about =int *sval=
 - the answer was unclear but I can use capture groups to parse my C
   string for me
-*** TODO parse STRING constants
+*** DONE parse STRING constants
 - strip surrounding quotes
 - replace escaped characters
 - see [[http://flex.sourceforge.net/manual/How-do-I-expand-backslash_002descape-sequences-in-C_002dstyle-quoted-strings_003f.html#How-do-I-expand-backslash_002descape-sequences-in-C_002dstyle-quoted-strings_003f][manual]]
@@ -15,16 +15,16 @@
 - see [[http://flex.sourceforge.net/manual/Multiple-Input-Buffers.html#Multiple-Input-Buffers][manual]]
 ** TODO return -1 for lexical errors
 ** DONE C++ // comments
-** TODO libraries
-*** TODO cstdlib
-*** TODO cmath
-*** TODO ctime
-*** TODO cstring
-*** TODO fstream
-*** TODO iostream
-*** TODO string
-*** TODO iomanip
-** TODO =using namespace std=
+** DONE libraries
+*** DONE cstdlib
+*** DONE cmath
+*** DONE ctime
+*** DONE cstring
+*** DONE fstream
+*** DONE iostream
+*** DONE string
+*** DONE iomanip
+** DONE =using namespace std=
 - use separate 'using' and 'namespace' keywords
 ** DONE C++ keywords
 *** DONE class
@@ -36,7 +36,6 @@
 ** TODO proper memory management
 - see [[http://flex.sourceforge.net/manual/Memory-Management.html#Memory-Management][manual]]
 - free linked list of tokens
-** TODO Iterate through list backwards
+** DONE Iterate through list backwards
 - stop being lazy and double link the damn thing
-** TODO Print with better formatting to match his
-** TODO Cleanup calls to =create_token(TOKEN); return TOKEN=
+** DONE Print with better formatting to match his
