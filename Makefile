@@ -20,4 +20,4 @@ lex.yy.c: clex.l cgram.tab.h
 	$(LEX) $<
 
 clean:
-	$(RM) $(BIN) $(OBJECTS)
+	$(RM) $(BIN) $(OBJECTS) lex.yy.c

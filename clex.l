@@ -57,7 +57,7 @@ void yytoken_append_text(char *s);
   /* keywords */
 "#include"              { BEGIN(INC); }
 <INC>{
-	[ \t\v\f\n]+    { /* eat whitespace */ }
+	[ \t\v\f]+      { /* eat whitespace */ }
 	"<cstdlib>"     { cstdlib  = true; BEGIN(INITIAL); }
 	"<cmath>"       { cmath	   = true; BEGIN(INITIAL); }
 	"<ctime>"       { ctime	   = true; BEGIN(INITIAL); }
@@ -66,7 +66,7 @@ void yytoken_append_text(char *s);
 	"<iostream>"    { iostream = true; BEGIN(INITIAL); }
 	"<string>"      { string   = true; BEGIN(INITIAL); }
 	"<iomanip>"     { iomanip  = true; BEGIN(INITIAL); }
-	\<[A-Za-z.]+\>  { BEGIN(INITIAL); /* TODO error on unrecognized libraries */ }
+	"<"[^<>]+">"    { BEGIN(INITIAL); /* TODO error on unrecognized libraries */ }
 }
 "auto"                  { create_token(AUTO); return AUTO; }
 "bool"                  { create_token(BOOL); return BOOL; }
@@ -208,7 +208,6 @@ L?\"                    { create_token(SCON); BEGIN(STR); }
 {L}({L}|{D})*           { create_token(IDENTIFIER); return IDENTIFIER; }
 
 <<EOF>>                 { return 0; }
-.                       { return -1; }
 %%
 
   /* TODO improve this */
