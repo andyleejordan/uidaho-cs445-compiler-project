@@ -1,2 +1,4 @@
 /120++
 /lex.yy.c
+/.dir-locals.el
+/test.cpp
