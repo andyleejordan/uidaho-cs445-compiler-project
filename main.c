@@ -16,9 +16,13 @@ struct tokenlist *head = NULL;
 int parse_file()
 {
 	while (1) {
-		int category = yylex();
-		if (category < 0)
-			return category;
+		int tmp = yylex();
+		if (tmp == 0) {
+			return 0;
+		} else if (tmp < 0) {
+			fprintf(stderr, "yylex returned %d\n", tmp);
+			exit(EXIT_FAILURE);
+		}
 		head = tokenlist_prepend(yytoken, head);
 	}
 }
@@ -58,5 +62,5 @@ int main(int argc, char **argv)
 	}
 
 	/* TODO free memory */
-	return 0;
+	return EXIT_SUCCESS;
 }

@@ -182,8 +182,9 @@ L?\"                    { create_token(SCON); BEGIN(STR); }
 "?"                     { create_token(QUEST); return QUEST; }
 
 {L}({L}|{D})*           { create_token(IDENTIFIER); return IDENTIFIER; }
-.                       { create_token(BAD_TOKEN); return BAD_TOKEN; }
-<<EOF>>                 { return -1; }
+
+<<EOF>>                 { return 0; }
+.                       { return -1; }
 %%
 
   /* TODO improve this */
