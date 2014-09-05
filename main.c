@@ -37,13 +37,28 @@ int main(int argc, char **argv)
 {
 	tokenlist_init(&head, &tail);
 
+	filename = calloc(strlen("stdin")+1, sizeof(char));
+	if (filename == NULL) {
+		free(filename);
+		fprintf(stderr, "Error reallocating memory for filename");
+		exit(EXIT_FAILURE);
+	}
+
 	if (argc == 1) {
-		filename = "stdin";
+		strcpy(filename, "stdin");
 		yyin = stdin;
 		parse_file();
 	} else {
 		for (int i = 1; i < argc; ++i) {
-			filename = argv[i];
+			char *buffer = realloc(filename, sizeof(argv[i]));
+			if (buffer) {
+				filename = buffer;
+				strcpy(filename, argv[i]);
+			} else {
+				free(filename);
+				fprintf(stderr, "Error reallocating memory for filename");
+				exit(EXIT_FAILURE);
+			}
 			yyin = fopen(filename, "r");
 			parse_file();
 		}
