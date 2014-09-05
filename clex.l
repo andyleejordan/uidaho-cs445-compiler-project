@@ -236,7 +236,7 @@ void create_token(int category)
 /* reallocate yytoken->sval to append string and terminating null */
 void yytoken_realloc_sval(char *s)
 {
-	size_t size = sizeof(yytoken->sval)+sizeof(s)+sizeof(char);
+	size_t size = strlen(yytoken->sval)+strlen(s)+1;
 	yytoken->sval = realloc(yytoken->sval, size);
 }
 
@@ -258,7 +258,7 @@ void yytoken_append_string_sval(char *s)
 /* reallocate yytoken->text to append string and terminating null */
 void yytoken_realloc_text(char *s)
 {
-	size_t size = sizeof(yytoken->text)+sizeof(s)+sizeof(char);
+	size_t size = strlen(yytoken->text)+strlen(s)+1;
 	yytoken->text = realloc(yytoken->text, size);
 }
 
