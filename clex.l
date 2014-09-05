@@ -128,7 +128,6 @@ void yytoken_append_text(char *s);
 	"\\'"           { yytoken->ival = '\''; yytoken_append_text(yytext); }
 	"\\\""          { yytoken->ival = '"'; yytoken_append_text(yytext); }
 	"\\?"           { yytoken->ival = '\?'; yytoken_append_text(yytext); }
-	"\\\\"          { yytoken->ival = '\\'; yytoken_append_text(yytext); }
 	"\\a"           { yytoken->ival = '\a'; yytoken_append_text(yytext); }
 	"\\b"           { yytoken->ival = '\b'; yytoken_append_text(yytext); }
 	"\\f"           { yytoken->ival = '\f'; yytoken_append_text(yytext); }
@@ -136,6 +135,7 @@ void yytoken_append_text(char *s);
 	"\\r"           { yytoken->ival = '\r'; yytoken_append_text(yytext); }
 	"\\t"           { yytoken->ival = '\t'; yytoken_append_text(yytext); }
 	"\\v"           { yytoken->ival = '\v'; yytoken_append_text(yytext); }
+	"\\\\"          { yytoken->ival = '\\'; yytoken_append_text(yytext); }
 	[^\\"'"]        { yytoken->ival = *yytext; yytoken_append_text(yytext); }
 }
 
@@ -146,7 +146,6 @@ L?\"                    { create_token(SCON); BEGIN(STR); }
 	"\\'"           { yytoken_append_char_sval('\''); yytoken_append_text(yytext); }
 	"\\\""          { yytoken_append_char_sval('"'); yytoken_append_text(yytext); }
 	"\\?"           { yytoken_append_char_sval('\?'); yytoken_append_text(yytext); }
-	"\\"            { yytoken_append_char_sval('\\'); yytoken_append_text(yytext); }
 	"\\a"           { yytoken_append_char_sval('\a'); yytoken_append_text(yytext); }
 	"\\b"           { yytoken_append_char_sval('\b'); yytoken_append_text(yytext); }
 	"\\f"           { yytoken_append_char_sval('\f'); yytoken_append_text(yytext); }
@@ -154,6 +153,7 @@ L?\"                    { create_token(SCON); BEGIN(STR); }
 	"\\r"           { yytoken_append_char_sval('\r'); yytoken_append_text(yytext); }
 	"\\t"           { yytoken_append_char_sval('\t'); yytoken_append_text(yytext); }
 	"\\v"           { yytoken_append_char_sval('\v'); yytoken_append_text(yytext); }
+	"\\\\"          { yytoken_append_char_sval('\\'); yytoken_append_text(yytext); }
 	[^\\\n\"]+      { yytoken_append_string_sval(yytext); yytoken_append_text(yytext); }
 }
 
