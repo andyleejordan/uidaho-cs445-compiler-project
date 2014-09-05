@@ -4,6 +4,7 @@
 %x COMMENT
 %x STR
 %x CHR
+%x INC
 
 D        [0-9]
 L        [a-zA-Z_]
@@ -12,6 +13,7 @@ FS       (f|F|l|L)
 IS       (u|U|l|L)*
 
 %{
+#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -22,6 +24,15 @@ IS       (u|U|l|L)*
 
 extern struct token *yytoken;
 extern char *filename;
+
+bool cstdlib  = false;
+bool cmath    = false;
+bool ctime    = false;
+bool cstring  = false;
+bool fstream  = false;
+bool iostream = false;
+bool string   = false;
+bool iomanip  = false;
 
 /* allocates and prepares token, saving pointer into yytoken */
 void create_token(int category);
@@ -44,6 +55,19 @@ void yytoken_append_text(char *s);
 }
 
   /* keywords */
+"#include"              { BEGIN(INC); }
+<INC>{
+	[ \t\v\f\n]+    { /* eat whitespace */ }
+	"<cstdlib>"     { cstdlib  = true; BEGIN(INITIAL); }
+	"<cmath>"       { cmath	   = true; BEGIN(INITIAL); }
+	"<ctime>"       { ctime	   = true; BEGIN(INITIAL); }
+	"<cstring>"     { cstring  = true; BEGIN(INITIAL); }
+	"<fstream>"     { fstream  = true; BEGIN(INITIAL); }
+	"<iostream>"    { iostream = true; BEGIN(INITIAL); }
+	"<string>"      { string   = true; BEGIN(INITIAL); }
+	"<iomanip>"     { iomanip  = true; BEGIN(INITIAL); }
+	\<[A-Za-z.]+\>  { BEGIN(INITIAL); /* TODO error on unrecognized libraries */ }
+}
 "auto"                  { create_token(AUTO); return AUTO; }
 "bool"                  { create_token(BOOL); return BOOL; }
 "break"                 { create_token(BREAK); return BREAK; }
