@@ -33,16 +33,14 @@ void yytoken_append_text(char *s);
 
 %%
 
-  /* eat whitespace */
-[ \t\v\f\n]+            { }
+[ \t\v\f\n]+            { /* eat whitespace */ }
 
-  /* comments */
-"//".*$                 { }
-"/*"                    BEGIN(COMMENT);
+"//".*$                 { /* eat C++ comments */ }
+"/*"                    { BEGIN(COMMENT); /* eat C comments */ }
 <COMMENT>{
-[^*]*                   /* eat comment in chunks */
-"*"+[^*/]*              /* eat the lone star */
-"*"+"/"                 BEGIN(INITIAL);
+	[^*]*           { /* eat comment in chunks */ }
+	"*"+[^*/]*      { /* eat the lone star */ }
+	"*"+"/"         { BEGIN(INITIAL); /* stop eating comment */ }
 }
 
   /* keywords */
