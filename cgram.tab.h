@@ -51,7 +51,7 @@
 #define ICON 304
 #define CCON 305
 #define FCON 306
-#define STRING 307
+#define SCON 307
 
 /* operators */
 #define SRASN 308

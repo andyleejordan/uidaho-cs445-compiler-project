@@ -48,7 +48,9 @@ int main(int argc, char **argv)
 
 		if (tmp->data->category == ICON)
 			printf("\t%d", tmp->data->ival);
-		else if (tmp->data->category == STRING)
+		else if (tmp->data->category == CCON)
+			printf("\t%c", tmp->data->ival);
+		else if (tmp->data->category == SCON)
 			printf("\t%s", tmp->data->sval);
 
 		printf("\n");

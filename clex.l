@@ -2,6 +2,8 @@
 %option warn nodefault
 %option yylineno
 %x COMMENT
+%x STR
+%x CHR
 
 D        [0-9]
 L        [a-zA-Z_]
@@ -23,6 +25,10 @@ extern char *filename;
 
 /* allocates and prepares token, saving pointer into yytoken */
 void create_token(int category);
+
+void yytoken_append_char_sval(char c);
+void yytoken_append_string_sval(char *s);
+void yytoken_append_text(char *s);
 %}
 
 %%
@@ -90,14 +96,45 @@ void create_token(int category);
 
   /* constants */
 {D}+{IS}?               { create_token(ICON); return ICON; }
-
-\'(\\.|[^"'"])+\'       { create_token(CCON); return CCON; }
-
 {D}+{FS}?               { create_token(FCON); return FCON; }
 {D}*"."{D}+{FS}?        { create_token(FCON); return FCON; }
 {D}+"."{D}*{FS}?        { create_token(FCON); return FCON; }
 
-L?\"(\\.|[^"\""])*\"    { create_token(STRING); return STRING; }
+\'                      { create_token(CCON); BEGIN(CHR); }
+<CHR>{
+	\'              { BEGIN(INITIAL); yytoken_append_text(yytext); return CCON; }
+	\n              { BEGIN(INITIAL); return -2; } /* unterminated string constant */
+	"\\'"           { yytoken->ival = '\''; yytoken_append_text(yytext); }
+	"\\\""          { yytoken->ival = '"'; yytoken_append_text(yytext); }
+	"\\?"           { yytoken->ival = '\?'; yytoken_append_text(yytext); }
+	"\\\\"          { yytoken->ival = '\\'; yytoken_append_text(yytext); }
+	"\\a"           { yytoken->ival = '\a'; yytoken_append_text(yytext); }
+	"\\b"           { yytoken->ival = '\b'; yytoken_append_text(yytext); }
+	"\\f"           { yytoken->ival = '\f'; yytoken_append_text(yytext); }
+	"\\n"           { yytoken->ival = '\n'; yytoken_append_text(yytext); }
+	"\\r"           { yytoken->ival = '\r'; yytoken_append_text(yytext); }
+	"\\t"           { yytoken->ival = '\t'; yytoken_append_text(yytext); }
+	"\\v"           { yytoken->ival = '\v'; yytoken_append_text(yytext); }
+	[^\\"'"]        { yytoken->ival = *yytext; yytoken_append_text(yytext); }
+}
+
+L?\"                    { create_token(SCON); BEGIN(STR); }
+<STR>{
+	\"              { yytoken_append_char_sval('\0'); yytoken_append_text(yytext); BEGIN(INITIAL); return SCON; /* end of string*/ }
+	\n              { BEGIN(INITIAL); return -2; } /* unterminated string constant */
+	"\\'"           { yytoken_append_char_sval('\''); yytoken_append_text(yytext); }
+	"\\\""          { yytoken_append_char_sval('"'); yytoken_append_text(yytext); }
+	"\\?"           { yytoken_append_char_sval('\?'); yytoken_append_text(yytext); }
+	"\\"            { yytoken_append_char_sval('\\'); yytoken_append_text(yytext); }
+	"\\a"           { yytoken_append_char_sval('\a'); yytoken_append_text(yytext); }
+	"\\b"           { yytoken_append_char_sval('\b'); yytoken_append_text(yytext); }
+	"\\f"           { yytoken_append_char_sval('\f'); yytoken_append_text(yytext); }
+	"\\n"           { yytoken_append_char_sval('\n'); yytoken_append_text(yytext); }
+	"\\r"           { yytoken_append_char_sval('\r'); yytoken_append_text(yytext); }
+	"\\t"           { yytoken_append_char_sval('\t'); yytoken_append_text(yytext); }
+	"\\v"           { yytoken_append_char_sval('\v'); yytoken_append_text(yytext); }
+	[^\\\n\"]+      { yytoken_append_string_sval(yytext); yytoken_append_text(yytext); }
+}
 
   /* operators */
 ">>="                   { create_token(SRASN); return SRASN; }
@@ -170,16 +207,49 @@ void create_token(int category)
 	yytoken->filename = calloc(strlen(filename)+1, sizeof(char));
 	strcpy(yytoken->filename, filename);
 
-	if (yytoken->category == ICON)
+	if (category == ICON)
 		yytoken->ival = atoi(yytext);
 
-	if (yytoken->category == STRING) {
-		yytoken->sval = calloc(strlen(yytext)+1, sizeof(char));
-		strcpy(yytoken->sval, yytext);
-		/* TODO parse escaped characters */
-	}
+	if (category == SCON)
+		yytoken->sval = calloc(128, sizeof(char));
 
 #ifdef DEBUG
 	printf("line %d - category %d - lexeme: %s\n", yytoken->lineno, yytoken->category, yytoken->text);
 #endif
+}
+
+/* reallocate yytoken->sval to append string and terminating null */
+void yytoken_realloc_sval(char *s)
+{
+	size_t size = sizeof(yytoken->sval)+sizeof(s)+sizeof(char);
+	yytoken->sval = realloc(yytoken->sval, size);
+}
+
+/* append char literal to yytoken->sval string (to parse escapes) */
+void yytoken_append_char_sval(char c)
+{
+	size_t len = strlen(yytoken->sval);
+	yytoken_realloc_sval(&c);
+	yytoken->sval[len] = c;
+}
+
+/* append string literal to yytoken->sval string (with null) */
+void yytoken_append_string_sval(char *s)
+{
+	yytoken_realloc_sval(s);
+	strcat(yytoken->sval, s);
+}
+
+/* reallocate yytoken->text to append string and terminating null */
+void yytoken_realloc_text(char *s)
+{
+	size_t size = sizeof(yytoken->text)+sizeof(s)+sizeof(char);
+	yytoken->text = realloc(yytoken->text, size);
+}
+
+/* append string literal yytoken->text (with null) */
+void yytoken_append_text(char *s)
+{
+	yytoken_realloc_text(s);
+	strcat(yytoken->text, s);
 }
