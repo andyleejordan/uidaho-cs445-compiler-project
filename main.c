@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -15,7 +16,7 @@ struct tokenlist *head = NULL;
 /* TODO return yywrap value*/
 int parse_file()
 {
-	while (1) {
+	while (true) {
 		int tmp = yylex();
 		if (tmp == 0) {
 			return 0;
