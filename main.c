@@ -16,14 +16,18 @@ struct tokenlist *head = NULL;
 struct tokenlist *tail = NULL;
 
 /* TODO return yywrap value*/
-int parse_file()
+void parse_file()
 {
 	while (true) {
-		int tmp = yylex();
-		if (tmp == 0) {
-			return 0;
-		} else if (tmp < 0) {
-			fprintf(stderr, "yylex returned %d on line %d\n", tmp, yytoken->lineno);
+		int temp = yylex();
+		if (temp == ENDOFFILE) {
+			return;
+		} else if (temp == BADTOKEN || temp == NEWLINE) {
+			fprintf(stderr, "Lexical error on line %d: %s\n", yytoken->lineno, yytoken->text);
+			exit(1); /* required to exit with 1 on lexical error */
+		} else if ((temp < 257 && temp != ENDOFFILE && temp != NEWLINE)
+		           || temp > BADTOKEN) {
+			fprintf(stderr, "Unkown return from yylex %d\n", temp);
 			exit(EXIT_FAILURE);
 		}
 		tokenlist_append(yytoken, &tail);

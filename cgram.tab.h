@@ -1,3 +1,6 @@
+#define NEWLINE -2
+#define ENDOFFILE -1
+
 /* keywords */
 #define AUTO 257
 #define BOOL 258
@@ -101,5 +104,4 @@
 #define QUEST 352
 
 #define IDENTIFIER 353
-#define TYPEDEF_NAME 354
-#define BAD_TOKEN 355
+#define BADTOKEN 354

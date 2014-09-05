@@ -50,7 +50,7 @@ void yytoken_append_text(char *s);
 <COMMENT>{
 	[^*]*           { /* eat comment in chunks */ }
 	"*"+[^*/]*      { /* eat the lone star */ }
-	"*"+"/"         { BEGIN(INITIAL); /* stop eating comment */ }
+	"*"+"/"         { BEGIN(INITIAL); }
 }
 
   /* keywords */
@@ -65,7 +65,8 @@ void yytoken_append_text(char *s);
 	"<iostream>"    { iostream = true; BEGIN(INITIAL); }
 	"<string>"      { string   = true; BEGIN(INITIAL); }
 	"<iomanip>"     { iomanip  = true; BEGIN(INITIAL); }
-	"<"[^<>]+">"    { BEGIN(INITIAL); /* TODO error on unrecognized libraries */ }
+	"<"[^<>]*">"    { BEGIN(INITIAL); /* TODO error on unrecognized libraries */ }
+	\"[^\"]*\"      { BEGIN(INITIAL); /* TODO process include files */ }
 }
 "auto"                  { create_token(AUTO); return AUTO; }
 "bool"                  { create_token(BOOL); return BOOL; }
@@ -123,10 +124,10 @@ void yytoken_append_text(char *s);
 
 \'                      { create_token(CCON); BEGIN(CHR); }
 <CHR>{
-	\'              { BEGIN(INITIAL); yytoken_append_text(yytext); return CCON; }
-	\n              { BEGIN(INITIAL); return -2; } /* unterminated string constant */
+	\'              { yytoken_append_text(yytext); BEGIN(INITIAL); return CCON; }
+	\n              { return NEWLINE; }
 	"\\'"           { yytoken->ival = '\''; yytoken_append_text(yytext); }
-	"\\\""          { yytoken->ival = '"'; yytoken_append_text(yytext); }
+	"\\\""          { yytoken->ival = '"';  yytoken_append_text(yytext); }
 	"\\?"           { yytoken->ival = '\?'; yytoken_append_text(yytext); }
 	"\\a"           { yytoken->ival = '\a'; yytoken_append_text(yytext); }
 	"\\b"           { yytoken->ival = '\b'; yytoken_append_text(yytext); }
@@ -141,10 +142,10 @@ void yytoken_append_text(char *s);
 
 L?\"                    { create_token(SCON); BEGIN(STR); }
 <STR>{
-	\"              { yytoken_append_char_sval('\0'); yytoken_append_text(yytext); BEGIN(INITIAL); return SCON; /* end of string*/ }
-	\n              { BEGIN(INITIAL); return -2; } /* unterminated string constant */
+	\"              { yytoken_append_char_sval('\0'); yytoken_append_text(yytext); BEGIN(INITIAL); return SCON; }
+	\n              { return NEWLINE; }
 	"\\'"           { yytoken_append_char_sval('\''); yytoken_append_text(yytext); }
-	"\\\""          { yytoken_append_char_sval('"'); yytoken_append_text(yytext); }
+	"\\\""          { yytoken_append_char_sval('"');  yytoken_append_text(yytext); }
 	"\\?"           { yytoken_append_char_sval('\?'); yytoken_append_text(yytext); }
 	"\\a"           { yytoken_append_char_sval('\a'); yytoken_append_text(yytext); }
 	"\\b"           { yytoken_append_char_sval('\b'); yytoken_append_text(yytext); }
@@ -206,7 +207,8 @@ L?\"                    { create_token(SCON); BEGIN(STR); }
 
 {L}({L}|{D})*           { create_token(IDENTIFIER); return IDENTIFIER; }
 
-<<EOF>>                 { return 0; }
+<<EOF>>                 { return ENDOFFILE; }
+.                       { create_token(BADTOKEN); return BADTOKEN; }
 %%
 
 void create_token(int category)
