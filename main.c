@@ -23,7 +23,7 @@ int parse_file()
 		if (tmp == 0) {
 			return 0;
 		} else if (tmp < 0) {
-			fprintf(stderr, "yylex returned %d\n", tmp);
+			fprintf(stderr, "yylex returned %d on line %d\n", tmp, yytoken->lineno);
 			exit(EXIT_FAILURE);
 		}
 		tokenlist_append(yytoken, &tail);
