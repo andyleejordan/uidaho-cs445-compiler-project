@@ -42,21 +42,22 @@ int main(int argc, char **argv)
 		}
 	}
 
-	printf("Category\tText\tLineno\tFilename\tIval/Sval\n");
+	printf("Line/Filename    Token   Text -> Ival/Sval\n");
+	printf("------------------------------------------\n");
 	struct tokenlist *tmp = head;
 	while (tmp != NULL) {
-		printf("%d\t%s\t%d\t%s",
-		       tmp->data->category,
-		       tmp->data->text,
+		printf("%-5d%-12s%-8d%s ",
 		       tmp->data->lineno,
-		       tmp->data->filename);
+		       tmp->data->filename,
+		       tmp->data->category,
+		       tmp->data->text);
 
 		if (tmp->data->category == ICON)
-			printf("\t%d", tmp->data->ival);
+			printf("-> %d", tmp->data->ival);
 		else if (tmp->data->category == CCON)
-			printf("\t%c", tmp->data->ival);
+			printf("-> %c", tmp->data->ival);
 		else if (tmp->data->category == SCON)
-			printf("\t%s", tmp->data->sval);
+			printf("-> %s", tmp->data->sval);
 
 		printf("\n");
 		tmp = tmp->next;
