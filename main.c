@@ -11,7 +11,9 @@ extern FILE *yyin;
 
 struct token *yytoken = NULL;
 char *filename = NULL;
+
 struct tokenlist *head = NULL;
+struct tokenlist *tail = NULL;
 
 /* TODO return yywrap value*/
 int parse_file()
@@ -24,12 +26,14 @@ int parse_file()
 			fprintf(stderr, "yylex returned %d\n", tmp);
 			exit(EXIT_FAILURE);
 		}
-		head = tokenlist_prepend(yytoken, head);
+		tokenlist_append(yytoken, &tail);
 	}
 }
 
 int main(int argc, char **argv)
 {
+	tokenlist_init(&head, &tail);
+
 	if (argc == 1) {
 		filename = "stdin";
 		yyin = stdin;
@@ -44,8 +48,8 @@ int main(int argc, char **argv)
 
 	printf("Line/Filename    Token   Text -> Ival/Sval\n");
 	printf("------------------------------------------\n");
-	struct tokenlist *tmp = head;
-	while (tmp != NULL) {
+	struct tokenlist *tmp = head->next;
+	while (tmp->data != NULL) {
 		printf("%-5d%-12s%-8d%s ",
 		       tmp->data->lineno,
 		       tmp->data->filename,

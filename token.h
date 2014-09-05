@@ -17,9 +17,16 @@ struct tokenlist
 {
 	struct token *data;
 	struct tokenlist *next;
+	struct tokenlist *prev;
 };
 
-/* prepends token to list and returns pointer to new head of list */
-struct tokenlist *tokenlist_prepend(struct token *token, struct tokenlist *list);
+/* initializes head and tail of tokenlist; data fields to NULL */
+void tokenlist_init(struct tokenlist **head, struct tokenlist **tail);
+
+/* prepends token to head of list and returns pointer to new head */
+void tokenlist_prepend(struct token *token, struct tokenlist **head);
+
+/* appends token to tail of list and returns pointer to new tail */
+void tokenlist_append(struct token *token, struct tokenlist **tail);
 
 #endif /* TOKEN_H */
