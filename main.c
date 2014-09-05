@@ -20,13 +20,12 @@ void parse_file()
 {
 	while (true) {
 		int temp = yylex();
-		if (temp == ENDOFFILE) {
+		if (temp == 0) {
 			return;
-		} else if (temp == BADTOKEN || temp == NEWLINE) {
+		} else if (temp == BADTOKEN) {
 			fprintf(stderr, "Lexical error on line %d: %s\n", yytoken->lineno, yytoken->text);
 			exit(1); /* required to exit with 1 on lexical error */
-		} else if ((temp < 257 && temp != ENDOFFILE && temp != NEWLINE)
-		           || temp > BADTOKEN) {
+		} else if (temp < BEGTOKEN || temp > ENDTOKEN ) {
 			fprintf(stderr, "Unkown return from yylex %d\n", temp);
 			exit(EXIT_FAILURE);
 		}

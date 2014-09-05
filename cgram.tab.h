@@ -1,5 +1,5 @@
-#define NEWLINE -2
-#define ENDOFFILE -1
+#define BEGTOKEN AUTO
+#define ENDTOKEN BADTOKEN
 
 /* keywords */
 #define AUTO 257

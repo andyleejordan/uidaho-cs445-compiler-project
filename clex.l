@@ -125,7 +125,7 @@ void yytoken_append_text(char *s);
 \'                      { create_token(CCON); BEGIN(CHR); }
 <CHR>{
 	\'              { yytoken_append_text(yytext); BEGIN(INITIAL); return CCON; }
-	\n              { return NEWLINE; }
+	\n              { create_token(BADTOKEN); return BADTOKEN; }
 	"\\'"           { yytoken->ival = '\''; yytoken_append_text(yytext); }
 	"\\\""          { yytoken->ival = '"';  yytoken_append_text(yytext); }
 	"\\?"           { yytoken->ival = '\?'; yytoken_append_text(yytext); }
@@ -138,12 +138,13 @@ void yytoken_append_text(char *s);
 	"\\v"           { yytoken->ival = '\v'; yytoken_append_text(yytext); }
 	"\\\\"          { yytoken->ival = '\\'; yytoken_append_text(yytext); }
 	[^\\"'"]        { yytoken->ival = *yytext; yytoken_append_text(yytext); }
+	.               { create_token(BADTOKEN); return BADTOKEN; }
 }
 
 L?\"                    { create_token(SCON); BEGIN(STR); }
 <STR>{
 	\"              { yytoken_append_char_sval('\0'); yytoken_append_text(yytext); BEGIN(INITIAL); return SCON; }
-	\n              { return NEWLINE; }
+	\n              { create_token(BADTOKEN); return BADTOKEN; }
 	"\\'"           { yytoken_append_char_sval('\''); yytoken_append_text(yytext); }
 	"\\\""          { yytoken_append_char_sval('"');  yytoken_append_text(yytext); }
 	"\\?"           { yytoken_append_char_sval('\?'); yytoken_append_text(yytext); }
@@ -156,6 +157,7 @@ L?\"                    { create_token(SCON); BEGIN(STR); }
 	"\\v"           { yytoken_append_char_sval('\v'); yytoken_append_text(yytext); }
 	"\\\\"          { yytoken_append_char_sval('\\'); yytoken_append_text(yytext); }
 	[^\\\n\"]+      { yytoken_append_string_sval(yytext); yytoken_append_text(yytext); }
+	.               { create_token(BADTOKEN); return BADTOKEN; }
 }
 
   /* operators */
