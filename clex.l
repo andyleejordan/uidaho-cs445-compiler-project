@@ -39,6 +39,9 @@ void create_token(int category);
 void yytoken_append_char_sval(char c);
 void yytoken_append_string_sval(char *s);
 void yytoken_append_text(char *s);
+
+/* TODO keep track of included files and prior file names */
+void handle_include(char *s);
 %}
 
 %%
@@ -56,7 +59,8 @@ void yytoken_append_text(char *s);
   /* keywords */
 "#include"              { BEGIN(INC); }
 <INC>{
-	[ \t\v\f]+      { /* eat whitespace */ }
+	[ \t]*          { /* eat whitespace */ }
+	/* TODO add libraries to their own struct */
 	"<cstdlib>"     { cstdlib  = true; BEGIN(INITIAL); }
 	"<cmath>"       { cmath	   = true; BEGIN(INITIAL); }
 	"<ctime>"       { ctime	   = true; BEGIN(INITIAL); }
@@ -66,8 +70,10 @@ void yytoken_append_text(char *s);
 	"<string>"      { string   = true; BEGIN(INITIAL); }
 	"<iomanip>"     { iomanip  = true; BEGIN(INITIAL); }
 	"<"[^<>]*">"    { BEGIN(INITIAL); /* TODO error on unrecognized libraries */ }
-	\"[^\"]*\"      { BEGIN(INITIAL); /* TODO process include files */ }
+	\"[^\"]+\"      { handle_include(yytext); BEGIN(INITIAL); }
+	.               { create_token(BADTOKEN); return BADTOKEN; }
 }
+
 "auto"                  { create_token(AUTO); return AUTO; }
 "bool"                  { create_token(BOOL); return BOOL; }
 "break"                 { create_token(BREAK); return BREAK; }
@@ -209,7 +215,7 @@ L?\"                    { create_token(SCON); BEGIN(STR); }
 
 {L}({L}|{D})*           { create_token(IDENTIFIER); return IDENTIFIER; }
 
-<<EOF>>                 { return ENDOFFILE; }
+<<EOF>>                 { yypop_buffer_state(); if (!YY_CURRENT_BUFFER) yyterminate(); }
 .                       { create_token(BADTOKEN); return BADTOKEN; }
 %%
 
@@ -271,4 +277,26 @@ void yytoken_append_text(char *s)
 {
 	yytoken_realloc_text(s);
 	strcat(yytoken->text, s);
+}
+
+void handle_include(char *s)
+{
+	size_t len = strlen(s) - 2; /* size without surrounding quotes */
+	char *buffer = realloc(filename, len+1);
+	if (buffer) {
+		filename = buffer;
+		strncpy(filename, s+1, len); /* copy substring */
+		filename[len] = '\0';
+	} else {
+		free(filename);
+		fprintf(stderr, "Error reallocating memory for filename");
+		exit(EXIT_FAILURE);
+	}
+	yyin = fopen(filename, "r");
+	if (yyin) {
+		yypush_buffer_state(yy_create_buffer(yyin, YY_BUF_SIZE));
+	} else {
+		fprintf(stderr, "Error opening include file \"%s\"\n", filename);
+		exit(EXIT_FAILURE);
+	}
 }
