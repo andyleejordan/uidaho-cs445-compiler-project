@@ -1,6 +1,5 @@
 /* -*- mode: flex; -*- */
-%option warn nodefault
-%option yylineno
+%option warn nodefault yylineno noyywrap
 %x COMMENT
 %x STR
 %x CHR
@@ -209,12 +208,6 @@ L?\"                    { create_token(SCON); BEGIN(STR); }
 
 <<EOF>>                 { return 0; }
 %%
-
-  /* TODO improve this */
-int yywrap()
-{
-	return 1;
-}
 
 void create_token(int category)
 {
