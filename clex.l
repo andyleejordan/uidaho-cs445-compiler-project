@@ -212,10 +212,11 @@ L?\"                    { new_token(SCON); BEGIN(STR); }
 
 {L}({L}|{D})*           { new_token(IDENTIFIER); return IDENTIFIER; }
 
-<<EOF>>                 { yypop_buffer_state(); list_pop(filenames); if (!YY_CURRENT_BUFFER) yyterminate(); }
 .                       { new_token(BADTOKEN); return BADTOKEN; }
-%%
 
+<<EOF>>                 { yypop_buffer_state(); list_pop(filenames); yylineno = 1; if (!YY_CURRENT_BUFFER) yyterminate(); }
+
+%%
 
 void handle_include(char *s)
 {
@@ -230,6 +231,7 @@ void handle_include(char *s)
 	yyin = fopen(filename, "r");
 	if (yyin == NULL)
 		goto error_fopen;
+	yylineno = 1;
 	yypush_buffer_state(yy_create_buffer(yyin, YY_BUF_SIZE));
 
 	return;
