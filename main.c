@@ -64,8 +64,8 @@ int main(int argc, char **argv)
 
 	printf("Line/Filename    Token   Text -> Ival/Sval\n");
 	printf("------------------------------------------\n");
-	struct list_node *iter = tokens->sentinel->next;
-	while (!iter->data.sentinel) {
+	struct list_node *iter = list_head(tokens);
+	while (!list_end(iter)) {
 		printf("%-5d%-12s%-8d%s ",
 		       iter->data.token->lineno,
 		       iter->data.token->filename,
