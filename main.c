@@ -25,6 +25,7 @@ void parse_files()
 			goto error_unknown_return_value;
 		list_push(tokens, (union data)yytoken);
 	}
+	yylex_destroy();
 	return;
 
  error_badtoken: {
