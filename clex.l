@@ -35,11 +35,10 @@ bool string   = false;
 bool iomanip  = false;
 
 /* allocates and prepares token, saving pointer into yytoken */
-void create_token(int category);
-
-void yytoken_append_char_sval(char c);
-void yytoken_append_string_sval(char *s);
-void yytoken_append_text(char *s);
+void new_token(int category)
+{
+	yytoken = token_create(category, yylineno, yytext, list_peek(filenames).filename);
+}
 
 /* TODO keep track of included files and prior file names */
 void handle_include(char *s);
@@ -72,214 +71,157 @@ void handle_include(char *s);
 	"<iomanip>"     { iomanip  = true; BEGIN(INITIAL); }
 	"<"[^<>]*">"    { BEGIN(INITIAL); /* TODO error on unrecognized libraries */ }
 	\"[^\"]+\"      { handle_include(yytext); BEGIN(INITIAL); }
-	.               { create_token(BADTOKEN); return BADTOKEN; }
+	.               { new_token(BADTOKEN); return BADTOKEN; }
 }
 
-"auto"                  { create_token(AUTO); return AUTO; }
-"bool"                  { create_token(BOOL); return BOOL; }
-"break"                 { create_token(BREAK); return BREAK; }
-"case"                  { create_token(CASE); return CASE; }
-"char"                  { create_token(CHAR); return CHAR; }
-"class"                 { create_token(CLASS); return CLASS; }
-"const"                 { create_token(CONST); return CONST; }
-"continue"              { create_token(CONTINUE); return CONTINUE; }
-"default"               { create_token(DEFAULT); return DEFAULT; }
-"delete"                { create_token(DELETE); return DELETE; }
-"do"                    { create_token(DO); return DO; }
-"double"                { create_token(DOUBLE); return DOUBLE; }
-"..."                   { create_token(ELIPSIS); return ELIPSIS; }
-"else"                  { create_token(ELSE); return ELSE; }
-"enum"                  { create_token(ENUM); return ENUM; }
-"extern"                { create_token(EXTERN); return EXTERN; }
-"false"                 { create_token(FALSE); return FALSE; }
-"float"                 { create_token(FLOAT); return FLOAT; }
-"for"                   { create_token(FOR); return FOR; }
-"friend"                { create_token(FRIEND); return FRIEND; }
-"goto"                  { create_token(GOTO); return GOTO; }
-"if"                    { create_token(IF); return IF; }
-"int"                   { create_token(INT); return INT; }
-"long"                  { create_token(LONG); return LONG; }
-"namespace"             { create_token(NAMESPACE); return NAMESPACE; }
-"new"                   { create_token(NEW); return NEW; }
-"private"               { create_token(PRIVATE); return PRIVATE; }
-"protected"             { create_token(PROTECTED); return PROTECTED; }
-"public"                { create_token(PUBLIC); return PUBLIC; }
-"register"              { create_token(REGISTER); return REGISTER; }
-"return"                { create_token(RETURN); return RETURN; }
-"short"                 { create_token(SHORT); return SHORT; }
-"signed"                { create_token(SIGNED); return SIGNED; }
-"sizeof"                { create_token(SIZEOF); return SIZEOF; }
-"static"                { create_token(STATIC); return STATIC; }
-"struct"                { create_token(STRUCT); return STRUCT; }
-"switch"                { create_token(SWITCH); return SWITCH; }
-"this"                  { create_token(THIS); return THIS; }
-"true"                  { create_token(TRUE); return TRUE; }
-"typedef"               { create_token(TYPEDEF); return TYPEDEF; }
-"union"                 { create_token(UNION); return UNION; }
-"unsigned"              { create_token(UNSIGNED); return UNSIGNED; }
-"using"                 { create_token(USING); return USING; }
-"virtual"               { create_token(VIRTUAL); return VIRTUAL; }
-"void"                  { create_token(VOID); return VOID; }
-"volatile"              { create_token(VOLATILE); return VOLATILE; }
-"while"                 { create_token(WHILE); return WHILE; }
+"auto"                  { new_token(AUTO); return AUTO; }
+"bool"                  { new_token(BOOL); return BOOL; }
+"break"                 { new_token(BREAK); return BREAK; }
+"case"                  { new_token(CASE); return CASE; }
+"char"                  { new_token(CHAR); return CHAR; }
+"class"                 { new_token(CLASS); return CLASS; }
+"const"                 { new_token(CONST); return CONST; }
+"continue"              { new_token(CONTINUE); return CONTINUE; }
+"default"               { new_token(DEFAULT); return DEFAULT; }
+"delete"                { new_token(DELETE); return DELETE; }
+"do"                    { new_token(DO); return DO; }
+"double"                { new_token(DOUBLE); return DOUBLE; }
+"..."                   { new_token(ELIPSIS); return ELIPSIS; }
+"else"                  { new_token(ELSE); return ELSE; }
+"enum"                  { new_token(ENUM); return ENUM; }
+"extern"                { new_token(EXTERN); return EXTERN; }
+"false"                 { new_token(FALSE); return FALSE; }
+"float"                 { new_token(FLOAT); return FLOAT; }
+"for"                   { new_token(FOR); return FOR; }
+"friend"                { new_token(FRIEND); return FRIEND; }
+"goto"                  { new_token(GOTO); return GOTO; }
+"if"                    { new_token(IF); return IF; }
+"int"                   { new_token(INT); return INT; }
+"long"                  { new_token(LONG); return LONG; }
+"namespace"             { new_token(NAMESPACE); return NAMESPACE; }
+"new"                   { new_token(NEW); return NEW; }
+"private"               { new_token(PRIVATE); return PRIVATE; }
+"protected"             { new_token(PROTECTED); return PROTECTED; }
+"public"                { new_token(PUBLIC); return PUBLIC; }
+"register"              { new_token(REGISTER); return REGISTER; }
+"return"                { new_token(RETURN); return RETURN; }
+"short"                 { new_token(SHORT); return SHORT; }
+"signed"                { new_token(SIGNED); return SIGNED; }
+"sizeof"                { new_token(SIZEOF); return SIZEOF; }
+"static"                { new_token(STATIC); return STATIC; }
+"struct"                { new_token(STRUCT); return STRUCT; }
+"switch"                { new_token(SWITCH); return SWITCH; }
+"this"                  { new_token(THIS); return THIS; }
+"true"                  { new_token(TRUE); return TRUE; }
+"typedef"               { new_token(TYPEDEF); return TYPEDEF; }
+"union"                 { new_token(UNION); return UNION; }
+"unsigned"              { new_token(UNSIGNED); return UNSIGNED; }
+"using"                 { new_token(USING); return USING; }
+"virtual"               { new_token(VIRTUAL); return VIRTUAL; }
+"void"                  { new_token(VOID); return VOID; }
+"volatile"              { new_token(VOLATILE); return VOLATILE; }
+"while"                 { new_token(WHILE); return WHILE; }
 
   /* constants */
-{D}+{IS}?               { create_token(ICON); return ICON; }
-{D}+{FS}?               { create_token(FCON); return FCON; }
-{D}*"."{D}+{FS}?        { create_token(FCON); return FCON; }
-{D}+"."{D}*{FS}?        { create_token(FCON); return FCON; }
+{D}+{IS}?               { new_token(ICON); return ICON; }
+{D}+{FS}?               { new_token(FCON); return FCON; }
+{D}*"."{D}+{FS}?        { new_token(FCON); return FCON; }
+{D}+"."{D}*{FS}?        { new_token(FCON); return FCON; }
 
-\'                      { create_token(CCON); BEGIN(CHR); }
+\'                      { new_token(CCON); BEGIN(CHR); }
 <CHR>{
-	\'              { yytoken_append_text(yytext); BEGIN(INITIAL); return CCON; }
-	\n              { create_token(BADTOKEN); return BADTOKEN; }
-	"\\'"           { yytoken->ival = '\''; yytoken_append_text(yytext); }
-	"\\\""          { yytoken->ival = '"';  yytoken_append_text(yytext); }
-	"\\?"           { yytoken->ival = '\?'; yytoken_append_text(yytext); }
-	"\\a"           { yytoken->ival = '\a'; yytoken_append_text(yytext); }
-	"\\b"           { yytoken->ival = '\b'; yytoken_append_text(yytext); }
-	"\\f"           { yytoken->ival = '\f'; yytoken_append_text(yytext); }
-	"\\n"           { yytoken->ival = '\n'; yytoken_append_text(yytext); }
-	"\\r"           { yytoken->ival = '\r'; yytoken_append_text(yytext); }
-	"\\t"           { yytoken->ival = '\t'; yytoken_append_text(yytext); }
-	"\\v"           { yytoken->ival = '\v'; yytoken_append_text(yytext); }
-	"\\\\"          { yytoken->ival = '\\'; yytoken_append_text(yytext); }
-	[^\\"'"]        { yytoken->ival = *yytext; yytoken_append_text(yytext); }
-	.               { create_token(BADTOKEN); return BADTOKEN; }
+	\'              { token_append_text(yytoken, yytext); BEGIN(INITIAL); return CCON; }
+	\n              { new_token(BADTOKEN); return BADTOKEN; }
+	"\\'"           { yytoken->ival = '\''; token_append_text(yytoken, yytext); }
+	"\\\""          { yytoken->ival = '"';  token_append_text(yytoken, yytext); }
+	"\\?"           { yytoken->ival = '\?'; token_append_text(yytoken, yytext); }
+	"\\a"           { yytoken->ival = '\a'; token_append_text(yytoken, yytext); }
+	"\\b"           { yytoken->ival = '\b'; token_append_text(yytoken, yytext); }
+	"\\f"           { yytoken->ival = '\f'; token_append_text(yytoken, yytext); }
+	"\\n"           { yytoken->ival = '\n'; token_append_text(yytoken, yytext); }
+	"\\r"           { yytoken->ival = '\r'; token_append_text(yytoken, yytext); }
+	"\\t"           { yytoken->ival = '\t'; token_append_text(yytoken, yytext); }
+	"\\v"           { yytoken->ival = '\v'; token_append_text(yytoken, yytext); }
+	"\\\\"          { yytoken->ival = '\\'; token_append_text(yytoken, yytext); }
+	[^\\"'"]        { yytoken->ival = *yytext; token_append_text(yytoken, yytext); }
+	.               { new_token(BADTOKEN); return BADTOKEN; }
 }
 
-L?\"                    { create_token(SCON); BEGIN(STR); }
+L?\"                    { new_token(SCON); BEGIN(STR); }
 <STR>{
-	\"              { yytoken_append_char_sval('\0'); yytoken_append_text(yytext); BEGIN(INITIAL); return SCON; }
-	\n              { create_token(BADTOKEN); return BADTOKEN; }
-	"\\'"           { yytoken_append_char_sval('\''); yytoken_append_text(yytext); }
-	"\\\""          { yytoken_append_char_sval('"');  yytoken_append_text(yytext); }
-	"\\?"           { yytoken_append_char_sval('\?'); yytoken_append_text(yytext); }
-	"\\a"           { yytoken_append_char_sval('\a'); yytoken_append_text(yytext); }
-	"\\b"           { yytoken_append_char_sval('\b'); yytoken_append_text(yytext); }
-	"\\f"           { yytoken_append_char_sval('\f'); yytoken_append_text(yytext); }
-	"\\n"           { yytoken_append_char_sval('\n'); yytoken_append_text(yytext); }
-	"\\r"           { yytoken_append_char_sval('\r'); yytoken_append_text(yytext); }
-	"\\t"           { yytoken_append_char_sval('\t'); yytoken_append_text(yytext); }
-	"\\v"           { yytoken_append_char_sval('\v'); yytoken_append_text(yytext); }
-	"\\\\"          { yytoken_append_char_sval('\\'); yytoken_append_text(yytext); }
-	[^\\\n\"]+      { yytoken_append_string_sval(yytext); yytoken_append_text(yytext); }
-	.               { create_token(BADTOKEN); return BADTOKEN; }
+	\"              { token_append_sval_char(yytoken, '\0'); token_append_text(yytoken, yytext); BEGIN(INITIAL); return SCON; }
+	\n              { new_token(BADTOKEN); return BADTOKEN; }
+	"\\'"           { token_append_sval_char(yytoken, '\''); token_append_text(yytoken, yytext); }
+	"\\\""          { token_append_sval_char(yytoken, '"');  token_append_text(yytoken, yytext); }
+	"\\?"           { token_append_sval_char(yytoken, '\?'); token_append_text(yytoken, yytext); }
+	"\\a"           { token_append_sval_char(yytoken, '\a'); token_append_text(yytoken, yytext); }
+	"\\b"           { token_append_sval_char(yytoken, '\b'); token_append_text(yytoken, yytext); }
+	"\\f"           { token_append_sval_char(yytoken, '\f'); token_append_text(yytoken, yytext); }
+	"\\n"           { token_append_sval_char(yytoken, '\n'); token_append_text(yytoken, yytext); }
+	"\\r"           { token_append_sval_char(yytoken, '\r'); token_append_text(yytoken, yytext); }
+	"\\t"           { token_append_sval_char(yytoken, '\t'); token_append_text(yytoken, yytext); }
+	"\\v"           { token_append_sval_char(yytoken, '\v'); token_append_text(yytoken, yytext); }
+	"\\\\"          { token_append_sval_char(yytoken, '\\'); token_append_text(yytoken, yytext); }
+	[^\\\n\"]+      { token_append_sval_string(yytoken, yytext); token_append_text(yytoken, yytext); }
+	.               { new_token(BADTOKEN); return BADTOKEN; }
 }
 
   /* operators */
-">>="                   { create_token(SRASN); return SRASN; }
-"<<="                   { create_token(SLASN); return SLASN; }
-"+="                    { create_token(PLASN); return PLASN; }
-"-="                    { create_token(MIASN); return MIASN; }
-"*="                    { create_token(MUASN); return MUASN; }
-"/="                    { create_token(DIASN); return DIASN; }
-"%="                    { create_token(MOASN); return MOASN; }
-"&="                    { create_token(ANASN); return ANASN; }
-"^="                    { create_token(ERASN); return ERASN; }
-"|="                    { create_token(ORASN); return ORASN; }
-">>"                    { create_token(SHR); return SHR; }
-"<<"                    { create_token(SHL); return SHL; }
-"++"                    { create_token(INCOP); return INCOP; }
-"--"                    { create_token(DECOP); return DECOP; }
-"->"                    { create_token(FOLLOW); return FOLLOW; }
-"&&"                    { create_token(ANDAND); return ANDAND; }
-"||"                    { create_token(OROR); return OROR; }
-"<="                    { create_token(LE); return LE; }
-">="                    { create_token(GE); return GE; }
-"=="                    { create_token(EQ); return EQ; }
-"!="                    { create_token(NE); return NE; }
-";"                     { create_token(SM); return SM; }
-"{"                     { create_token(LC); return LC; }
-"}"                     { create_token(RC); return RC; }
-","                     { create_token(CM); return CM; }
-":"                     { create_token(COLON); return COLON; }
-"="                     { create_token(ASN); return ASN; }
-"("                     { create_token(LP); return LP; }
-")"                     { create_token(RP); return RP; }
-"["                     { create_token(LB); return LB; }
-"]"                     { create_token(RB); return RB; }
-"."                     { create_token(DOT); return DOT; }
-"&"                     { create_token(AND); return AND; }
-"!"                     { create_token(BANG); return BANG; }
-"~"                     { create_token(TILDE); return TILDE; }
-"-"                     { create_token(MINUS); return MINUS; }
-"+"                     { create_token(PLUS); return PLUS; }
-"*"                     { create_token(MUL); return MUL; }
-"/"                     { create_token(DIV); return DIV; }
-"%"                     { create_token(MOD); return MOD; }
-"<"                     { create_token(LT); return LT; }
-">"                     { create_token(GT); return GT; }
-"^"                     { create_token(ER); return ER; }
-"|"                     { create_token(OR); return OR; }
-"?"                     { create_token(QUEST); return QUEST; }
+">>="                   { new_token(SRASN); return SRASN; }
+"<<="                   { new_token(SLASN); return SLASN; }
+"+="                    { new_token(PLASN); return PLASN; }
+"-="                    { new_token(MIASN); return MIASN; }
+"*="                    { new_token(MUASN); return MUASN; }
+"/="                    { new_token(DIASN); return DIASN; }
+"%="                    { new_token(MOASN); return MOASN; }
+"&="                    { new_token(ANASN); return ANASN; }
+"^="                    { new_token(ERASN); return ERASN; }
+"|="                    { new_token(ORASN); return ORASN; }
+">>"                    { new_token(SHR); return SHR; }
+"<<"                    { new_token(SHL); return SHL; }
+"++"                    { new_token(INCOP); return INCOP; }
+"--"                    { new_token(DECOP); return DECOP; }
+"->"                    { new_token(FOLLOW); return FOLLOW; }
+"&&"                    { new_token(ANDAND); return ANDAND; }
+"||"                    { new_token(OROR); return OROR; }
+"<="                    { new_token(LE); return LE; }
+">="                    { new_token(GE); return GE; }
+"=="                    { new_token(EQ); return EQ; }
+"!="                    { new_token(NE); return NE; }
+";"                     { new_token(SM); return SM; }
+"{"                     { new_token(LC); return LC; }
+"}"                     { new_token(RC); return RC; }
+","                     { new_token(CM); return CM; }
+":"                     { new_token(COLON); return COLON; }
+"="                     { new_token(ASN); return ASN; }
+"("                     { new_token(LP); return LP; }
+")"                     { new_token(RP); return RP; }
+"["                     { new_token(LB); return LB; }
+"]"                     { new_token(RB); return RB; }
+"."                     { new_token(DOT); return DOT; }
+"&"                     { new_token(AND); return AND; }
+"!"                     { new_token(BANG); return BANG; }
+"~"                     { new_token(TILDE); return TILDE; }
+"-"                     { new_token(MINUS); return MINUS; }
+"+"                     { new_token(PLUS); return PLUS; }
+"*"                     { new_token(MUL); return MUL; }
+"/"                     { new_token(DIV); return DIV; }
+"%"                     { new_token(MOD); return MOD; }
+"<"                     { new_token(LT); return LT; }
+">"                     { new_token(GT); return GT; }
+"^"                     { new_token(ER); return ER; }
+"|"                     { new_token(OR); return OR; }
+"?"                     { new_token(QUEST); return QUEST; }
 
-{L}({L}|{D})*           { create_token(IDENTIFIER); return IDENTIFIER; }
+{L}({L}|{D})*           { new_token(IDENTIFIER); return IDENTIFIER; }
 
-<<EOF>>                 { yypop_buffer_state(); if (!YY_CURRENT_BUFFER) yyterminate(); }
-.                       { create_token(BADTOKEN); return BADTOKEN; }
+<<EOF>>                 { yypop_buffer_state(); list_pop(filenames); if (!YY_CURRENT_BUFFER) yyterminate(); }
+.                       { new_token(BADTOKEN); return BADTOKEN; }
 %%
 
-void create_token(int category)
-{
-	yytoken = malloc(sizeof(*yytoken));
 
-	yytoken->category = category;
-	yytoken->lineno = yylineno;
-
-	yytoken->text = calloc(strlen(yytext)+1, sizeof(char));
-	strcpy(yytoken->text, yytext);
-
-	yytoken->filename = calloc(strlen(filename)+1, sizeof(char));
-	strcpy(yytoken->filename, filename);
-
-	if (category == ICON)
-		yytoken->ival = atoi(yytext);
-
-	if (category == SCON)
-		yytoken->sval = calloc(128, sizeof(char));
-
-#ifdef DEBUG
-	printf("line %d - category %d - lexeme: %s\n", yytoken->lineno, yytoken->category, yytoken->text);
-#endif
-}
-
-/* reallocate yytoken->sval to append string and terminating null */
-void yytoken_realloc_sval(char *s)
-{
-	size_t size = strlen(yytoken->sval)+strlen(s)+1;
-	yytoken->sval = realloc(yytoken->sval, size);
-}
-
-/* append char literal to yytoken->sval string (to parse escapes) */
-void yytoken_append_char_sval(char c)
 void handle_include(char *s)
 {
-	size_t len = strlen(yytoken->sval);
-	yytoken_realloc_sval(&c);
-	yytoken->sval[len] = c;
-}
-
-/* append string literal to yytoken->sval string (with null) */
-void yytoken_append_string_sval(char *s)
-{
-	yytoken_realloc_sval(s);
-	strcat(yytoken->sval, s);
-}
-
-/* reallocate yytoken->text to append string and terminating null */
-void yytoken_realloc_text(char *s)
-{
-	size_t size = strlen(yytoken->text)+strlen(s)+1;
-	yytoken->text = realloc(yytoken->text, size);
-}
-
-/* append string literal yytoken->text (with null) */
-void yytoken_append_text(char *s)
-{
-	yytoken_realloc_text(s);
-	strcat(yytoken->text, s);
-}
 	size_t len = strlen(s) - 2; /* size without surrounding quotes */
 	char *filename = malloc(len+1);
 	if (filename == NULL)
