@@ -86,11 +86,13 @@ int main(int argc, char **argv)
 
 	return EXIT_SUCCESS;
 
- error_list_init:
-	perror("list_init()");
-	return EXIT_FAILURE;
+ error_list_init: {
+		perror("list_init()");
+		return EXIT_FAILURE;
+	}
 
- error_fopen:
-	perror("fopen(filename)");
-	return EXIT_FAILURE;
+ error_fopen: {
+		perror("main: fopen(filename)");
+		return EXIT_FAILURE;
+	}
 }
