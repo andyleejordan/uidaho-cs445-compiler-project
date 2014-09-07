@@ -16,6 +16,9 @@ struct token
 /* malloc token and assign values */
 struct token *token_create(int category, int lineno, char *text, char* filename);
 
+/* free internal values */
+void token_free(struct token *t);
+
 /* append char literal to yytoken->sval string (to parse escapes) */
 void token_append_sval_char(struct token *t, char c);
 

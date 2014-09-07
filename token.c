@@ -26,6 +26,15 @@ struct token *token_create(int category, int lineno, char *text, char* filename)
 	return t;
 }
 
+void token_free(struct token *t)
+{
+	free(t->text);
+	free(t->filename);
+	if (t->category == SCON)
+		free(t->sval);
+	free(t);
+}
+
 /* reallocate t->sval to append string and terminating null */
 void token_realloc_sval(struct token *t, char *s)
 {
