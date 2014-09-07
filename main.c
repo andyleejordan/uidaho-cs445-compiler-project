@@ -98,8 +98,13 @@ int main(int argc, char **argv)
 
 	return EXIT_SUCCESS;
 
+ error_calloc: {
+		perror("main: calloc()");
+		return EXIT_FAILURE;
+	}
+
  error_list_init: {
-		perror("list_init()");
+		perror("main: list_init()");
 		return EXIT_FAILURE;
 	}
 
