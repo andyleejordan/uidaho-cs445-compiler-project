@@ -3,14 +3,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "clex.h"
 #include "token.h"
 #include "list.h"
 #include "cgram.tab.h"
 
-int yylex();
-extern FILE *yyin;
 struct token *yytoken = NULL;
-
 struct list *tokens = NULL;
 struct list *filenames = NULL;
 
