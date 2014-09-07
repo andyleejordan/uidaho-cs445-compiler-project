@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "token.h"
 #include "cgram.tab.h"
@@ -40,6 +41,12 @@ void token_realloc_sval(struct token *t, char *s)
 {
 	size_t size = strlen(t->sval)+strlen(s)+1;
 	t->sval = realloc(t->sval, size);
+	if (t->sval == NULL)
+		goto error;
+	return;
+ error:
+	perror("token_realloc_sval()");
+	exit(EXIT_FAILURE);
 }
 
 void token_append_sval_char(struct token *t, char c)
@@ -60,6 +67,12 @@ void token_realloc_text(struct token *t, char *s)
 {
 	size_t size = strlen(t->text)+strlen(s)+1;
 	t->text = realloc(t->text, size);
+	if (t->text == NULL)
+		goto error;
+	return;
+ error:
+	perror("token_realloc_text()");
+	exit(EXIT_FAILURE);
 }
 
 void token_append_text(struct token *t, char* s)
