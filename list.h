@@ -10,6 +10,7 @@
  */
 
 union data {
+	void *empty;
 	struct token *token;
 	char *filename;
 };

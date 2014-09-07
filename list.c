@@ -176,6 +176,9 @@ union data list_peek(struct list *self)
 	if (self == NULL)
 		goto error_null_self;
 
+	if (list_empty(self))
+		return (union data)NULL;
+
 	return self->sentinel->prev->data;
 
  error_null_self: {
@@ -188,6 +191,9 @@ union data list_peek_front(struct list *self)
 {
 	if (self == NULL)
 		goto error_null_self;
+
+	if (list_empty(self))
+		return (union data)NULL;
 
 	return self->sentinel->next->data;
 
