@@ -30,7 +30,11 @@ struct list
 
 /* initializes head and tail of list; data fields to NULL */
 struct list *list_init();
-
+void list_destroy(struct list *self);
+bool list_empty(struct list *self);
+bool list_end(struct list_node *n);
+struct list_node *list_head(struct list *self);
+struct list_node *list_tail(struct list *self);
 void list_push(struct list *self, union data data);
 void list_push_front(struct list *self, union data data);
 union data list_pop(struct list *self);

@@ -23,6 +23,37 @@ struct list *list_init()
 	}
 }
 
+void list_destroy(struct list *self)
+{
+	while (!list_empty(self)) {
+		union data d = list_pop(self);
+		if (d.token != NULL)
+			free(d.token);
+		else if (d.filename != NULL)
+			free(d.filename);
+	}
+}
+
+bool list_empty(struct list *self)
+{
+	return list_peek(self).sentinel;
+}
+
+bool list_end(struct list_node *n)
+{
+	return n->data.sentinel;
+}
+
+struct list_node *list_head(struct list *self)
+{
+	return self->sentinel->next;
+}
+
+struct list_node *list_tail(struct list *self)
+{
+	return self->sentinel->prev;
+}
+
 void list_push(struct list *self, union data data)
 {
 	if (self == NULL)
@@ -90,7 +121,8 @@ union data list_pop(struct list *self)
 	self->sentinel->prev = n->prev;
 	n->prev->next = self->sentinel;
 
-	free(n);
+	if (!list_end(n))
+		free(n);
 
 	return d;
 
@@ -111,7 +143,8 @@ union data list_pop_front(struct list *self)
 	self->sentinel->next = n->next;
 	n->next->prev = self->sentinel;
 
-	free(n);
+	if (!list_end(n))
+		free(n);
 
 	return d;
 
