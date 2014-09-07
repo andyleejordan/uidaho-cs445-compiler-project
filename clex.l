@@ -1,9 +1,6 @@
 /* -*- mode: flex; -*- */
-%option warn nodefault yylineno noyywrap
-%x COMMENT
-%x STR
-%x CHR
-%x INC
+%option warn nodefault yylineno noyywrap nounput noinput
+%x COMMENT STR CHR INC
 
 D        [0-9]
 L        [a-zA-Z_]
