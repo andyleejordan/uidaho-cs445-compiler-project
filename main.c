@@ -96,6 +96,13 @@ int main(int argc, char **argv)
 		iter = iter->next;
 	}
 
+	while (!list_empty(tokens)) {
+		union data d = list_pop(tokens);
+		token_free(d.token);
+	}
+
+	list_destroy(filenames);
+
 	return EXIT_SUCCESS;
 
  error_calloc: {
