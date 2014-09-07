@@ -13,7 +13,7 @@ struct list *tokens = NULL;
 struct list *filenames = NULL;
 
 /* TODO return yywrap value*/
-void parse_file()
+void parse_files()
 {
 	int category;
 	while (true) {
@@ -52,16 +52,18 @@ int main(int argc, char **argv)
 	if (argc == 1) {
 		list_push(filenames, (union data)"stdin");
 		yyin = stdin;
-		parse_file();
+		yypush_buffer_state(yy_create_buffer(yyin, YY_BUF_SIZE));
 	} else {
 		for (int i = 1; i < argc; ++i) {
 			list_push(filenames, (union data)argv[i]);
-			yyin = fopen(list_peek(filenames).filename, "r");
+			yyin = fopen(argv[i], "r");
 			if (yyin == NULL)
 				goto error_fopen;
-			parse_file();
+			yypush_buffer_state(yy_create_buffer(yyin, YY_BUF_SIZE));
 		}
 	}
+
+	parse_files();
 
 	printf("Line/Filename    Token   Text -> Ival/Sval\n");
 	printf("------------------------------------------\n");
