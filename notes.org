@@ -1,10 +1,10 @@
 * Tasks
 ** TODO Finish [[http://www2.cs.uidaho.edu/~jeffery/courses/445/hw1.html][Homework #1]]
-** TODO yywrap and EOF
+** DONE yywrap and EOF
 ** DONE #include "file"
 - see [[http://flex.sourceforge.net/manual/Multiple-Input-Buffers.html#Multiple-Input-Buffers][manual]]
 ** DONE return 1 for lexical errors
-** TODO proper memory management
+** DONE proper memory management
 - see [[http://flex.sourceforge.net/manual/Memory-Management.html#Memory-Management][manual]]
 - free linked list of tokens
-- flyweight pattern for repeated strings
+** TODO flyweight pattern for repeated strings
