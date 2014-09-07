@@ -50,13 +50,23 @@ int main(int argc, char **argv)
 		goto error_list_init;
 
 	if (argc == 1) {
-		list_push(filenames, (union data)"stdin");
+		char *filename = calloc(strlen("stdin"), sizeof(char));
+		if (filename == NULL)
+			goto error_calloc;
+		strcpy(filename, "stdin");
+
+		list_push(filenames, (union data)filename);
 		yyin = stdin;
 		yypush_buffer_state(yy_create_buffer(yyin, YY_BUF_SIZE));
 	} else {
 		for (int i = 1; i < argc; ++i) {
-			list_push(filenames, (union data)argv[i]);
-			yyin = fopen(argv[i], "r");
+			char *filename = calloc(strlen(argv[i]), sizeof(char));
+			if (filename == NULL)
+				goto error_calloc;
+			strcpy(filename, argv[i]);
+
+			list_push(filenames, (union data)filename);
+			yyin = fopen(filename, "r");
 			if (yyin == NULL)
 				goto error_fopen;
 			yypush_buffer_state(yy_create_buffer(yyin, YY_BUF_SIZE));
