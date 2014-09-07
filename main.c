@@ -9,11 +9,10 @@
 
 int yylex();
 extern FILE *yyin;
-
 struct token *yytoken = NULL;
-char *filename = NULL;
 
 struct list *tokens = NULL;
+struct list *filenames = NULL;
 
 /* TODO return yywrap value*/
 void parse_file()
@@ -29,7 +28,7 @@ void parse_file()
 		else if (category < BEGTOKEN || category > ENDTOKEN )
 			goto error_unknown_token;
 		if (tokens == NULL) fprintf(stderr, "WTF\n");
-		list_append(tokens, (union data)yytoken);
+		list_push(tokens, (union data)yytoken);
 	}
 	return;
 
@@ -47,25 +46,18 @@ void parse_file()
 int main(int argc, char **argv)
 {
 	tokens = list_init();
-	if (tokens == NULL)
+	filenames = list_init();
+	if (tokens == NULL || filenames == NULL)
 		goto error_list_init;
 
-	filename = calloc(strlen("stdin")+1, sizeof(char));
-	if (filename == NULL)
-		goto error_filename;
-
 	if (argc == 1) {
-		strcpy(filename, "stdin");
+		list_push(filenames, (union data)"stdin");
 		yyin = stdin;
 		parse_file();
 	} else {
 		for (int i = 1; i < argc; ++i) {
-			char *buffer = realloc(filename, sizeof(argv[i]));
-			if (buffer == NULL)
-				goto error_filename;
-			filename = buffer;
-			strcpy(filename, argv[i]);
-			yyin = fopen(filename, "r");
+			list_push(filenames, (union data)argv[i]);
+			yyin = fopen(list_peek(filenames).filename, "r");
 			if (yyin == NULL)
 				goto error_fopen;
 			parse_file();
@@ -97,11 +89,6 @@ int main(int argc, char **argv)
 
  error_list_init:
 	perror("list_init()");
-	return EXIT_FAILURE;
-
- error_filename:
-	free(filename);
-	perror("filename");
 	return EXIT_FAILURE;
 
  error_fopen:

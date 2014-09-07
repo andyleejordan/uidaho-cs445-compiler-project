@@ -18,11 +18,12 @@ IS       (u|U|l|L)*
 #include <stdlib.h>
 #include <ctype.h>
 
+#include "list.h"
 #include "token.h"
 #include "cgram.tab.h"
 
 extern struct token *yytoken;
-extern char *filename;
+extern struct list *filenames;
 
 bool cstdlib  = false;
 bool cmath    = false;
@@ -252,6 +253,7 @@ void yytoken_realloc_sval(char *s)
 
 /* append char literal to yytoken->sval string (to parse escapes) */
 void yytoken_append_char_sval(char c)
+void handle_include(char *s)
 {
 	size_t len = strlen(yytoken->sval);
 	yytoken_realloc_sval(&c);
@@ -278,25 +280,28 @@ void yytoken_append_text(char *s)
 	yytoken_realloc_text(s);
 	strcat(yytoken->text, s);
 }
-
-void handle_include(char *s)
-{
 	size_t len = strlen(s) - 2; /* size without surrounding quotes */
-	char *buffer = realloc(filename, len+1);
-	if (buffer) {
-		filename = buffer;
-		strncpy(filename, s+1, len); /* copy substring */
-		filename[len] = '\0';
-	} else {
-		free(filename);
-		fprintf(stderr, "Error reallocating memory for filename");
+	char *filename = malloc(len+1);
+	if (filename == NULL)
+		goto error_malloc;
+	strncpy(filename, s+1, len); /* copy substring */
+	filename[len] = '\0';
+	list_push(filenames, (union data)filename);
+
+	yyin = fopen(filename, "r");
+	if (yyin == NULL)
+		goto error_fopen;
+	yypush_buffer_state(yy_create_buffer(yyin, YY_BUF_SIZE));
+
+	return;
+
+ error_malloc: {
+		perror("handle_include()");
 		exit(EXIT_FAILURE);
 	}
-	yyin = fopen(filename, "r");
-	if (yyin) {
-		yypush_buffer_state(yy_create_buffer(yyin, YY_BUF_SIZE));
-	} else {
-		fprintf(stderr, "Error opening include file \"%s\"\n", filename);
+
+ error_fopen: {
+		perror("handle_include: fopen(filename)");
 		exit(EXIT_FAILURE);
 	}
 }
