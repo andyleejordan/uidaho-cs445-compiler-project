@@ -47,7 +47,7 @@ int main(int argc, char **argv)
 		goto error_list_init;
 
 	if (argc == 1) {
-		char *filename = calloc(strlen("stdin"), sizeof(char));
+		char *filename = calloc(strlen("stdin")+1, sizeof(char));
 		if (filename == NULL)
 			goto error_calloc;
 		strcpy(filename, "stdin");
@@ -57,7 +57,7 @@ int main(int argc, char **argv)
 		yypush_buffer_state(yy_create_buffer(yyin, YY_BUF_SIZE));
 	} else {
 		for (int i = 1; i < argc; ++i) {
-			char *filename = calloc(strlen(argv[i]), sizeof(char));
+			char *filename = calloc(strlen(argv[i])+1, sizeof(char));
 			if (filename == NULL)
 				goto error_calloc;
 			strcpy(filename, argv[i]);

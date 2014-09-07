@@ -220,7 +220,7 @@ L?\"                    { new_token(SCON); BEGIN(STR); }
 void handle_include(char *s)
 {
 	size_t len = strlen(s) - 2; /* size without surrounding quotes */
-	char *filename = malloc(len+1);
+	char *filename = calloc(len+1, sizeof(char));
 	if (filename == NULL)
 		goto error_malloc;
 	strncpy(filename, s+1, len); /* copy substring */
