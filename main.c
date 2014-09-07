@@ -24,19 +24,20 @@ void parse_file()
 		else if (category == BADTOKEN)
 			goto error_badtoken;
 		else if (category < BEGTOKEN || category > ENDTOKEN )
-			goto error_unknown_token;
+			goto error_unknown_return_value;
 		if (tokens == NULL) fprintf(stderr, "WTF\n");
 		list_push(tokens, (union data)yytoken);
 	}
 	return;
 
  error_badtoken: {
-		fprintf(stderr, "Lexical error on line %d: %s\n", yytoken->lineno, yytoken->text);
+		fprintf(stderr, "Lexical error in file \"%s\" on line %d: %s\n",
+		        yytoken->filename, yytoken->lineno, yytoken->text);
 		exit(1); /* required to exit with 1 on lexical error */
 	}
 
- error_unknown_token: {
-		fprintf(stderr, "Unkown category from yylex %d\n", category);
+ error_unknown_return_value: {
+		fprintf(stderr, "Unkown return value from yylex %d\n", category);
 		exit(EXIT_FAILURE);
 	}
 }
