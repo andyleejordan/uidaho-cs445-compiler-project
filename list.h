@@ -11,7 +11,6 @@
  */
 
 union data {
-	bool sentinel;
 	struct token *token;
 	char *filename;
 };
@@ -20,6 +19,7 @@ struct list_node
 {
 	struct list_node *next;
 	struct list_node *prev;
+	bool sentinel;
 	union data data;
 };
 

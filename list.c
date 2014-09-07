@@ -13,7 +13,7 @@ struct list *list_init()
 	self->sentinel = sentinel;
 	self->size = 0;
 
-	sentinel->data.sentinel = true;
+	sentinel->sentinel = true;
 	sentinel->next = sentinel;
 	sentinel->prev = sentinel;
 
@@ -48,7 +48,7 @@ bool list_empty(struct list *self)
 
 bool list_end(struct list_node *n)
 {
-	return n->data.sentinel;
+	return n->sentinel;
 }
 
 struct list_node *list_head(struct list *self)
@@ -69,6 +69,7 @@ void list_push(struct list *self, union data data)
 	struct list_node *n = malloc(sizeof(*n));
 	if (n == NULL)
 		goto error_malloc;
+	n->sentinel = false;
 	n->data = data;
 
 	n->prev = self->sentinel->prev;
@@ -99,6 +100,7 @@ void list_push_front(struct list *self, union data data)
 	struct list_node *n = malloc(sizeof(*n));
 	if (n == NULL)
 		goto error_malloc;
+	n->sentinel = false;
 	n->data = data;
 
 	n->next = self->sentinel->next;
