@@ -37,7 +37,6 @@ void new_token(int category)
 	yytoken = token_create(category, yylineno, yytext, list_peek(filenames).filename);
 }
 
-/* TODO keep track of included files and prior file names */
 void handle_include(char *s);
 %}
 

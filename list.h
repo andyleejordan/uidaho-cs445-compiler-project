@@ -7,7 +7,6 @@
 
 /*
  * basic doubly linked circular list implementation
- * TODO add cleanup functions
  */
 
 union data {
@@ -29,7 +28,6 @@ struct list
 	size_t size;
 };
 
-/* initializes head and tail of list; data fields to NULL */
 struct list *list_init();
 void list_destroy(struct list *self);
 bool list_empty(struct list *self);

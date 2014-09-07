@@ -12,12 +12,10 @@ struct token *yytoken = NULL;
 struct list *tokens = NULL;
 struct list *filenames = NULL;
 
-/* TODO return yywrap value*/
 void parse_files()
 {
 	int category;
 	while (true) {
-		/* TODO check yywrap */
 		category = yylex();
 		if (category == 0)
 			break;
@@ -25,7 +23,6 @@ void parse_files()
 			goto error_badtoken;
 		else if (category < BEGTOKEN || category > ENDTOKEN )
 			goto error_unknown_return_value;
-		if (tokens == NULL) fprintf(stderr, "WTF\n");
 		list_push(tokens, (union data)yytoken);
 	}
 	return;
