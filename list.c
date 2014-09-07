@@ -82,11 +82,11 @@ void list_push(struct list *self, union data data)
 	return;
 
  error_null_self: {
-		fprintf(stderr, "list_append(): self was null\n");
+		fprintf(stderr, "list_push(): self was null\n");
 		exit(EXIT_FAILURE);
 	}
  error_malloc: {
-		perror("list_append()");
+		perror("list_push()");
 		exit(EXIT_FAILURE);
 	}
 }
@@ -112,11 +112,11 @@ void list_push_front(struct list *self, union data data)
 	return;
 
  error_null_self: {
-		fprintf(stderr, "list_prepend(): self was null\n");
+		fprintf(stderr, "list_push_front(): self was null\n");
 		exit(EXIT_FAILURE);
 	}
  error_malloc: {
-		perror("list_prepend()");
+		perror("list_push_front()");
 		exit(EXIT_FAILURE);
 	}
 }
