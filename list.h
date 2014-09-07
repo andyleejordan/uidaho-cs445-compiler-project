@@ -31,7 +31,11 @@ struct list
 /* initializes head and tail of list; data fields to NULL */
 struct list *list_init();
 
-void list_prepend(struct list *self, union data data);
-void list_append(struct list *self, union data data);
+void list_push(struct list *self, union data data);
+void list_push_front(struct list *self, union data data);
+union data list_pop(struct list *self);
+union data list_pop_front(struct list *self);
+union data list_peek(struct list *self);
+union data list_peek_front(struct list *self);
 
 #endif /* LIST_H */

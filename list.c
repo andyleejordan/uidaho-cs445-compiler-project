@@ -7,11 +7,10 @@ struct list *list_init()
 {
 	struct list *self = malloc(sizeof(*self));
 	struct list_node *sentinel = malloc(sizeof(*sentinel));
-	if (self && sentinel)
-		self->sentinel = sentinel;
-	else
+	if (self == NULL || sentinel == NULL)
 		goto error_malloc;
 
+	self->sentinel = sentinel;
 	sentinel->data.sentinel = true;
 	sentinel->next = sentinel;
 	sentinel->prev = sentinel;
@@ -24,21 +23,49 @@ struct list *list_init()
 	}
 }
 
-void list_prepend(struct list *self, union data data)
+void list_push(struct list *self, union data data)
 {
 	if (self == NULL)
 		goto error_null_self;
 
-	struct list_node *temp = malloc(sizeof(*temp));
-	if (temp == NULL)
+	struct list_node *n = malloc(sizeof(*n));
+	if (n == NULL)
 		goto error_malloc;
-	temp->data = data;
+	n->data = data;
 
-	temp->next = self->sentinel->next;
-	self->sentinel->next->prev = temp;
+	n->prev = self->sentinel->prev;
+	n->prev->next = n;
 
-	temp->prev = self->sentinel;
-	self->sentinel->next = temp;
+	n->next = self->sentinel;
+	self->sentinel->prev = n;
+
+	return;
+
+ error_null_self: {
+		fprintf(stderr, "list_append(): self was null\n");
+		exit(EXIT_FAILURE);
+	}
+ error_malloc: {
+		perror("list_append()");
+		exit(EXIT_FAILURE);
+	}
+}
+
+void list_push_front(struct list *self, union data data)
+{
+	if (self == NULL)
+		goto error_null_self;
+
+	struct list_node *n = malloc(sizeof(*n));
+	if (n == NULL)
+		goto error_malloc;
+	n->data = data;
+
+	n->next = self->sentinel->next;
+	n->next->prev = n;
+
+	n->prev = self->sentinel;
+	self->sentinel->next = n;
 
 	return;
 
@@ -52,30 +79,70 @@ void list_prepend(struct list *self, union data data)
 	}
 }
 
-void list_append(struct list *self, union data data)
+union data list_pop(struct list *self)
 {
 	if (self == NULL)
 		goto error_null_self;
 
-	struct list_node *temp = malloc(sizeof(*temp));
-	if (temp == NULL)
-		goto error_malloc;
-	temp->data = data;
+	struct list_node *n = self->sentinel->prev;
+	union data d = n->data;
 
-	temp->prev = self->sentinel->prev;
-	self->sentinel->prev->next = temp;
+	self->sentinel->prev = n->prev;
+	n->prev->next = self->sentinel;
 
-	temp->next = self->sentinel;
-	self->sentinel->prev = temp;
+	free(n);
 
-	return;
+	return d;
 
  error_null_self: {
-		fprintf(stderr, "list_append(): self was null\n");
+		fprintf(stderr, "list_pop(): self was null\n");
 		exit(EXIT_FAILURE);
 	}
- error_malloc: {
-		perror("list_append()");
+}
+
+union data list_pop_front(struct list *self)
+{
+	if (self == NULL)
+		goto error_null_self;
+
+	struct list_node *n = self->sentinel->next;
+	union data d = n->data;
+
+	self->sentinel->next = n->next;
+	n->next->prev = self->sentinel;
+
+	free(n);
+
+	return d;
+
+ error_null_self: {
+		fprintf(stderr, "list_pop_front(): self was null\n");
+		exit(EXIT_FAILURE);
+	}
+}
+
+union data list_peek(struct list *self)
+{
+	if (self == NULL)
+		goto error_null_self;
+
+	return self->sentinel->prev->data;
+
+ error_null_self: {
+		fprintf(stderr, "list_peek(): self was null\n");
+		exit(EXIT_FAILURE);
+	}
+}
+
+union data list_peek_front(struct list *self)
+{
+	if (self == NULL)
+		goto error_null_self;
+
+	return self->sentinel->next->data;
+
+ error_null_self: {
+		fprintf(stderr, "list_peek(): self was null\n");
 		exit(EXIT_FAILURE);
 	}
 }
