@@ -11,6 +11,8 @@ struct list *list_init()
 		goto error_malloc;
 
 	self->sentinel = sentinel;
+	self->size = 0;
+
 	sentinel->data.sentinel = true;
 	sentinel->next = sentinel;
 	sentinel->prev = sentinel;
@@ -34,9 +36,14 @@ void list_destroy(struct list *self)
 	}
 }
 
+size_t list_size(struct list *self)
+{
+	return self->size;
+}
+
 bool list_empty(struct list *self)
 {
-	return list_peek(self).sentinel;
+	return (self->size == 0);
 }
 
 bool list_end(struct list_node *n)
@@ -70,6 +77,8 @@ void list_push(struct list *self, union data data)
 	n->next = self->sentinel;
 	self->sentinel->prev = n;
 
+	++self->size;
+
 	return;
 
  error_null_self: {
@@ -98,6 +107,8 @@ void list_push_front(struct list *self, union data data)
 	n->prev = self->sentinel;
 	self->sentinel->next = n;
 
+	++self->size;
+
 	return;
 
  error_null_self: {
@@ -124,6 +135,8 @@ union data list_pop(struct list *self)
 	if (!list_end(n))
 		free(n);
 
+	--self->size;
+
 	return d;
 
  error_null_self: {
@@ -145,6 +158,8 @@ union data list_pop_front(struct list *self)
 
 	if (!list_end(n))
 		free(n);
+
+	--self->size;
 
 	return d;
 

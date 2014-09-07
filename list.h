@@ -26,6 +26,7 @@ struct list_node
 struct list
 {
 	struct list_node *sentinel;
+	size_t size;
 };
 
 /* initializes head and tail of list; data fields to NULL */
