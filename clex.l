@@ -58,7 +58,6 @@ void handle_include(char *s);
 "#include"              { BEGIN(INC); }
 <INC>{
 	[ \t]*          { /* eat whitespace */ }
-	/* TODO add libraries to their own struct */
 	"<cstdlib>"     { cstdlib  = true; BEGIN(INITIAL); }
 	"<cmath>"       { cmath	   = true; BEGIN(INITIAL); }
 	"<ctime>"       { ctime	   = true; BEGIN(INITIAL); }
@@ -67,7 +66,7 @@ void handle_include(char *s);
 	"<iostream>"    { iostream = true; BEGIN(INITIAL); }
 	"<string>"      { string   = true; BEGIN(INITIAL); }
 	"<iomanip>"     { iomanip  = true; BEGIN(INITIAL); }
-	"<"[^<>]*">"    { BEGIN(INITIAL); /* TODO error on unrecognized libraries */ }
+	"<"[^<>]*">"    { BEGIN(INITIAL); }
 	\"[^\"]+\"      { handle_include(yytext); BEGIN(INITIAL); }
 	.               { new_token(BADTOKEN); return BADTOKEN; }
 }
