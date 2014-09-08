@@ -25,14 +25,14 @@ struct list *list_init()
 	}
 }
 
-void list_destroy(struct list *self)
+void list_destroy(struct list *self, void (*destroy)(union data))
 {
 	while (!list_empty(self)) {
 		union data d = list_pop(self);
 		if (d.token != NULL)
-			free(d.token);
+			destroy((union data)d.token);
 		else if (d.filename != NULL)
-			free(d.filename);
+			destroy((union data)d.filename);
 	}
 }
 

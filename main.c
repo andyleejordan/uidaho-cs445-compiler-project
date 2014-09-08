@@ -120,12 +120,8 @@ int main(int argc, char **argv)
 		iter = iter->next;
 	}
 
-	while (!list_empty(tokens)) {
-		union data d = list_pop(tokens);
-		token_free(d.token);
-	}
-
-	list_destroy(filenames);
+	list_destroy(tokens, (void (*)(union data))&token_free);
+	list_destroy(filenames, (void (*)(union data))&free);
 
 	return EXIT_SUCCESS;
 

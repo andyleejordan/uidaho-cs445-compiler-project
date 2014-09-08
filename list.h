@@ -30,7 +30,7 @@ struct list
 };
 
 struct list *list_init();
-void list_destroy(struct list *self);
+void list_destroy(struct list *self, void (*destroy)(union data));
 bool list_empty(struct list *self);
 bool list_end(struct list_node *n);
 struct list_node *list_head(struct list *self);
