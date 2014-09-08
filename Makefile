@@ -1,5 +1,6 @@
 BIN=120++
 SOURCES=main.c list.c token.c lex.yy.c
+TESTS=test/lex/test.c test/lex/test.cpp
 OBJECTS=$(SOURCES:.c=.o)
 
 LEX=flex
@@ -10,6 +11,9 @@ LDFLAGS=
 RM=rm -f
 
 all: $(BIN)
+
+test: $(BIN)
+	./$(BIN) $(TESTS)
 
 $(BIN): $(OBJECTS)
 	$(CC) $(LDFLAGS) $^ -o $@

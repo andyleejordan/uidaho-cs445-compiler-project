@@ -1,0 +1,3 @@
+struct stuff {
+	int foo;
+};
