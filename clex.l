@@ -130,6 +130,7 @@ void handle_include(char *s);
 <CHR>{
 	\'              { token_append_text(yytoken, yytext); BEGIN(INITIAL); return CCON; }
 	\n              { new_token(BADTOKEN); return BADTOKEN; }
+	<<EOF>>         { new_token(BADTOKEN); return BADTOKEN; }
 	"\\'"           { yytoken->ival = '\''; token_append_text(yytoken, yytext); }
 	"\\\""          { yytoken->ival = '"';  token_append_text(yytoken, yytext); }
 	"\\?"           { yytoken->ival = '\?'; token_append_text(yytoken, yytext); }
@@ -149,6 +150,7 @@ L?\"                    { new_token(SCON); BEGIN(STR); }
 <STR>{
 	\"              { token_append_sval_char(yytoken, '\0'); token_append_text(yytoken, yytext); BEGIN(INITIAL); return SCON; }
 	\n              { new_token(BADTOKEN); return BADTOKEN; }
+	<<EOF>>         { new_token(BADTOKEN); return BADTOKEN; }
 	"\\'"           { token_append_sval_char(yytoken, '\''); token_append_text(yytoken, yytext); }
 	"\\\""          { token_append_sval_char(yytoken, '"');  token_append_text(yytoken, yytext); }
 	"\\?"           { token_append_sval_char(yytoken, '\?'); token_append_text(yytoken, yytext); }
