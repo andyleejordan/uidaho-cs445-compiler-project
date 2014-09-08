@@ -33,13 +33,20 @@ bool iostream = false;
 bool string   = false;
 bool iomanip  = false;
 
+/* print error message to stderr and terminate (for now) */
+void yyerror(char const *s)
+{
+	fprintf (stderr, "File %s line %d: %s\n", list_peek(filenames).filename, yylineno, s);
+	exit(1);
+}
+
 /* allocates and prepares token, saving pointer into yytoken */
 void new_token(int category)
 {
 	yytoken = token_create(category, yylineno, yytext, list_peek(filenames).filename);
 }
 
-void handle_include(char *s);
+void handle_include(char const *s);
 %}
 
 %%
@@ -66,9 +73,10 @@ void handle_include(char *s);
 	"<iostream>"    { iostream = true; BEGIN(INITIAL); }
 	"<string>"      { string   = true; BEGIN(INITIAL); }
 	"<iomanip>"     { iomanip  = true; BEGIN(INITIAL); }
-	"<"[^<>]*">"    { BEGIN(INITIAL); }
 	\"[^\"]+\"      { handle_include(yytext); BEGIN(INITIAL); }
-	.               { new_token(BADTOKEN); return BADTOKEN; }
+	"<"[^<>]*">"    { yyerror("Unrecognized system library"); }
+	<<EOF>>         { yyerror("Unexpected EOF"); }
+	.               { yyerror("Unrecognized token following #include"); }
 }
 
 "auto"                  { new_token(AUTO); return AUTO; }
@@ -128,8 +136,6 @@ void handle_include(char *s);
 \'                      { new_token(CCON); BEGIN(CHR); }
 <CHR>{
 	\'              { token_append_text(yytoken, yytext); BEGIN(INITIAL); return CCON; }
-	\n              { new_token(BADTOKEN); return BADTOKEN; }
-	<<EOF>>         { new_token(BADTOKEN); return BADTOKEN; }
 	"\\'"           { yytoken->ival = '\''; token_append_text(yytoken, yytext); }
 	"\\\""          { yytoken->ival = '"';  token_append_text(yytoken, yytext); }
 	"\\?"           { yytoken->ival = '\?'; token_append_text(yytoken, yytext); }
@@ -142,14 +148,14 @@ void handle_include(char *s);
 	"\\v"           { yytoken->ival = '\v'; token_append_text(yytoken, yytext); }
 	"\\\\"          { yytoken->ival = '\\'; token_append_text(yytoken, yytext); }
 	[^\\"'"]        { yytoken->ival = *yytext; token_append_text(yytoken, yytext); }
-	.               { new_token(BADTOKEN); return BADTOKEN; }
+	\n              { yyerror("Newline found after start of char literal"); }
+	<<EOF>>         { yyerror("Unterminated char literal"); }
+	.               { yyerror("Unrecognized token in char literal"); }
 }
 
 L?\"                    { new_token(SCON); BEGIN(STR); }
 <STR>{
 	\"              { token_append_sval_char(yytoken, '\0'); token_append_text(yytoken, yytext); BEGIN(INITIAL); return SCON; }
-	\n              { new_token(BADTOKEN); return BADTOKEN; }
-	<<EOF>>         { new_token(BADTOKEN); return BADTOKEN; }
 	"\\'"           { token_append_sval_char(yytoken, '\''); token_append_text(yytoken, yytext); }
 	"\\\""          { token_append_sval_char(yytoken, '"');  token_append_text(yytoken, yytext); }
 	"\\?"           { token_append_sval_char(yytoken, '\?'); token_append_text(yytoken, yytext); }
@@ -162,7 +168,9 @@ L?\"                    { new_token(SCON); BEGIN(STR); }
 	"\\v"           { token_append_sval_char(yytoken, '\v'); token_append_text(yytoken, yytext); }
 	"\\\\"          { token_append_sval_char(yytoken, '\\'); token_append_text(yytoken, yytext); }
 	[^\\\n\"]+      { token_append_sval_string(yytoken, yytext); token_append_text(yytoken, yytext); }
-	.               { new_token(BADTOKEN); return BADTOKEN; }
+	\n              { yyerror("Newline found after start of string literal"); }
+	<<EOF>>         { yyerror("Unterminated string literal"); }
+	.               { yyerror("Unrecognized token in string literal"); }
 }
 
   /* operators */
@@ -214,7 +222,7 @@ L?\"                    { new_token(SCON); BEGIN(STR); }
 
 {L}({L}|{D})*           { new_token(IDENTIFIER); return IDENTIFIER; }
 
-.                       { new_token(BADTOKEN); return BADTOKEN; }
+.                       { yyerror("Unrecognized token"); }
 
 <<EOF>>                 {
 	/* pop the current buffer and filename */
@@ -234,7 +242,7 @@ L?\"                    { new_token(SCON); BEGIN(STR); }
 
 %%
 
-void handle_include(char *s)
+void handle_include(char const *s)
 {
 	/* get the include path */
 	size_t len = strlen(s) - 2; /* size without surrounding quotes */

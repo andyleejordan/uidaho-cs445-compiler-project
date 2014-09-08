@@ -38,19 +38,12 @@ void parse_files()
 		category = yylex();
 		if (category == 0)
 			break;
-		else if (category == BADTOKEN)
-			goto error_badtoken;
 		else if (category < BEGTOKEN || category > ENDTOKEN )
 			goto error_unknown_return_value;
 		list_push(tokens, (union data)yytoken);
 	}
 	yylex_destroy();
 	return;
-
- error_badtoken:
-	fprintf(stderr, "Lexical error in file \"%s\" on line %d: %s\n",
-	        yytoken->filename, yytoken->lineno, yytoken->text);
-	exit(1); /* required to exit with 1 on lexical error */
 
  error_unknown_return_value:
 	fprintf(stderr, "Unkown return value from yylex %d\n", category);

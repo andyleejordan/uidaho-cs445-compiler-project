@@ -1,5 +1,5 @@
 #define BEGTOKEN AUTO
-#define ENDTOKEN BADTOKEN
+#define ENDTOKEN IDENTIFIER
 
 /* keywords */
 #define AUTO 257
@@ -104,4 +104,3 @@
 #define QUEST 352
 
 #define IDENTIFIER 353
-#define BADTOKEN 354
