@@ -3,3 +3,4 @@
 /.dir-locals.el
 /test.cpp
 /test.h
+/clex.h
