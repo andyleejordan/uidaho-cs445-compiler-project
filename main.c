@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <libgen.h>
 
 #include "clex.h"
 #include "token.h"
@@ -12,6 +13,24 @@ struct token *yytoken = NULL;
 struct list *tokens = NULL;
 struct list *filenames = NULL;
 
+char *current_filename()
+{
+	char *filename = list_peek(filenames).filename;
+	if (filename == NULL)
+		return NULL;
+	char *copy = calloc(strlen(filename)+1, sizeof(char));
+	if (copy == NULL)
+		goto error;
+	strcpy(copy, filename);
+	return copy;
+
+ error:
+	perror("current_filename()");
+	exit(EXIT_FAILURE);
+}
+
+/* start the parser via yylex; error on relevant tokens; add good
+   tokens to token list */
 void parse_files()
 {
 	int category;
@@ -28,16 +47,14 @@ void parse_files()
 	yylex_destroy();
 	return;
 
- error_badtoken: {
-		fprintf(stderr, "Lexical error in file \"%s\" on line %d: %s\n",
-		        yytoken->filename, yytoken->lineno, yytoken->text);
-		exit(1); /* required to exit with 1 on lexical error */
-	}
+ error_badtoken:
+	fprintf(stderr, "Lexical error in file \"%s\" on line %d: %s\n",
+	        yytoken->filename, yytoken->lineno, yytoken->text);
+	exit(1); /* required to exit with 1 on lexical error */
 
- error_unknown_return_value: {
-		fprintf(stderr, "Unkown return value from yylex %d\n", category);
-		exit(EXIT_FAILURE);
-	}
+ error_unknown_return_value:
+	fprintf(stderr, "Unkown return value from yylex %d\n", category);
+	exit(EXIT_FAILURE);
 }
 
 int main(int argc, char **argv)
@@ -48,9 +65,10 @@ int main(int argc, char **argv)
 		goto error_list_init;
 
 	if (argc == 1) {
-		char *filename = calloc(strlen("stdin")+1, sizeof(char));
+		/* not 'char filename[] = "stdin"' because list_destroy */
+		char *filename = malloc(sizeof("stdin"));
 		if (filename == NULL)
-			goto error_calloc;
+			goto error_alloc;
 		strcpy(filename, "stdin");
 
 		list_push(filenames, (union data)filename);
@@ -58,17 +76,25 @@ int main(int argc, char **argv)
 		yypush_buffer_state(yy_create_buffer(yyin, YY_BUF_SIZE));
 	} else {
 		for (int i = 1; i < argc; ++i) {
-			char *filename = calloc(strlen(argv[i])+1, sizeof(char));
+			/* get real path for argument */
+			char *filename = realpath(argv[i], NULL);
 			if (filename == NULL)
-				goto error_calloc;
-			strcpy(filename, argv[i]);
+				goto error_realpath;
 
+			/* open file and push filename and buffer */
 			list_push(filenames, (union data)filename);
 			yyin = fopen(filename, "r");
 			if (yyin == NULL)
 				goto error_fopen;
 			yypush_buffer_state(yy_create_buffer(yyin, YY_BUF_SIZE));
 		}
+		/* start is a special case where we need to chdir to
+		   the directory of the first file to be parsed; all
+		   other files are chdir'ed to after the previous has
+		   been popped */
+		char *filename = current_filename();
+		if (filename)
+			chdir(dirname(filename));
 	}
 
 	parse_files();
@@ -79,7 +105,7 @@ int main(int argc, char **argv)
 	while (!list_end(iter)) {
 		printf("%-5d%-12s%-8d%s ",
 		       iter->data.token->lineno,
-		       iter->data.token->filename,
+		       basename(iter->data.token->filename),
 		       iter->data.token->category,
 		       iter->data.token->text);
 
@@ -103,11 +129,15 @@ int main(int argc, char **argv)
 
 	return EXIT_SUCCESS;
 
- error_calloc: {
-		perror("main: calloc()");
+ error_alloc: {
+		perror("main: memory re/allocation()");
 		return EXIT_FAILURE;
 	}
 
+ error_realpath: {
+		perror("main: realpath()");
+		return EXIT_FAILURE;
+	}
  error_list_init: {
 		perror("main: list_init()");
 		return EXIT_FAILURE;

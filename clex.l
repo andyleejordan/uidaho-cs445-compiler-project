@@ -14,6 +14,7 @@ IS       (u|U|l|L)*
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <libgen.h>
 
 #include "list.h"
 #include "token.h"
@@ -21,6 +22,7 @@ IS       (u|U|l|L)*
 
 extern struct token *yytoken;
 extern struct list *filenames;
+extern char *current_filename();
 
 bool cstdlib  = false;
 bool cmath    = false;
@@ -213,35 +215,51 @@ L?\"                    { new_token(SCON); BEGIN(STR); }
 
 .                       { new_token(BADTOKEN); return BADTOKEN; }
 
-<<EOF>>                 { yypop_buffer_state(); list_pop(filenames); yylineno = 1; if (!YY_CURRENT_BUFFER) yyterminate(); }
+<<EOF>>                 {
+	/* pop the current buffer and filename */
+	yypop_buffer_state();
+	list_pop(filenames);
+
+	/* if there's another file to process, chdir to it */
+	char *filename = current_filename();
+	if (filename)
+		chdir(dirname(filename));
+
+	yylineno = 1; /* restart line numbering count */
+
+	if (!YY_CURRENT_BUFFER) /* if buffer stack is empty, stop */
+		yyterminate();
+  }
 
 %%
 
 void handle_include(char *s)
 {
+	/* get the include path */
 	size_t len = strlen(s) - 2; /* size without surrounding quotes */
-	char *filename = calloc(len+1, sizeof(char));
+	char *include = calloc(len+1, sizeof(char));
+	if (include == NULL)
+		goto error;
+	strncpy(include, s+1, len); /* copy substring */
+	include[len] = '\0';
+
+	/* get the real path */
+	char *filename = realpath(include, NULL);
+	free(include);
 	if (filename == NULL)
-		goto error_malloc;
-	strncpy(filename, s+1, len); /* copy substring */
-	filename[len] = '\0';
+		goto error;
 	list_push(filenames, (union data)filename);
 
+	/* open file and push buffer */
 	yyin = fopen(filename, "r");
 	if (yyin == NULL)
-		goto error_fopen;
+		goto error;
 	yylineno = 1;
 	yypush_buffer_state(yy_create_buffer(yyin, YY_BUF_SIZE));
 
 	return;
 
- error_malloc: {
-		perror("handle_include()");
-		exit(EXIT_FAILURE);
-	}
-
- error_fopen: {
-		perror("handle_include: fopen(filename)");
-		exit(EXIT_FAILURE);
-	}
+ error:
+	perror("handle_include()");
+	exit(EXIT_FAILURE);
 }
