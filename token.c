@@ -31,6 +31,9 @@ struct token *token_create(int category, int lineno,
 	if (category == ICON)
 		t->ival = atoi(text);
 
+	if (category == FCON)
+		t->fval = atof(text);
+
 	if (category == SCON)
 		t->sval = calloc(128, sizeof(char));
 

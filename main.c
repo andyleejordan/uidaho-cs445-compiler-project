@@ -118,6 +118,8 @@ int main(int argc, char **argv)
 
 		if (iter->data.token->category == ICON)
 			printf("-> %d", iter->data.token->ival);
+		else if (iter->data.token->category == FCON)
+			printf("-> %f", iter->data.token->fval);
 		else if (iter->data.token->category == CCON)
 			printf("-> %c", iter->data.token->ival);
 		else if (iter->data.token->category == SCON)

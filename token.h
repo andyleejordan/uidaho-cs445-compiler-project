@@ -20,6 +20,7 @@ struct token
 	char *text;
 	char *filename;
 	int ival;
+	double fval;
 	char *sval;
 };
 
