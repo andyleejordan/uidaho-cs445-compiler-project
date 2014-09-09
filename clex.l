@@ -34,7 +34,7 @@ bool string   = false;
 bool iomanip  = false;
 
 /* print error message to stderr and terminate (for now) */
-void yyerror(char const *s)
+void yyerror(const char *s)
 {
 	fprintf (stderr, "File %s line %d: %s\n", list_peek(filenames).filename, yylineno, s);
 	exit(1);
@@ -46,7 +46,7 @@ void new_token(int category)
 	yytoken = token_create(category, yylineno, yytext, list_peek(filenames).filename);
 }
 
-void handle_include(char const *s);
+void handle_include(const char *s);
 %}
 
 %%
@@ -231,8 +231,10 @@ L?\"                    { new_token(SCON); BEGIN(STR); }
 
 	/* if there's another file to process, chdir to it */
 	char *filename = current_filename();
-	if (filename)
+	if (filename) {
 		chdir(dirname(filename));
+		free(filename);
+	}
 
 	yylineno = 1; /* restart line numbering count */
 
@@ -242,7 +244,7 @@ L?\"                    { new_token(SCON); BEGIN(STR); }
 
 %%
 
-void handle_include(char const *s)
+void handle_include(const char *s)
 {
 	/* get the include path */
 	size_t len = strlen(s) - 2; /* size without surrounding quotes */

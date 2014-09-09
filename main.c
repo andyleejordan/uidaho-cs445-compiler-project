@@ -15,7 +15,7 @@ struct list *filenames = NULL;
 
 char *current_filename()
 {
-	char *filename = list_peek(filenames).filename;
+	const char *filename = list_peek(filenames).filename;
 	if (filename == NULL)
 		return NULL;
 	char *copy = calloc(strlen(filename)+1, sizeof(char));
@@ -86,21 +86,26 @@ int main(int argc, char **argv)
 		   other files are chdir'ed to after the previous has
 		   been popped */
 		char *filename = current_filename();
-		if (filename)
+		if (filename) {
 			chdir(dirname(filename));
+			free(filename);
+		}
 	}
 
 	parse_files();
 
 	printf("Line/Filename    Token   Text -> Ival/Sval\n");
 	printf("------------------------------------------\n");
-	struct list_node *iter = list_head(tokens);
+	const struct list_node *iter = list_head(tokens);
 	while (!list_end(iter)) {
+		char *filename = calloc(strlen(iter->data.token->filename)+1, sizeof(char));
+		strcpy(filename, iter->data.token->filename);
 		printf("%-5d%-12s%-8d%s ",
 		       iter->data.token->lineno,
-		       basename(iter->data.token->filename),
+		       basename(filename),
 		       iter->data.token->category,
 		       iter->data.token->text);
+		free(filename);
 
 		if (iter->data.token->category == ICON)
 			printf("-> %d", iter->data.token->ival);

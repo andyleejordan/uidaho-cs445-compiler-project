@@ -36,27 +36,27 @@ void list_destroy(struct list *self, void (*destroy)(union data))
 	}
 }
 
-size_t list_size(struct list *self)
+size_t list_size(const struct list *self)
 {
 	return self->size;
 }
 
-bool list_empty(struct list *self)
+bool list_empty(const struct list *self)
 {
 	return (self->size == 0);
 }
 
-bool list_end(struct list_node *n)
+bool list_end(const struct list_node *n)
 {
 	return n->sentinel;
 }
 
-struct list_node *list_head(struct list *self)
+struct list_node *list_head(const struct list *self)
 {
 	return self->sentinel->next;
 }
 
-struct list_node *list_tail(struct list *self)
+struct list_node *list_tail(const struct list *self)
 {
 	return self->sentinel->prev;
 }
@@ -171,7 +171,7 @@ union data list_pop_front(struct list *self)
 	}
 }
 
-union data list_peek(struct list *self)
+union data list_peek(const struct list *self)
 {
 	if (self == NULL)
 		goto error_null_self;
@@ -187,7 +187,7 @@ union data list_peek(struct list *self)
 	}
 }
 
-union data list_peek_front(struct list *self)
+union data list_peek_front(const struct list *self)
 {
 	if (self == NULL)
 		goto error_null_self;
