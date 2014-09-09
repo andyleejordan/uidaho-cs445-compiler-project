@@ -47,7 +47,7 @@ bool iomanip  = false;
 /* print error message to stderr and terminate (for now) */
 void yyerror(const char *s)
 {
-	fprintf (stderr, "File %s line %d: %s\n", list_peek(filenames).filename, yylineno, s);
+	fprintf (stderr, "File %s line %d, token %s: %s\n", list_peek(filenames).filename, yylineno, yytext, s);
 	exit(1);
 }
 
