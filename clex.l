@@ -1,5 +1,5 @@
 /* -*- mode: flex; -*- */
-%option warn nodefault nounput noinput
+%option warn nounput noinput
 %option header-file="clex.h"
 %option yylineno noyywrap
 %x COMMENT STR CHR INC
@@ -224,8 +224,6 @@ L?\"                    { new_token(SCON); BEGIN(STR); }
 
 {L}({L}|{D})*           { new_token(IDENTIFIER); return IDENTIFIER; }
 
-.                       { yyerror("Unrecognized token"); }
-
 <<EOF>>                 {
 	/* pop the current buffer and filename */
 	yypop_buffer_state();
@@ -244,6 +242,7 @@ L?\"                    { new_token(SCON); BEGIN(STR); }
 		yyterminate();
   }
 
+<*>.|\n                 { yyerror("Unrecognized token"); }
 %%
 
 void handle_include(const char *s)
