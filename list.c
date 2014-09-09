@@ -28,10 +28,9 @@ struct list *list_init()
 
 	return self;
 
- error_malloc: {
-		perror("list malloc");
-		exit(EXIT_FAILURE);
-	}
+ error_malloc:
+	perror("list malloc");
+	exit(EXIT_FAILURE);
 }
 
 void list_destroy(struct list *self, void (*destroy)(union data))
@@ -91,14 +90,13 @@ void list_push(struct list *self, union data data)
 
 	return;
 
- error_null_self: {
-		fprintf(stderr, "list_push(): self was null\n");
-		exit(EXIT_FAILURE);
-	}
- error_malloc: {
-		perror("list_push()");
-		exit(EXIT_FAILURE);
-	}
+ error_null_self:
+	fprintf(stderr, "list_push(): self was null\n");
+	exit(EXIT_FAILURE);
+
+ error_malloc:
+	perror("list_push()");
+	exit(EXIT_FAILURE);
 }
 
 void list_push_front(struct list *self, union data data)
@@ -122,14 +120,13 @@ void list_push_front(struct list *self, union data data)
 
 	return;
 
- error_null_self: {
-		fprintf(stderr, "list_push_front(): self was null\n");
-		exit(EXIT_FAILURE);
-	}
- error_malloc: {
-		perror("list_push_front()");
-		exit(EXIT_FAILURE);
-	}
+ error_null_self:
+	fprintf(stderr, "list_push_front(): self was null\n");
+	exit(EXIT_FAILURE);
+
+ error_malloc:
+	perror("list_push_front()");
+	exit(EXIT_FAILURE);
 }
 
 union data list_pop(struct list *self)
@@ -150,10 +147,9 @@ union data list_pop(struct list *self)
 
 	return d;
 
- error_null_self: {
-		fprintf(stderr, "list_pop(): self was null\n");
-		exit(EXIT_FAILURE);
-	}
+ error_null_self:
+	fprintf(stderr, "list_pop(): self was null\n");
+	exit(EXIT_FAILURE);
 }
 
 union data list_pop_front(struct list *self)
@@ -174,10 +170,9 @@ union data list_pop_front(struct list *self)
 
 	return d;
 
- error_null_self: {
-		fprintf(stderr, "list_pop_front(): self was null\n");
-		exit(EXIT_FAILURE);
-	}
+ error_null_self:
+	fprintf(stderr, "list_pop_front(): self was null\n");
+	exit(EXIT_FAILURE);
 }
 
 union data list_peek(const struct list *self)
@@ -190,10 +185,9 @@ union data list_peek(const struct list *self)
 
 	return self->sentinel->prev->data;
 
- error_null_self: {
-		fprintf(stderr, "list_peek(): self was null\n");
-		exit(EXIT_FAILURE);
-	}
+ error_null_self:
+	fprintf(stderr, "list_peek(): self was null\n");
+	exit(EXIT_FAILURE);
 }
 
 union data list_peek_front(const struct list *self)
@@ -206,8 +200,7 @@ union data list_peek_front(const struct list *self)
 
 	return self->sentinel->next->data;
 
- error_null_self: {
-		fprintf(stderr, "list_peek(): self was null\n");
-		exit(EXIT_FAILURE);
-	}
+ error_null_self:
+	fprintf(stderr, "list_peek(): self was null\n");
+	exit(EXIT_FAILURE);
 }
