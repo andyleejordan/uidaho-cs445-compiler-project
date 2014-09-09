@@ -62,7 +62,7 @@ void handle_include(const char *s);
 
 %%
 
-[ \t\v\f\n]*            { /* eat whitespace */ }
+[ \r\t\v\f\n]*          { /* eat whitespace */ }
 
 "//".*$                 { /* eat C++ comments */ }
 "/*"                    { BEGIN(COMMENT); /* eat C comments */ }
