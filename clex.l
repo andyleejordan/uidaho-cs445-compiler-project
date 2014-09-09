@@ -147,8 +147,8 @@ void handle_include(const char *s);
 	"\\t"           { yytoken->ival = '\t'; token_append_text(yytoken, yytext); }
 	"\\v"           { yytoken->ival = '\v'; token_append_text(yytoken, yytext); }
 	"\\\\"          { yytoken->ival = '\\'; token_append_text(yytoken, yytext); }
-	[^\\"'"]        { yytoken->ival = *yytext; token_append_text(yytoken, yytext); }
 	\n              { yyerror("Newline found after start of char literal"); }
+	[^\\"'"]        { yytoken->ival = *yytext; token_append_text(yytoken, yytext); }
 	<<EOF>>         { yyerror("Unterminated char literal"); }
 	.               { yyerror("Unrecognized token in char literal"); }
 }
@@ -167,8 +167,8 @@ L?\"                    { new_token(SCON); BEGIN(STR); }
 	"\\t"           { token_append_sval_char(yytoken, '\t'); token_append_text(yytoken, yytext); }
 	"\\v"           { token_append_sval_char(yytoken, '\v'); token_append_text(yytoken, yytext); }
 	"\\\\"          { token_append_sval_char(yytoken, '\\'); token_append_text(yytoken, yytext); }
-	[^\\\n\"]+      { token_append_sval_string(yytoken, yytext); token_append_text(yytoken, yytext); }
 	\n              { yyerror("Newline found after start of string literal"); }
+	[^\\\"]+      { token_append_sval_string(yytoken, yytext); token_append_text(yytoken, yytext); }
 	<<EOF>>         { yyerror("Unterminated string literal"); }
 	.               { yyerror("Unrecognized token in string literal"); }
 }
