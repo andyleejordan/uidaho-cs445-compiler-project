@@ -4,7 +4,6 @@ TESTS=test/lex/test.c test/lex/test.cpp
 OBJECTS=$(SOURCES:.c=.o)
 
 LEX=flex
-LEXFLAGS=--header-file=clex.h
 CC=gcc
 CFLAGS=-g -Wall -std=gnu99
 LDFLAGS=
@@ -26,7 +25,7 @@ main.c: clex.h
 clex.h: lex.yy.c
 
 lex.yy.c: clex.l cgram.tab.h
-	$(LEX) $(LEXFLAGS) $<
+	$(LEX) $<
 
 clean:
 	$(RM) $(BIN) $(OBJECTS) lex.yy.c clex.h

@@ -1,5 +1,7 @@
 /* -*- mode: flex; -*- */
-%option warn nodefault yylineno noyywrap nounput noinput
+%option warn nodefault nounput noinput
+%option header-file="clex.h"
+%option yylineno noyywrap
 %x COMMENT STR CHR INC
 
 D        [0-9]
