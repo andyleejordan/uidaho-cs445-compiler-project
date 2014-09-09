@@ -1,13 +1,18 @@
+/*
+ * list.h - Interface for doubly linked circular list.
+ *
+ * Copyright (C) 2014 Andrew Schwartzmeyer
+ *
+ * This file released under the AGPLv3.
+ *
+ */
+
 #ifndef LIST_H
 #define LIST_H
 
 #include <stdbool.h>
 
 #include "token.h"
-
-/*
- * basic doubly linked circular list implementation
- */
 
 union data {
 	void *empty;

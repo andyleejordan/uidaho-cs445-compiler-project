@@ -1,3 +1,12 @@
+/*
+ * token.c - Source code for tokens.
+ *
+ * Copyright (C) 2014 Andrew Schwartzmeyer
+ *
+ * This file released under the AGPLv3.
+ *
+ */
+
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>

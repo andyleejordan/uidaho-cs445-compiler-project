@@ -1,3 +1,12 @@
+/*
+ * main.c - Accepts files for the 120++ lexical analyzer.
+ *
+ * Copyright (C) 2014 Andrew Schwartzmeyer
+ *
+ * This file released under the AGPLv3.
+ *
+ */
+
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>

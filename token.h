@@ -1,8 +1,18 @@
+/*
+ * token.h - Interface for tokens.
+ *
+ * Copyright (C) 2014 Andrew Schwartzmeyer
+ *
+ * This file released under the AGPLv3.
+ *
+ */
+
 #ifndef TOKEN_H
 #define TOKEN_H
 
 #include <stdlib.h>
 
+/* interface from Dr. Jeffery */
 struct token
 {
 	int category;

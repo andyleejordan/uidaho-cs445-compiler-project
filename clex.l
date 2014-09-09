@@ -1,4 +1,13 @@
-/* -*- mode: flex; -*- */
+/* -*- mode: flex; -*-
+ *
+ * clex.l - Flex scanner for 120++.
+ *
+ * Copyright (C) 2014 Andrew Schwartzmeyer
+ *
+ * This file released under the AGPLv3.
+ *
+ */
+
 %option warn nounput noinput
 %option header-file="clex.h"
 %option yylineno noyywrap
