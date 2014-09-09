@@ -53,7 +53,7 @@ void handle_include(const char *s);
 
 %%
 
-[ \t\v\f\n]+            { /* eat whitespace */ }
+[ \t\v\f\n]*            { /* eat whitespace */ }
 
 "//".*$                 { /* eat C++ comments */ }
 "/*"                    { BEGIN(COMMENT); /* eat C comments */ }
@@ -170,7 +170,7 @@ L?\"                    { new_token(SCON); BEGIN(STR); }
 	"\\v"           { token_append_sval_char(yytoken, '\v'); token_append_text(yytoken, yytext); }
 	"\\\\"          { token_append_sval_char(yytoken, '\\'); token_append_text(yytoken, yytext); }
 	\n              { yyerror("Newline found after start of string literal"); }
-	[^\\\"]+      { token_append_sval_string(yytoken, yytext); token_append_text(yytoken, yytext); }
+	[^\\\"]+        { token_append_sval_string(yytoken, yytext); token_append_text(yytoken, yytext); }
 	<<EOF>>         { yyerror("Unterminated string literal"); }
 	.               { yyerror("Unrecognized token in string literal"); }
 }
@@ -224,6 +224,8 @@ L?\"                    { new_token(SCON); BEGIN(STR); }
 
 {L}({L}|{D})*           { new_token(IDENTIFIER); return IDENTIFIER; }
 
+<*>.                    { yyerror("Unrecognized token"); }
+
 <<EOF>>                 {
 	/* pop the current buffer and filename */
 	yypop_buffer_state();
@@ -241,8 +243,6 @@ L?\"                    { new_token(SCON); BEGIN(STR); }
 	if (!YY_CURRENT_BUFFER) /* if buffer stack is empty, stop */
 		yyterminate();
   }
-
-<*>.|\n                 { yyerror("Unrecognized token"); }
 %%
 
 void handle_include(const char *s)
