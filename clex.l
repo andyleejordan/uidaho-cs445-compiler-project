@@ -157,6 +157,7 @@ void handle_include(const char *s);
 	"\\r"           { yytoken->ival = '\r'; token_append_text(yytoken, yytext); }
 	"\\t"           { yytoken->ival = '\t'; token_append_text(yytoken, yytext); }
 	"\\v"           { yytoken->ival = '\v'; token_append_text(yytoken, yytext); }
+	"\\0"           { yytoken->ival = '\0'; token_append_text(yytoken, yytext); }
 	"\\\\"          { yytoken->ival = '\\'; token_append_text(yytoken, yytext); }
 	\n              { yyerror("Newline found after start of char literal"); }
 	[^\\"'"]        { yytoken->ival = *yytext; token_append_text(yytoken, yytext); }
@@ -177,6 +178,7 @@ L?\"                    { new_token(SCON); BEGIN(STR); }
 	"\\r"           { token_append_sval_char(yytoken, '\r'); token_append_text(yytoken, yytext); }
 	"\\t"           { token_append_sval_char(yytoken, '\t'); token_append_text(yytoken, yytext); }
 	"\\v"           { token_append_sval_char(yytoken, '\v'); token_append_text(yytoken, yytext); }
+	"\\0"           { yytoken->ival = '\0'; token_append_text(yytoken, yytext); }
 	"\\\\"          { token_append_sval_char(yytoken, '\\'); token_append_text(yytoken, yytext); }
 	\n              { yyerror("Newline found after start of string literal"); }
 	[^\\\"]+        { token_append_sval_string(yytoken, yytext); token_append_text(yytoken, yytext); }
