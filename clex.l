@@ -11,7 +11,7 @@
 %option warn nounput noinput
 %option header-file="clex.h"
 %option yylineno noyywrap
-%x COMMENT STR CHR INC
+%x COMMENT STR CHR CHREND INC
 
 D        [0-9]
 L        [a-zA-Z_]
@@ -147,24 +147,28 @@ void handle_include(const char *s);
 
 \'                      { new_token(CCON); BEGIN(CHR); }
 <CHR>{
-	\'              { token_append_text(yytoken, yytext); BEGIN(INITIAL); return CCON; }
-	"\\'"           { yytoken->ival = '\''; token_append_text(yytoken, yytext); }
-	"\\\""          { yytoken->ival = '"';  token_append_text(yytoken, yytext); }
-	"\\?"           { yytoken->ival = '\?'; token_append_text(yytoken, yytext); }
-	"\\a"           { yytoken->ival = '\a'; token_append_text(yytoken, yytext); }
-	"\\b"           { yytoken->ival = '\b'; token_append_text(yytoken, yytext); }
-	"\\f"           { yytoken->ival = '\f'; token_append_text(yytoken, yytext); }
-	"\\n"           { yytoken->ival = '\n'; token_append_text(yytoken, yytext); }
-	"\\r"           { yytoken->ival = '\r'; token_append_text(yytoken, yytext); }
-	"\\t"           { yytoken->ival = '\t'; token_append_text(yytoken, yytext); }
-	"\\v"           { yytoken->ival = '\v'; token_append_text(yytoken, yytext); }
-	"\\0"           { yytoken->ival = '\0'; token_append_text(yytoken, yytext); }
-	"\\\\"          { yytoken->ival = '\\'; token_append_text(yytoken, yytext); }
-	\n              { yyerror("Newline found after start of char literal"); }
-	[^\\"'"]        { yytoken->ival = *yytext; token_append_text(yytoken, yytext); }
-	<<EOF>>         { yyerror("Unterminated char literal"); }
+	\'              { yyerror("Empty char literal"); }
+	"\\'"           { yytoken->ival = '\''; token_append_text(yytoken, yytext); BEGIN(CHREND); }
+	"\\\""          { yytoken->ival = '"';  token_append_text(yytoken, yytext); BEGIN(CHREND); }
+	"\\?"           { yytoken->ival = '\?'; token_append_text(yytoken, yytext); BEGIN(CHREND); }
+	"\\a"           { yytoken->ival = '\a'; token_append_text(yytoken, yytext); BEGIN(CHREND); }
+	"\\b"           { yytoken->ival = '\b'; token_append_text(yytoken, yytext); BEGIN(CHREND); }
+	"\\f"           { yytoken->ival = '\f'; token_append_text(yytoken, yytext); BEGIN(CHREND); }
+	"\\n"           { yytoken->ival = '\n'; token_append_text(yytoken, yytext); BEGIN(CHREND); }
+	"\\r"           { yytoken->ival = '\r'; token_append_text(yytoken, yytext); BEGIN(CHREND); }
+	"\\t"           { yytoken->ival = '\t'; token_append_text(yytoken, yytext); BEGIN(CHREND); }
+	"\\v"           { yytoken->ival = '\v'; token_append_text(yytoken, yytext); BEGIN(CHREND); }
+	"\\0"           { yytoken->ival = '\0'; token_append_text(yytoken, yytext); BEGIN(CHREND); }
+	"\\\\"          { yytoken->ival = '\\'; token_append_text(yytoken, yytext); BEGIN(CHREND); }
+	[^\\"'"]        { yytoken->ival = *yytext; token_append_text(yytoken, yytext); BEGIN(CHREND); }
 	.               { yyerror("Unrecognized token in char literal"); }
 }
+<CHREND>{
+	\'              { token_append_text(yytoken, yytext); BEGIN(INITIAL); return CCON; }
+	\n              { yyerror("Unexpected newline in char literal"); }
+	.               { yyerror("Too many symbols in char literal"); }
+}
+
 
 L?\"                    { new_token(SCON); BEGIN(STR); }
 <STR>{
@@ -181,10 +185,10 @@ L?\"                    { new_token(SCON); BEGIN(STR); }
 	"\\v"           { token_append_sval_char(yytoken, '\v'); token_append_text(yytoken, yytext); }
 	"\\0"           { yytoken->ival = '\0'; token_append_text(yytoken, yytext); }
 	"\\\\"          { token_append_sval_char(yytoken, '\\'); token_append_text(yytoken, yytext); }
-	\n              { yyerror("Newline found after start of string literal"); }
-	[^\\\"]+        { token_append_sval_string(yytoken, yytext); token_append_text(yytoken, yytext); }
-	<<EOF>>         { yyerror("Unterminated string literal"); }
+	[^\\\"\n]+      { token_append_sval_string(yytoken, yytext); token_append_text(yytoken, yytext); }
+	\n              { yyerror("Unexpected newline in string literal"); }
 	.               { yyerror("Unrecognized token in string literal"); }
+	<<EOF>>         { yyerror("Unterminated string literal"); }
 }
 
   /* operators */
