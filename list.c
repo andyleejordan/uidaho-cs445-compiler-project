@@ -53,6 +53,11 @@ struct list *list_init()
 
 void list_destroy(struct list *self, void (*destroy)(union data))
 {
+	if (self == NULL) {
+		fprintf(stderr, "list_destroy(): self was null\n");
+		return;
+	}
+
 	while (!list_empty(self)) {
 		union data d = list_pop(self);
 		if (d.token != NULL)
@@ -64,26 +69,51 @@ void list_destroy(struct list *self, void (*destroy)(union data))
 
 size_t list_size(const struct list *self)
 {
+	if (self == NULL) {
+		fprintf(stderr, "list_size(): self was null\n");
+		return 0;
+	}
+
 	return self->size;
 }
 
 bool list_empty(const struct list *self)
 {
+	if (self == NULL) {
+		fprintf(stderr, "list_empty(): self was null\n");
+		return false;
+	}
+
 	return (self->size == 0);
 }
 
 bool list_end(const struct list_node *n)
 {
+	if (n == NULL) {
+		fprintf(stderr, "list_end(): n was null\n");
+		return false;
+	}
+
 	return n->sentinel;
 }
 
 struct list_node *list_head(const struct list *self)
 {
+	if (self == NULL) {
+		fprintf(stderr, "list_tail(): self was null\n");
+		return NULL;
+	}
+
 	return self->sentinel->next;
 }
 
 struct list_node *list_tail(const struct list *self)
 {
+	if (self == NULL) {
+		fprintf(stderr, "list_tail(): self was null\n");
+		return NULL;
+	}
+
 	return self->sentinel->prev;
 }
 
