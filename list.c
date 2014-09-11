@@ -177,25 +177,26 @@ void list_push_front(struct list *self, union data data)
 
 union data list_pop(struct list *self)
 {
-	if (self == NULL)
-		goto error_null_self;
+	if (self == NULL) {
+		fprintf(stderr, "list_pop(): self was null\n");
+		return (union data)NULL;
+	}
 
 	struct list_node *n = self->sentinel->prev;
+	if (list_end(n)) {
+		return (union data)NULL;
+	}
+
 	union data d = n->data;
 
 	self->sentinel->prev = n->prev;
 	n->prev->next = self->sentinel;
 
-	if (!list_end(n))
-		free(n);
+	free(n);
 
 	--self->size;
 
 	return d;
-
- error_null_self:
-	fprintf(stderr, "list_pop(): self was null\n");
-	exit(EXIT_FAILURE);
 }
 
 union data list_pop_front(struct list *self)
