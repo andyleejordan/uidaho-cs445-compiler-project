@@ -1,4 +1,4 @@
-* Compiler and Translator Design Project
+* Compiler and Translator Design Project - by Andrew Schwartzmeyer
 This repository is my work-in-progress for the University of Idaho's
 Fall 2014 course [[http://www2.cs.uidaho.edu/~jeffery/courses/445/syllabus.html][CS 445: Compiler and Translator Design]], by
 Dr. Clinton Jeffery.
