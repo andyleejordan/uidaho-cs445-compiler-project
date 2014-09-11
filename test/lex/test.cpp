@@ -30,6 +30,8 @@ int main(int argc, char *argv[])
 	 * comment
 	 */
 
+	int double_array[2][2] = {{1, 2}, {3, 4}};
+
 	union types {
 		bool is = false;
 		char character = 'A';
@@ -42,6 +44,8 @@ int main(int argc, char *argv[])
 		float one = 1.;
 	};
 
+	string empty = "";
+
 
 	TestClass *tmpclass = new TestClass;
 	cout << tmpclass->data << endl;
@@ -50,7 +54,7 @@ int main(int argc, char *argv[])
 	return 0;
 }
 
-TestClass::TestClass(): data("Hello world!")
+TestClass::TestClass(): data("Hello world!\n")
 {}
 
 TestClass::TestClass(string data): data(data)
