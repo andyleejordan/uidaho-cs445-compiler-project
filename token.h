@@ -22,6 +22,7 @@ struct token
 	int ival;
 	double fval;
 	char *sval;
+	size_t ssize;
 };
 
 /* malloc token and assign values */
@@ -39,5 +40,7 @@ void token_append_sval_string(struct token *t, const char *s);
 
 /* append string literal yytoken->text (with null) */
 void token_append_text(struct token *t, const char* s);
+
+void token_finish_sval();
 
 #endif /* TOKEN_H */

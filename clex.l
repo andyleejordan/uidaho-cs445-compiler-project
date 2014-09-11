@@ -172,7 +172,7 @@ void handle_include(const char *s);
 
 L?\"                    { new_token(SCON); BEGIN(STR); }
 <STR>{
-	\"              { token_append_sval_char(yytoken, '\0'); token_append_text(yytoken, yytext); BEGIN(INITIAL); return SCON; }
+	\"              { token_finish_sval(yytoken); token_append_text(yytoken, yytext); BEGIN(INITIAL); return SCON; }
 	"\\'"           { token_append_sval_char(yytoken, '\''); token_append_text(yytoken, yytext); }
 	"\\\""          { token_append_sval_char(yytoken, '"');  token_append_text(yytoken, yytext); }
 	"\\?"           { token_append_sval_char(yytoken, '\?'); token_append_text(yytoken, yytext); }
@@ -183,7 +183,7 @@ L?\"                    { new_token(SCON); BEGIN(STR); }
 	"\\r"           { token_append_sval_char(yytoken, '\r'); token_append_text(yytoken, yytext); }
 	"\\t"           { token_append_sval_char(yytoken, '\t'); token_append_text(yytoken, yytext); }
 	"\\v"           { token_append_sval_char(yytoken, '\v'); token_append_text(yytoken, yytext); }
-	"\\0"           { yytoken->ival = '\0'; token_append_text(yytoken, yytext); }
+	"\\0"           { token_append_sval_char(yytoken, '\0'); token_append_text(yytoken, yytext); }
 	"\\\\"          { token_append_sval_char(yytoken, '\\'); token_append_text(yytoken, yytext); }
 	[^\\\"\n]+      { token_append_sval_string(yytoken, yytext); token_append_text(yytoken, yytext); }
 	\n              { yyerror("Unexpected newline in string literal"); }
