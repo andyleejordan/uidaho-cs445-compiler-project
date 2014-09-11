@@ -1,7 +1,5 @@
 * Tasks
-** TODO Finish [[http://www2.cs.uidaho.edu/~jeffery/courses/445/hw1.html][Homework #1]]
+** DONE Finish [[http://www2.cs.uidaho.edu/~jeffery/courses/445/hw1.html][Homework #1]]
 ** TODO flyweight pattern for repeated strings
-** DONE free function pointer for =list_destroy=
-** TODO Respect include guards
-** TODO Add libraries to their own struct
-** TODO Error on unsupported libraries
+** TODO Respect include guards(?)
+** TODO Add libraries to their own struct(?)
