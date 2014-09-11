@@ -33,6 +33,7 @@ IS       (u|U|l|L)*
 
 extern struct token *yytoken;
 extern struct list *filenames;
+extern void handle_error(char *c);
 extern char *current_filename();
 
 bool cstdlib  = false;
@@ -262,27 +263,27 @@ void handle_include(const char *s)
 	size_t len = strlen(s) - 2; /* size without surrounding quotes */
 	char *include = calloc(len+1, sizeof(char));
 	if (include == NULL)
-		goto error;
+		handle_error("handle include buffer");
 	strncpy(include, s+1, len); /* copy substring */
 	include[len] = '\0';
 
 	/* get the real path */
 	char *filename = realpath(include, NULL);
 	free(include);
-	if (filename == NULL)
-		goto error;
+	if (filename == NULL) {
+		fprintf(stderr, "Could not resolve path to included file: %s, included from %s\n", include, current_filename());
+		exit(EXIT_FAILURE);
+	}
 	list_push(filenames, (union data)filename);
 
 	/* open file and push buffer */
 	yyin = fopen(filename, "r");
-	if (yyin == NULL)
-		goto error;
+	if (yyin == NULL) {
+		fprintf(stderr, "Could not open included file: %s, include from %s\n", filename, current_filename());
+		exit(EXIT_FAILURE);
+	}
 	yylineno = 1;
 	yypush_buffer_state(yy_create_buffer(yyin, YY_BUF_SIZE));
 
 	return;
-
- error:
-	perror("handle_include()");
-	exit(EXIT_FAILURE);
 }

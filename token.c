@@ -14,10 +14,14 @@
 #include "token.h"
 #include "cgram.tab.h"
 
+extern void handle_error(char *c);
+
 struct token *token_create(int category, int lineno,
                            const char *text, const char* filename)
 {
 	struct token *t = malloc(sizeof(*t));
+	if (t == NULL)
+		handle_error("token create");
 
 	t->category = category;
 	t->lineno = lineno;
@@ -55,11 +59,8 @@ void token_realloc_sval(struct token *t, const char *s)
 	size_t size = strlen(t->sval)+strlen(s)+1;
 	t->sval = realloc(t->sval, size);
 	if (t->sval == NULL)
-		goto error;
+		handle_error("token_sval");
 	return;
- error:
-	perror("token_realloc_sval()");
-	exit(EXIT_FAILURE);
 }
 
 void token_append_sval_char(struct token *t, char c)
@@ -81,11 +82,8 @@ void token_realloc_text(struct token *t, const char *s)
 	size_t size = strlen(t->text)+strlen(s)+1;
 	t->text = realloc(t->text, size);
 	if (t->text == NULL)
-		goto error;
+		handle_error("token text");
 	return;
- error:
-	perror("token_realloc_text()");
-	exit(EXIT_FAILURE);
 }
 
 void token_append_text(struct token *t, const char* s)
