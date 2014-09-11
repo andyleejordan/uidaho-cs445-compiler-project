@@ -12,12 +12,34 @@
 
 #include "list.h"
 
+struct list_node *list_node_init()
+{
+	struct list_node *n = malloc(sizeof(*n));
+	if (n == NULL) {
+		perror("list_node_init()");
+		return NULL;
+	}
+
+	n->sentinel = false;
+	n->next = NULL;
+	n->prev = NULL;
+
+	return n;
+}
+
 struct list *list_init()
 {
 	struct list *self = malloc(sizeof(*self));
-	struct list_node *sentinel = malloc(sizeof(*sentinel));
-	if (self == NULL || sentinel == NULL)
-		goto error_malloc;
+	if (self == NULL) {
+		perror("list_init()");
+		return NULL;
+	}
+
+	struct list_node *sentinel = list_node_init();
+	if (sentinel == NULL) {
+		free(self);
+		return NULL;
+	}
 
 	self->sentinel = sentinel;
 	self->size = 0;
@@ -27,10 +49,6 @@ struct list *list_init()
 	sentinel->prev = sentinel;
 
 	return self;
-
- error_malloc:
-	perror("list malloc");
-	exit(EXIT_FAILURE);
 }
 
 void list_destroy(struct list *self, void (*destroy)(union data))
@@ -74,10 +92,9 @@ void list_push(struct list *self, union data data)
 	if (self == NULL)
 		goto error_null_self;
 
-	struct list_node *n = malloc(sizeof(*n));
+	struct list_node *n = list_node_init();
 	if (n == NULL)
 		goto error_malloc;
-	n->sentinel = false;
 	n->data = data;
 
 	n->prev = self->sentinel->prev;
@@ -104,10 +121,9 @@ void list_push_front(struct list *self, union data data)
 	if (self == NULL)
 		goto error_null_self;
 
-	struct list_node *n = malloc(sizeof(*n));
+	struct list_node *n = list_node_init();
 	if (n == NULL)
 		goto error_malloc;
-	n->sentinel = false;
 	n->data = data;
 
 	n->next = self->sentinel->next;
