@@ -24,6 +24,8 @@ main.c: clex.h
 
 clex.h: lex.yy.c
 
+list.c: data.h
+
 lex.yy.c: clex.l cgram.tab.h
 	$(LEX) $<
 

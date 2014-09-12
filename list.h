@@ -10,15 +10,10 @@
 #ifndef LIST_H
 #define LIST_H
 
+#include <stdlib.h>
 #include <stdbool.h>
 
-#include "token.h"
-
-union data {
-	void *empty;
-	struct token *token;
-	char *filename;
-};
+#include "data.h"
 
 struct list_node
 {
