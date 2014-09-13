@@ -23,6 +23,7 @@ struct list_node *list_node_init()
 	n->sentinel = false;
 	n->next = NULL;
 	n->prev = NULL;
+	n->data = NULL;
 
 	return n;
 }
@@ -51,7 +52,7 @@ struct list *list_init()
 	return self;
 }
 
-void list_destroy(struct list *self, void (*destroy)(union data))
+void list_destroy(struct list *self, void (*destroy)(void *data))
 {
 	if (self == NULL) {
 		fprintf(stderr, "list_destroy(): self was null\n");
@@ -59,11 +60,8 @@ void list_destroy(struct list *self, void (*destroy)(union data))
 	}
 
 	while (!list_empty(self)) {
-		union data d = list_pop(self);
-		if (d.token != NULL)
-			destroy((union data)d.token);
-		else if (d.filename != NULL)
-			destroy((union data)d.filename);
+		void *d = list_pop(self);
+		destroy(d);
 	}
 }
 
@@ -117,7 +115,7 @@ struct list_node *list_tail(const struct list *self)
 	return self->sentinel->prev;
 }
 
-struct list *list_push(struct list *self, union data data)
+struct list *list_push(struct list *self, void *data)
 {
 	if (self == NULL) {
 		fprintf(stderr, "list_push(): self was null\n");
@@ -141,7 +139,7 @@ struct list *list_push(struct list *self, union data data)
 	return self;
 }
 
-struct list *list_push_front(struct list *self, union data data)
+struct list *list_push_front(struct list *self, void *data)
 {
 	if (self == NULL) {
 		fprintf(stderr, "list_push_front(): self was null\n");
@@ -165,19 +163,19 @@ struct list *list_push_front(struct list *self, union data data)
 	return self;
 }
 
-union data list_pop(struct list *self)
+void *list_pop(struct list *self)
 {
 	if (self == NULL) {
 		fprintf(stderr, "list_pop(): self was null\n");
-		return (union data)NULL;
+		return NULL;
 	}
 
 	struct list_node *n = self->sentinel->prev;
 	if (list_end(n)) {
-		return (union data)NULL;
+		return NULL;
 	}
 
-	union data d = n->data;
+	void *d = n->data;
 
 	self->sentinel->prev = n->prev;
 	n->prev->next = self->sentinel;
@@ -189,18 +187,18 @@ union data list_pop(struct list *self)
 	return d;
 }
 
-union data list_pop_front(struct list *self)
+void *list_pop_front(struct list *self)
 {
 	if (self == NULL) {
 		fprintf(stderr, "list_pop_front(): self was null\n");
-		return (union data)NULL;
+		return NULL;
 	}
 
 	struct list_node *n = self->sentinel->next;
 	if (list_end(n))
-		return (union data)NULL;
+		return NULL;
 
-	union data d = n->data;
+	void *d = n->data;
 
 	self->sentinel->next = n->next;
 	n->next->prev = self->sentinel;
@@ -212,28 +210,28 @@ union data list_pop_front(struct list *self)
 	return d;
 }
 
-union data list_peek(const struct list *self)
+void *list_peek(const struct list *self)
 {
 	if (self == NULL) {
 		fprintf(stderr, "list_peek(): self was null\n");
-		return (union data)NULL;
+		return NULL;
 	}
 
 	if (list_empty(self))
-		return (union data)NULL;
+		return NULL;
 
 	return self->sentinel->prev->data;
 }
 
-union data list_peek_front(const struct list *self)
+void *list_peek_front(const struct list *self)
 {
 	if (self == NULL) {
 		fprintf(stderr, "list_peek_front(): self was null\n");
-		return (union data)NULL;
+		return NULL;
 	}
 
 	if (list_empty(self))
-		return (union data)NULL;
+		return NULL;
 
 	return self->sentinel->next->data;
 }

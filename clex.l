@@ -48,14 +48,16 @@ bool iomanip  = false;
 /* print error message to stderr and terminate (for now) */
 void yyerror(const char *s)
 {
-	fprintf (stderr, "File %s line %d, token %s: %s\n", list_peek(filenames).filename, yylineno, yytext, s);
+	fprintf (stderr, "File %s line %d, token %s: %s\n",
+	         (const char *)list_peek(filenames), yylineno, yytext, s);
 	exit(1);
 }
 
 /* allocates and prepares token, saving pointer into yytoken */
 void new_token(int category)
 {
-	yytoken = token_create(category, yylineno, yytext, list_peek(filenames).filename);
+	yytoken = token_create(category, yylineno, yytext,
+	                       (const char *)list_peek(filenames));
 }
 
 void handle_include(const char *s);
@@ -278,7 +280,7 @@ void handle_include(const char *s)
 		fprintf(stderr, "Could not resolve path to included file: %s, included from %s\n", include, current_filename());
 		exit(EXIT_FAILURE);
 	}
-	list_push(filenames, (union data)filename);
+	list_push(filenames, filename);
 
 	/* open file and push buffer */
 	yyin = fopen(filename, "r");

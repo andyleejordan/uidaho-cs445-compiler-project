@@ -31,7 +31,7 @@ void handle_error(char *c)
 
 char *current_filename()
 {
-	const char *filename = list_peek(filenames).filename;
+	const char *filename = list_peek(filenames);
 	if (filename == NULL)
 		return NULL;
 	char *copy = calloc(strlen(filename)+1, sizeof(char));
@@ -53,7 +53,7 @@ void parse_files()
 			fprintf(stderr, "Unkown return value from yylex %d\n", category);
 			exit(EXIT_FAILURE);
 		}
-		list_push(tokens, (union data)yytoken);
+		list_push(tokens, yytoken);
 	}
 	yylex_destroy();
 	return;
@@ -75,7 +75,7 @@ int main(int argc, char **argv)
 			handle_error("main filename");
 		strcpy(filename, "stdin");
 
-		list_push(filenames, (union data)filename);
+		list_push(filenames, filename);
 		yyin = stdin;
 		yypush_buffer_state(yy_create_buffer(yyin, YY_BUF_SIZE));
 	} else {
@@ -86,7 +86,7 @@ int main(int argc, char **argv)
 				handle_error("main real path");
 
 			/* open file and push filename and buffer */
-			list_push(filenames, (union data)filename);
+			list_push(filenames, filename);
 			yyin = fopen(filename, "r");
 			if (yyin == NULL)
 				handle_error("main file open");
@@ -109,30 +109,31 @@ int main(int argc, char **argv)
 	printf("------------------------------------------\n");
 	const struct list_node *iter = list_head(tokens);
 	while (!list_end(iter)) {
-		char *filename = calloc(strlen(iter->data.token->filename)+1, sizeof(char));
-		strcpy(filename, iter->data.token->filename);
+		const struct token *t = iter->data;
+		char *filename = calloc(strlen(t->filename)+1, sizeof(char));
+		strcpy(filename, t->filename);
 		printf("%-5d%-12s%-8d%s ",
-		       iter->data.token->lineno,
+		       t->lineno,
 		       basename(filename),
-		       iter->data.token->category,
-		       iter->data.token->text);
+		       t->category,
+		       t->text);
 		free(filename);
 
-		if (iter->data.token->category == ICON)
-			printf("-> %d", iter->data.token->ival);
-		else if (iter->data.token->category == FCON)
-			printf("-> %f", iter->data.token->fval);
-		else if (iter->data.token->category == CCON)
-			printf("-> %c", iter->data.token->ival);
-		else if (iter->data.token->category == SCON)
-			printf("-> %s", iter->data.token->sval);
+		if (t->category == ICON)
+			printf("-> %d", t->ival);
+		else if (t->category == FCON)
+			printf("-> %f", t->fval);
+		else if (t->category == CCON)
+			printf("-> %c", t->ival);
+		else if (t->category == SCON)
+			printf("-> %s", t->sval);
 
 		printf("\n");
 		iter = iter->next;
 	}
 
-	list_destroy(tokens, (void (*)(union data))&token_free);
-	list_destroy(filenames, (void (*)(union data))&free);
+	list_destroy(tokens, (void (*)(void *))&token_free);
+	list_destroy(filenames, (void (*)(void *))&free);
 
 	return EXIT_SUCCESS;
 }
