@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "../../tree.h"
-#include "../../list.h"
+#include "../tree.h"
+#include "../list.h"
 
 char *convert(char *data)
 {
@@ -24,6 +24,8 @@ int main(int argc, char *argv[])
 
 	tree_push(childB, d);
 	tree_push(childB, e);
+
+	printf("Child A size is %lu\n", tree_size(childA));
 
 	printf("Total size is %lu\n", tree_size(root));
 	tree_print(root, (char *(*)(void *))&convert);

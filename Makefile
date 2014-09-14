@@ -1,21 +1,30 @@
+# binaries
 BIN=120++
-SOURCES=main.c list.c token.c lex.yy.c
-TESTS=test/lex/test.c test/lex/test.cpp
-OBJECTS=$(SOURCES:.c=.o)
-
-LEX=flex
+TESTS=test-list test-tree
 CC=gcc
-CFLAGS=-g -Wall -std=gnu99
-LDFLAGS=
+LEX=flex
 RM=rm -f
 
-all: $(BIN)
+# compile options
+CFLAGS=-g -Wall -std=gnu99
 
-test: $(BIN)
-	./$(BIN) $(TESTS)
+# targets
+all: $(BIN) $(TESTS)
+
+test: $(TESTS)
+
+test-lex: $(BIN)
+	./$(BIN) $(LEX_TESTS)
+
+clean:
+	$(RM) $(BIN) $(TESTS) $(OBJECTS) lex.yy.c clex.h
+
+# source
+SOURCES=main.c list.c token.c lex.yy.c
+OBJECTS=$(SOURCES:.c=.o)
 
 $(BIN): $(OBJECTS)
-	$(CC) $(LDFLAGS) $^ -o $@
+	$(CC) $^ -o $@
 
 .c.o:
 	$(CC) $(CFLAGS) -c $< -o $@
@@ -27,5 +36,13 @@ clex.h: lex.yy.c
 lex.yy.c: clex.l cgram.tab.h
 	$(LEX) $<
 
-clean:
-	$(RM) $(BIN) $(OBJECTS) lex.yy.c clex.h
+# tests
+LEX_TESTS=test/lex/test.c test/lex/test.cpp
+
+test-list: list.c test/list.c
+	$(CC) $(CFLAGS) $^ -o $@
+	./$@
+
+test-tree: tree.c list.c test/tree.c
+	$(CC) $(CFLAGS) $^ -o $@
+	./$@
