@@ -52,6 +52,10 @@ struct list *list_init()
 	return self;
 }
 
+/*
+ * Use destroy function to free data of each node, free said node,
+ * finally free sentinel and list.
+ */
 void list_destroy(struct list *self, void (*destroy)(void *data))
 {
 	if (self == NULL) {
@@ -63,6 +67,8 @@ void list_destroy(struct list *self, void (*destroy)(void *data))
 		void *d = list_pop(self);
 		destroy(d);
 	}
+	free(self->sentinel);
+	free(self);
 }
 
 size_t list_size(const struct list *self)
