@@ -95,7 +95,7 @@ void test_iter_forward(struct list *list)
 	size_t counter = 0;
 	while (!list_end(iter)) {
 		++counter;
-		printf("%s ", iter->data);
+		printf("%s ", (char *)iter->data);
 		iter = iter->next;
 	}
 	if (counter != list_size(list)) {
@@ -110,7 +110,7 @@ void test_iter_backward(struct list *list)
 	size_t counter = 0;
 	while (!list_end(iter)) {
 		++counter;
-		printf("%s ", iter->data);
+		printf("%s ", (char *)iter->data);
 		iter = iter->prev;
 	}
 	if (counter != list_size(list)) {
