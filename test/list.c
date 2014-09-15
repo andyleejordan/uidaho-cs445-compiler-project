@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "test.h"
 #include "../list.h"
 
 void test_sentinel(struct list *list)
@@ -18,13 +19,15 @@ void test_sentinel(struct list *list)
 	struct list_node *sentinel = list->sentinel;
 
 	if (!sentinel->sentinel)
-		fprintf(stderr, "FAILURE sentinel should be marked as such\n");
+		failure("sentinel should be marked as such");
 }
 
 void test_size(struct list *list, size_t size)
 {
-	if (list_size(list) != size)
-		fprintf(stderr, "FAILURE list size should have been %lu\n", size);
+	if (list_size(list) != size) {
+		sprintf(buffer, "size should have been %lu", size);
+		failure(buffer);
+	}
 }
 
 void test_empty(struct list *list)
@@ -32,7 +35,7 @@ void test_empty(struct list *list)
 	test_size(list, 0);
 
 	if (!list_empty(list))
-		fprintf(stderr, "FAILURE empty list should have been empty\n");
+		failure("empty list should have been empty");
 }
 
 void test_empty_sentinel(struct list *list)
@@ -40,16 +43,16 @@ void test_empty_sentinel(struct list *list)
 	struct list_node *sentinel = list->sentinel;
 
 	if (sentinel != list_head(list))
-		fprintf(stderr, "FAILURE empty list sentinel should equal head\n");
+		failure("empty list sentinel should equal head");
 
 	if (sentinel != list_tail(list))
-		fprintf(stderr, "FAILURE empty list sentinel should equal tail\n");
+		failure("empty list sentinel should equal tail");
 
 	if (sentinel->next != sentinel)
-		fprintf(stderr, "FAILURE empty list sentinel next should be itself\n");
+		failure("empty list sentinel next should be itself");
 
 	if (sentinel->prev != sentinel)
-		fprintf(stderr, "FAILURE empty list sentinel prev should be itself\n");
+		failure("empty list sentinel prev should be itself");
 }
 
 void test_empty_ends(struct list *list)
@@ -58,28 +61,32 @@ void test_empty_ends(struct list *list)
 	struct list_node *tail = list_tail(list);
 
 	if (head != tail)
-		fprintf(stderr, "FAILURE empty list head should equal tail\n");
+		failure("empty list head should equal tail");
 
 	if (!list_end(head))
-		fprintf(stderr, "FAILURE empty list head should have been end\n");
+		failure("empty list head should have been end");
 }
 
 void test_non_empty(struct list *list)
 {
 	if (list_empty(list))
-		fprintf(stderr, "FAILURE list should not have been empty\n");
+		failure("should not have been empty");
 }
 
 void test_head_data(struct list *list, char *data)
 {
-	if (strcmp(list_peek_front(list), data) != 0)
-		fprintf(stderr, "FAILURE list head should have been '%s'\n", data);
+	if (strcmp(list_peek_front(list), data) != 0) {
+		sprintf(buffer, "head should have been '%s'", data);
+		failure(buffer);
+	}
 }
 
 void test_tail_data(struct list *list, char *data)
 {
-	if (strcmp(list_peek(list), data) != 0)
-		fprintf(stderr, "FAILURE list head should have been '%s'\n", data);
+	if (strcmp(list_peek(list), data) != 0) {
+		sprintf(buffer, "head should have been '%s'", data);
+		failure(buffer);
+	}
 }
 
 void test_iter_forward(struct list *list)
@@ -91,8 +98,10 @@ void test_iter_forward(struct list *list)
 		printf("%s ", iter->data);
 		iter = iter->next;
 	}
-	if (counter != list_size(list))
-		fprintf(stderr, "FAILURE list iter forward counted %lu, but had size %lu\n", counter, list_size(list));
+	if (counter != list_size(list)) {
+		sprintf(buffer, "iter forward counted %lu, but had size %lu", counter, list_size(list));
+		failure(buffer);
+	}
 }
 
 void test_iter_backward(struct list *list)
@@ -104,15 +113,17 @@ void test_iter_backward(struct list *list)
 		printf("%s ", iter->data);
 		iter = iter->prev;
 	}
-	if (counter != list_size(list))
-		fprintf(stderr, "FAILURE list iter backward counted %lu, but had size %lu\n", counter, list_size(list));
+	if (counter != list_size(list)) {
+		sprintf(buffer, "iter backward counted %lu, but had size %lu", counter, list_size(list));
+		failure(buffer);
+	}
 }
 
 int main(int argc, char *argv[])
 {
-	printf("RUNNING list tests\n");
+	running("list");
 
-	printf("TESTING list initialization\n");
+	testing("initialization");
 	struct list *list = list_init();
 	assert(list != NULL);
 	test_sentinel(list);
@@ -120,7 +131,7 @@ int main(int argc, char *argv[])
 	test_empty_sentinel(list);
 	test_empty_ends(list);
 
-	printf("TESTING list push\n");
+	testing("push");
 	char *a = strdup("A");
 	list_push(list, a);
 	test_head_data(list, a);
@@ -130,37 +141,37 @@ int main(int argc, char *argv[])
 	list_push(list, b);
 	test_tail_data(list, b);
 
-	printf("TESTING list push front\n");
+	testing("push front");
 	list_push_front(list, b);
 	test_head_data(list, b);
 
-	printf("TESTING list not empty\n");
+	testing("not empty");
 	test_non_empty(list);
 	test_size(list, 3);
 
-	printf("TESTING list pop\n");
+	testing("pop");
 	list_pop(list);
 	test_tail_data(list, a);
 
-	printf("TESTING list pop front\n");
+	testing("pop front");
 	list_pop_front(list);
 	test_head_data(list, a);
 
-	printf("TESTING list emptied\n");
+	testing("emptied");
 	list_pop(list);
 	test_empty(list);
 
-	printf("TESTING list forward iteration: ");
+	testing("forward iteration:");
 	list_push(list, a);
 	list_push(list, b);
 	test_iter_forward(list);
 	printf("\n");
 
-	printf("TESTING list backward iteration: ");
+	testing("backward iteration:");
 	test_iter_backward(list);
 	printf("\n");
 
 	list_destroy(list, &free);
 
-	return 0;
+	return status;
 }
