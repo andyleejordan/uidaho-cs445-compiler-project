@@ -36,6 +36,10 @@ clex.h: lex.yy.c
 lex.yy.c: clex.l cgram.tab.h
 	$(LEX) $<
 
+token.c: token.h
+
+list.c: list.h
+
 # tests
 LEX_TESTS=test/lex/test.c test/lex/test.cpp
 
