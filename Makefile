@@ -17,7 +17,7 @@ test-lex: $(BIN)
 	./$(BIN) $(LEX_TESTS)
 
 clean:
-	$(RM) $(BIN) $(TESTS) $(OBJECTS) lex.yy.c clex.h
+	$(RM) $(BIN) $(TESTS) $(OBJECTS) $(TEST_OBJECTS) lex.yy.c clex.h
 
 # source
 SOURCES=main.c token.c list.c tree.c lex.yy.c
@@ -42,13 +42,18 @@ list.c: list.h
 
 tree.c: tree.h
 
+test/test.c: test/test.h
+
 # tests
 LEX_TESTS=test/lex/test.c test/lex/test.cpp
 
-test-list: list.c test/list.c
+TEST_SOURCES=test/test.c list.c tree.c
+TEST_OBJECTS=$(TEST_SOURCES:.c=.o)
+
+test-list: test/list.c $(TEST_OBJECTS)
 	$(CC) $(CFLAGS) $^ -o $@
 	./$@
 
-test-tree: tree.c list.c test/tree.c
+test-tree: test/tree.c $(TEST_OBJECTS)
 	$(CC) $(CFLAGS) $^ -o $@
 	./$@
