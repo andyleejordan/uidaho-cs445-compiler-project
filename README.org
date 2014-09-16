@@ -1,11 +1,20 @@
 * Compiler and Translator Design Project
 
-[[https://travis-ci.org/andschwa/uidaho-cs445.png?branch=master]]
+[[https://travis-ci.org/andschwa/uidaho-cs445][https://travis-ci.org/andschwa/uidaho-cs445.svg?branch=master]]
 
 /Andrew Schwartzmeyer/
 
-This repository is my work-in-progress for the University of Idaho's Fall 2014 course [[http://www2.cs.uidaho.edu/~jeffery/courses/445/syllabus.html][CS 445: Compiler and Translator Design]], by Dr. Clinton Jeffery.
+This repository is my work-in-progress for the University of Idaho's
+Fall 2014 course [[http://www2.cs.uidaho.edu/~jeffery/courses/445/syllabus.html][CS 445: Compiler and Translator Design]], by
+Dr. Clinton Jeffery.
 
 ** Assignment #1: A Lexical Analyzer
 
-Per the [[http://www2.cs.uidaho.edu/~jeffery/courses/445/hw1.html][requirements]], my initial goal is to create a lexical analyzer (using [[http://flex.sourceforge.net/][Flex]]) for the subset of the C++ programming language used in our CS 120 course, dubbed "120++".
+Per the [[http://www2.cs.uidaho.edu/~jeffery/courses/445/hw1.html][requirements]], my initial goal is to create a lexical analyzer
+(using [[http://flex.sourceforge.net/][Flex]]) for the subset of the C++ programming language used in
+our CS 120 course, dubbed "120++".
+
+** Assignment #2: A Semantic Analyzer
+
+Per the [[http://www2.cs.uidaho.edu/~jeffery/courses/445/hw2.html][requirements]], my next goal is to write (or reuse) a 120++
+grammar that works with Bison.
