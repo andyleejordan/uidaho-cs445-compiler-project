@@ -34,10 +34,9 @@ char *current_filename()
 	const char *filename = list_peek(filenames);
 	if (filename == NULL)
 		return NULL;
-	char *copy = calloc(strlen(filename)+1, sizeof(char));
+	char *copy = strdup(filename);
 	if (copy == NULL)
 		handle_error("current_filename()");
-	strcpy(copy, filename);
 	return copy;
 }
 
@@ -70,11 +69,9 @@ int main(int argc, char **argv)
 
 	if (argc == 1) {
 		/* not 'char filename[] = "stdin"' because list_destroy */
-		char *filename = malloc(sizeof("stdin"));
+		char *filename = strdup("stdin");
 		if (filename == NULL)
 			handle_error("main filename");
-		strcpy(filename, "stdin");
-
 		list_push(filenames, filename);
 		yyin = stdin;
 		yypush_buffer_state(yy_create_buffer(yyin, YY_BUF_SIZE));
@@ -110,13 +107,17 @@ int main(int argc, char **argv)
 	const struct list_node *iter = list_head(tokens);
 	while (!list_end(iter)) {
 		const struct token *t = iter->data;
-		char *filename = calloc(strlen(t->filename)+1, sizeof(char));
-		strcpy(filename, t->filename);
+
+		char *filename = strdup(t->filename);
+		if (filename == NULL)
+			handle_error("main token filename");
+
 		printf("%-5d%-12s%-8d%s ",
 		       t->lineno,
 		       basename(filename),
 		       t->category,
 		       t->text);
+
 		free(filename);
 
 		if (t->category == ICON)
