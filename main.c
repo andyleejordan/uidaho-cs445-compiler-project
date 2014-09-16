@@ -133,8 +133,5 @@ int main(int argc, char **argv)
 		iter = iter->next;
 	}
 
-	list_destroy(tokens, (void (*)(void *))&token_free);
-	list_destroy(filenames, (void (*)(void *))&free);
-
 	return EXIT_SUCCESS;
 }
