@@ -8,6 +8,10 @@ RM=rm -f
 # compile options
 CFLAGS=-g -Wall -std=gnu99
 
+# archive options
+GITREF=HEAD
+PREFIX=$(BIN)
+
 # targets
 all: $(BIN) $(TESTS)
 
@@ -15,6 +19,9 @@ test: $(TESTS)
 
 test-lex: $(BIN)
 	./$(BIN) $(LEX_TESTS)
+
+tar:
+	git archive --format=tar.gz --prefix=$(PREFIX)/ $(GITREF) > $(PREFIX).tar.gz
 
 clean:
 	$(RM) $(BIN) $(TESTS) $(OBJECTS) $(TEST_OBJECTS) lex.yy.c clex.h
