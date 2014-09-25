@@ -868,11 +868,6 @@ access_specifier_opt:
 	| access_specifier
 	;
 
-handler_seq_opt:
-	/* epsilon */
-	| handler_seq
-	;
-
 assignment_expression_opt:
 	/* epsilon */
 	| assignment_expression
