@@ -51,7 +51,7 @@ static void yyerror(char *s);
 %token FALSE FLOAT FOR IF INT LONG NEW
 %token OPERATOR PRIVATE PROTECTED PUBLIC RETURN
 %token SHORT SIGNED SIZEOF STRUCT SWITCH
-%token TRUE TYPEDEF TYPEID TYPENAME UNION UNSIGNED
+%token TRUE TYPEDEF TYPEID TYPENAME UNSIGNED
 %token VOID WHILE
 
 %start translation_unit
@@ -629,7 +629,6 @@ class_head:
 class_key:
 	CLASS
 	| STRUCT
-	| UNION
 	;
 
 member_specification:
