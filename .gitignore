@@ -6,3 +6,5 @@
 /clex.h
 /test-list
 /test-tree
+/cgram.tab.c
+/cgram.tab.h

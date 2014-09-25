@@ -3,6 +3,7 @@ BIN=120++
 TESTS=test-list test-tree
 CC=gcc
 LEX=flex
+YACC=bison
 RM=rm -f
 
 # compile options
@@ -24,10 +25,12 @@ tar:
 	git archive --format=tar.gz --prefix=$(PREFIX)/ $(GITREF) > $(PREFIX).tar.gz
 
 clean:
-	$(RM) $(BIN) $(TESTS) $(OBJECTS) $(TEST_OBJECTS) lex.yy.c clex.h
+	$(RM) $(BIN) $(TESTS) $(OBJECTS) $(TEST_OBJECTS) lex.yy.c clex.h cgram.tab.h
+
+.PHONY: all test-lex tar clean
 
 # source
-SOURCES=main.c token.c list.c tree.c lex.yy.c
+SOURCES=main.c token.c list.c tree.c lex.yy.c cgram.tab.c
 OBJECTS=$(SOURCES:.c=.o)
 
 $(BIN): $(OBJECTS)
@@ -36,7 +39,10 @@ $(BIN): $(OBJECTS)
 .c.o:
 	$(CC) $(CFLAGS) -c $< -o $@
 
-main.c: clex.h
+main.c: clex.h cgram.tab.h
+
+cgram.tab.h cgram.tab.c: cgram.y
+	$(YACC) -d $<
 
 clex.h: lex.yy.c
 
