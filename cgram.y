@@ -52,7 +52,7 @@ static void yyerror(char *s);
 %token OPERATOR PRIVATE PROTECTED PUBLIC RETURN
 %token SHORT SIGNED SIZEOF STRUCT SWITCH
 %token TRUE TYPEDEF TYPEID TYPENAME UNION UNSIGNED
-%token VOID WCHAR_T WHILE
+%token VOID WHILE
 
 %start translation_unit
 
@@ -457,7 +457,6 @@ type_specifier:
 simple_type_specifier:
 	COLONCOLON_opt nested_name_specifier_opt type_name
 	| CHAR
-	| WCHAR_T
 	| BOOL
 	| SHORT
 	| INT
