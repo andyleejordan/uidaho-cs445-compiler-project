@@ -34,6 +34,8 @@ bool list_empty(const struct list *self);
 bool list_end(const struct list_node *n);
 struct list_node *list_head(const struct list *self);
 struct list_node *list_tail(const struct list *self);
+struct list_node *list_find(const struct list *self, void *data,
+                            bool (*compare)(void *a, void *b));
 struct list *list_push(struct list *self, void *data);
 struct list *list_push_front(struct list *self, void *data);
 void *list_pop(struct list *self);
