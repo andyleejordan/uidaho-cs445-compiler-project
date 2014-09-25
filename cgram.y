@@ -34,9 +34,7 @@
 %{
 #include <stdio.h>
 
-extern int lineno;
-
-static void yyerror(char *s);
+void yyerror(const char *s);
 %}
 
 %token IDENTIFIER INTEGER FLOATING CHARACTER STRING
@@ -879,21 +877,3 @@ type_id_list_opt:
 	;
 
 %%
-
-static void
-yyerror(char *s)
-{
-	fprintf(stderr, "%d: %s\n", lineno, s);
-}
-
-#ifdef MAIN
-/* use yours instead of this */
-int
-main(void)
-{
-	lineno = 1;
-	yyparse();
-
-	return 0;
-}
-#endif
