@@ -332,19 +332,12 @@ constant_expression:
  *----------------------------------------------------------------------*/
 
 statement:
-	labeled_statement
-	| expression_statement
+	expression_statement
 	| compound_statement
 	| selection_statement
 	| iteration_statement
 	| jump_statement
 	| declaration_statement
-	;
-
-labeled_statement:
-	identifier ':' statement
-	| CASE constant_expression ':' statement
-	| DEFAULT ':' statement
 	;
 
 expression_statement:
