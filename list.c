@@ -121,6 +121,25 @@ struct list_node *list_tail(const struct list *self)
 	return self->sentinel->prev;
 }
 
+/*
+ * Use compare function to return found node, else returns sentinel.
+ */
+struct list_node *list_find(const struct list *self, void *data,
+                            bool (*compare)(void *a, void *b)) {
+	if (self == NULL) {
+		fprintf(stderr, "list_find(): self was null\n");
+		return NULL;
+	}
+
+	struct list_node *iter = list_head(self);
+	while (!list_end(iter)) {
+		if (compare(data, iter->data))
+			return iter;
+		iter = iter->next;
+	}
+	return iter;
+}
+
 struct list *list_push(struct list *self, void *data)
 {
 	if (self == NULL) {
