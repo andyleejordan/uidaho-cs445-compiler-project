@@ -46,7 +46,7 @@ static void yyerror(char *s);
 %token XOREQ ANDEQ OREQ SL SR SREQ SLEQ EQ NOTEQ LTEQ GTEQ ANDAND OROR
 %token PLUSPLUS MINUSMINUS ARROWSTAR ARROW
 
-%token ASM AUTO BOOL BREAK CASE CATCH CHAR CLASS CONST CONST_CAST CONTINUE
+%token AUTO BOOL BREAK CASE CATCH CHAR CLASS CONST CONST_CAST CONTINUE
 %token DEFAULT DELETE DO DOUBLE DYNAMIC_CAST ELSE ENUM EXPLICIT EXPORT EXTERN
 %token FALSE FLOAT FOR FRIEND GOTO IF INLINE INT LONG MUTABLE NEW
 %token OPERATOR PRIVATE PROTECTED PUBLIC REGISTER REINTERPRET_CAST RETURN
@@ -438,7 +438,6 @@ declaration:
 
 block_declaration:
 	simple_declaration
-	| asm_definition
 	;
 
 simple_declaration:
@@ -535,10 +534,6 @@ enumerator_definition:
 
 enumerator:
 	identifier
-	;
-
-asm_definition:
-	ASM '(' string_literal ')' ';'
 	;
 
 linkage_specification:
