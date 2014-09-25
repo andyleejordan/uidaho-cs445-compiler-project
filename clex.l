@@ -93,52 +93,39 @@ void handle_include(const char *s);
 	.               { yyerror("Unrecognized token following #include"); }
 }
 
-"auto"                  { new_token(AUTO); return AUTO; }
 "bool"                  { new_token(BOOL); return BOOL; }
 "break"                 { new_token(BREAK); return BREAK; }
 "case"                  { new_token(CASE); return CASE; }
 "char"                  { new_token(CHAR); return CHAR; }
 "class"                 { new_token(CLASS); return CLASS; }
-"const"                 { new_token(CONST); return CONST; }
 "continue"              { new_token(CONTINUE); return CONTINUE; }
 "default"               { new_token(DEFAULT); return DEFAULT; }
 "delete"                { new_token(DELETE); return DELETE; }
 "do"                    { new_token(DO); return DO; }
 "double"                { new_token(DOUBLE); return DOUBLE; }
-"..."                   { new_token(ELIPSIS); return ELIPSIS; }
 "else"                  { new_token(ELSE); return ELSE; }
 "enum"                  { new_token(ENUM); return ENUM; }
 "extern"                { new_token(EXTERN); return EXTERN; }
 "false"                 { new_token(FALSE); return FALSE; }
 "float"                 { new_token(FLOAT); return FLOAT; }
 "for"                   { new_token(FOR); return FOR; }
-"friend"                { new_token(FRIEND); return FRIEND; }
-"goto"                  { new_token(GOTO); return GOTO; }
 "if"                    { new_token(IF); return IF; }
 "int"                   { new_token(INT); return INT; }
 "long"                  { new_token(LONG); return LONG; }
-"namespace"             { new_token(NAMESPACE); return NAMESPACE; }
 "new"                   { new_token(NEW); return NEW; }
 "private"               { new_token(PRIVATE); return PRIVATE; }
 "protected"             { new_token(PROTECTED); return PROTECTED; }
 "public"                { new_token(PUBLIC); return PUBLIC; }
-"register"              { new_token(REGISTER); return REGISTER; }
 "return"                { new_token(RETURN); return RETURN; }
 "short"                 { new_token(SHORT); return SHORT; }
 "signed"                { new_token(SIGNED); return SIGNED; }
 "sizeof"                { new_token(SIZEOF); return SIZEOF; }
-"static"                { new_token(STATIC); return STATIC; }
 "struct"                { new_token(STRUCT); return STRUCT; }
 "switch"                { new_token(SWITCH); return SWITCH; }
-"this"                  { new_token(THIS); return THIS; }
 "true"                  { new_token(TRUE); return TRUE; }
 "typedef"               { new_token(TYPEDEF); return TYPEDEF; }
-"union"                 { new_token(UNION); return UNION; }
 "unsigned"              { new_token(UNSIGNED); return UNSIGNED; }
-"using"                 { new_token(USING); return USING; }
-"virtual"               { new_token(VIRTUAL); return VIRTUAL; }
 "void"                  { new_token(VOID); return VOID; }
-"volatile"              { new_token(VOLATILE); return VOLATILE; }
 "while"                 { new_token(WHILE); return WHILE; }
 
   /* constants */
