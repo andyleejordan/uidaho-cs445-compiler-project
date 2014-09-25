@@ -129,12 +129,12 @@ void handle_include(const char *s);
 "while"                 { new_token(WHILE); return WHILE; }
 
   /* constants */
-{D}+{IS}?               { new_token(ICON); return ICON; }
-{D}+{FS}?               { new_token(FCON); return FCON; }
-{D}*"."{D}+{FS}?        { new_token(FCON); return FCON; }
-{D}+"."{D}*{FS}?        { new_token(FCON); return FCON; }
+{D}+{IS}?               { new_token(INTEGER); return INTEGER; }
+{D}+{FS}?               { new_token(FLOATING); return FLOATING; }
+{D}*"."{D}+{FS}?        { new_token(FLOATING); return FLOATING; }
+{D}+"."{D}*{FS}?        { new_token(FLOATING); return FLOATING; }
 
-\'                      { new_token(CCON); BEGIN(CHR); }
+\'                      { new_token(CHARACTER); BEGIN(CHR); }
 <CHR>{
 	\'              { yyerror("Empty char literal"); }
 	"\\'"           { yytoken->ival = '\''; token_append_text(yytoken, yytext); BEGIN(CHREND); }
@@ -153,15 +153,15 @@ void handle_include(const char *s);
 	.               { yyerror("Unrecognized token in char literal"); }
 }
 <CHREND>{
-	\'              { token_append_text(yytoken, yytext); BEGIN(INITIAL); return CCON; }
+	\'              { token_append_text(yytoken, yytext); BEGIN(INITIAL); return CHARACTER; }
 	\n              { yyerror("Unexpected newline in char literal"); }
 	.               { yyerror("Too many symbols in char literal"); }
 }
 
 
-L?\"                    { new_token(SCON); BEGIN(STR); }
+L?\"                    { new_token(STRING); BEGIN(STR); }
 <STR>{
-	\"              { token_finish_sval(yytoken); token_append_text(yytoken, yytext); BEGIN(INITIAL); return SCON; }
+	\"              { token_finish_sval(yytoken); token_append_text(yytoken, yytext); BEGIN(INITIAL); return STRING; }
 	"\\'"           { token_append_sval_char(yytoken, '\''); token_append_text(yytoken, yytext); }
 	"\\\""          { token_append_sval_char(yytoken, '"');  token_append_text(yytoken, yytext); }
 	"\\?"           { token_append_sval_char(yytoken, '\?'); token_append_text(yytoken, yytext); }

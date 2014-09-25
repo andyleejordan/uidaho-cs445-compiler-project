@@ -117,13 +117,13 @@ int main(int argc, char **argv)
 
 		free(filename);
 
-		if (t->category == ICON)
+		if (t->category == INTEGER)
 			printf("-> %d", t->ival);
-		else if (t->category == FCON)
+		else if (t->category == FLOATING)
 			printf("-> %f", t->fval);
-		else if (t->category == CCON)
+		else if (t->category == CHARACTER)
 			printf("-> %c", t->ival);
-		else if (t->category == SCON)
+		else if (t->category == STRING)
 			printf("-> %s", t->sval);
 
 		printf("\n");

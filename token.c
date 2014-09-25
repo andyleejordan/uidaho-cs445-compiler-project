@@ -36,13 +36,13 @@ struct token *token_create(int category, int lineno,
 	t->filename = calloc(strlen(filename)+1, sizeof(char));
 	strcpy(t->filename, filename);
 
-	if (category == ICON)
+	if (category == INTEGER)
 		t->ival = atoi(text);
 
-	if (category == FCON)
+	if (category == FLOATING)
 		t->fval = atof(text);
 
-	if (category == SCON) {
+	if (category == STRING) {
 		t->ssize = 0; /* append null later */
 		token_sval_size = TEXT_CHUNK_SIZE;
 		t->sval = calloc(token_sval_size, sizeof(char));
@@ -55,7 +55,7 @@ void token_free(struct token *t)
 {
 	free(t->text);
 	free(t->filename);
-	if (t->category == SCON)
+	if (t->category == STRING)
 		free(t->sval);
 	free(t);
 }
