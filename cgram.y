@@ -42,7 +42,7 @@ static void yyerror(char *s);
 %token IDENTIFIER INTEGER FLOATING CHARACTER STRING
 %token TYPEDEF_NAME CLASS_NAME ENUM_NAME
 
-%token ELLIPSIS COLONCOLON DOTSTAR ADDEQ SUBEQ MULEQ DIVEQ MODEQ
+%token COLONCOLON DOTSTAR ADDEQ SUBEQ MULEQ DIVEQ MODEQ
 %token XOREQ ANDEQ OREQ SL SR SREQ SLEQ EQ NOTEQ LTEQ GTEQ ANDAND OROR
 %token PLUSPLUS MINUSMINUS ARROWSTAR ARROW
 
@@ -596,8 +596,7 @@ direct_abstract_declarator:
 	;
 
 parameter_declaration_clause:
-	parameter_declaration_list_opt ELLIPSIS_opt
-	| parameter_declaration_list ',' ELLIPSIS
+	parameter_declaration_list_opt
 	;
 
 parameter_declaration_list:
@@ -835,7 +834,6 @@ exception_declaration:
 	type_specifier_seq declarator
 	| type_specifier_seq abstract_declarator
 	| type_specifier_seq
-	| ELLIPSIS
 	;
 
 throw_expression:
@@ -970,10 +968,6 @@ parameter_declaration_list_opt:
 	| parameter_declaration_list
 	;
 
-ELLIPSIS_opt:
-	/* epsilon */
-	| ELLIPSIS
-	;
 
 ctor_initializer_opt:
 	/* epsilon */
