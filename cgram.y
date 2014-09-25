@@ -52,7 +52,7 @@ static void yyerror(char *s);
 %token OPERATOR PRIVATE PROTECTED PUBLIC RETURN
 %token SHORT SIGNED SIZEOF STRUCT SWITCH
 %token TRUE TYPEDEF TYPEID TYPENAME UNION UNSIGNED
-%token VOID VOLATILE WCHAR_T WHILE
+%token VOID WCHAR_T WHILE
 
 %start translation_unit
 
@@ -547,7 +547,6 @@ cv_qualifier_seq:
 
 cv_qualifier:
 	CONST
-	| VOLATILE
 	;
 
 declarator_id:
