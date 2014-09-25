@@ -47,8 +47,8 @@ static void yyerror(char *s);
 %token PLUSPLUS MINUSMINUS ARROWSTAR ARROW
 
 %token BOOL BREAK CASE CHAR CLASS CONST CONTINUE
-%token DEFAULT DELETE DO DOUBLE ELSE ENUM EXPLICIT EXTERN
-%token FALSE FLOAT FOR GOTO IF INLINE INT LONG NEW
+%token DEFAULT DELETE DO DOUBLE ELSE ENUM EXTERN
+%token FALSE FLOAT FOR GOTO IF INT LONG NEW
 %token OPERATOR PRIVATE PROTECTED PUBLIC RETURN
 %token SHORT SIGNED SIZEOF STRUCT SWITCH
 %token TRUE TYPEDEF TYPEID TYPENAME UNION UNSIGNED
@@ -416,8 +416,6 @@ declaration_seq:
 declaration:
 	block_declaration
 	| function_definition
-	| explicit_instantiation
-	| explicit_specialization
 	| linkage_specification
 	;
 
@@ -432,7 +430,6 @@ simple_declaration:
 decl_specifier:
 	storage_class_specifier
 	| type_specifier
-	| function_specifier
 	| TYPEDEF
 	;
 
@@ -442,11 +439,6 @@ decl_specifier_seq:
 
 storage_class_specifier:
 	EXTERN
-	;
-
-function_specifier:
-	INLINE
-	| EXPLICIT
 	;
 
 /*
