@@ -627,18 +627,9 @@ member_declarator_list:
 	;
 
 member_declarator:
-	declarator pure_specifier_opt
+	declarator
 	| declarator constant_initializer_opt
 	| identifier_opt ':' constant_expression
-	;
-
-/*
- * This rule need a hack for working around the ``= 0'' pure specifier.
- * 0 is returned as an ``INTEGER'' by the lexical analyzer but in this
- * context is different.
- */
-pure_specifier:
-	'=' '0'
 	;
 
 constant_initializer:
@@ -825,11 +816,6 @@ member_declarator_list_opt:
 SEMICOLON_opt:
 	/* epsilon */
 	| ';'
-	;
-
-pure_specifier_opt:
-	/* epsilon */
-	| pure_specifier
 	;
 
 constant_initializer_opt:
