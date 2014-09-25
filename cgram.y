@@ -51,7 +51,7 @@ static void yyerror(char *s);
 %token FALSE FLOAT FOR GOTO IF INLINE INT LONG NEW
 %token OPERATOR PRIVATE PROTECTED PUBLIC RETURN
 %token SHORT SIGNED SIZEOF STRUCT SWITCH
-%token THROW TRUE TRY TYPEDEF TYPEID TYPENAME UNION UNSIGNED VIRTUAL
+%token THROW TRUE TRY TYPEDEF TYPEID TYPENAME UNION UNSIGNED
 %token VOID VOLATILE WCHAR_T WHILE
 
 %start translation_unit
@@ -448,7 +448,6 @@ storage_class_specifier:
 
 function_specifier:
 	INLINE
-	| VIRTUAL
 	| EXPLICIT
 	;
 
@@ -696,8 +695,8 @@ base_specifier_list:
 
 base_specifier:
 	COLONCOLON_opt nested_name_specifier_opt class_name
-	| VIRTUAL access_specifier_opt COLONCOLON_opt nested_name_specifier_opt class_name
-	| access_specifier VIRTUAL_opt COLONCOLON_opt nested_name_specifier_opt class_name
+	| access_specifier_opt COLONCOLON_opt nested_name_specifier_opt class_name
+	| access_specifier COLONCOLON_opt nested_name_specifier_opt class_name
 	;
 
 access_specifier:
@@ -1003,11 +1002,6 @@ constant_initializer_opt:
 access_specifier_opt:
 	/* epsilon */
 	| access_specifier
-	;
-
-VIRTUAL_opt:
-	/* epsilon */
-	| VIRTUAL
 	;
 
 conversion_declarator_opt:
