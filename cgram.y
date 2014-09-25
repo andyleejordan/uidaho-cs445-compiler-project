@@ -150,10 +150,6 @@ nested_name_specifier:
 	class_name COLONCOLON nested_name_specifier_opt
 	;
 
-class_name:
-	class_name
-	;
-
 postfix_expression:
 	primary_expression
 	| postfix_expression '[' expression ']'
