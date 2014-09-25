@@ -46,7 +46,7 @@ static void yyerror(char *s);
 %token XOREQ ANDEQ OREQ SL SR SREQ SLEQ EQ NOTEQ LTEQ GTEQ ANDAND OROR
 %token PLUSPLUS MINUSMINUS ARROWSTAR ARROW
 
-%token BOOL BREAK CASE CHAR CLASS CONST CONTINUE
+%token BOOL BREAK CASE CHAR CLASS CONTINUE
 %token DEFAULT DELETE DO DOUBLE ELSE ENUM EXTERN
 %token FALSE FLOAT FOR IF INT LONG NEW
 %token PRIVATE PROTECTED PUBLIC RETURN
@@ -448,7 +448,6 @@ type_specifier:
 	| class_specifier
 	| enum_specifier
 	| elaborated_type_specifier
-	| cv_qualifier
 	;
 
 simple_type_specifier:
@@ -526,23 +525,15 @@ declarator:
 
 direct_declarator:
 	declarator_id
-	| direct_declarator '('parameter_declaration_clause ')' cv_qualifier_seq_opt
+	| direct_declarator '('parameter_declaration_clause ')'
 	| direct_declarator '[' constant_expression_opt ']'
 	| '(' declarator ')'
 	;
 
 ptr_operator:
-	'*' cv_qualifier_seq_opt
+	'*'
 	| '&'
-	| COLONCOLON_opt nested_name_specifier '*' cv_qualifier_seq_opt
-	;
-
-cv_qualifier_seq:
-	cv_qualifier cv_qualifier_seq_opt
-	;
-
-cv_qualifier:
-	CONST
+	| COLONCOLON_opt nested_name_specifier '*'
 	;
 
 declarator_id:
@@ -564,7 +555,7 @@ abstract_declarator:
 	;
 
 direct_abstract_declarator:
-	direct_abstract_declarator_opt '(' parameter_declaration_clause ')' cv_qualifier_seq_opt
+	direct_abstract_declarator_opt '(' parameter_declaration_clause ')'
 	| direct_abstract_declarator_opt '[' constant_expression_opt ']'
 	| '(' abstract_declarator ')'
 	;
@@ -804,11 +795,6 @@ TYPENAME_opt:
 initializer_opt:
 	/* epsilon */
 	| initializer
-	;
-
-cv_qualifier_seq_opt:
-	/* epsilon */
-	| cv_qualifier_seq
 	;
 
 constant_expression_opt:
