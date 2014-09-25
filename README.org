@@ -18,3 +18,12 @@ our CS 120 course, dubbed "120++".
 
 Per the [[http://www2.cs.uidaho.edu/~jeffery/courses/445/hw2.html][requirements]], my next goal is to write (or reuse) a 120++
 grammar that works with Bison.
+
+*** TODO Resolve identifier types
+*** TODO Add semantic operation not unsupported errors
+*** TODO Setup union for tree node
+*** TODO Create tree nodes in production rules
+*** TODO Expand tree library
+*** TODO Assign tree root to global start symbol
+*** TODO Revise main to call yyparse instead of yylex
+*** TODO Print parse tree
