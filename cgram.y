@@ -40,7 +40,7 @@ static void yyerror(char *s);
 %}
 
 %token IDENTIFIER INTEGER FLOATING CHARACTER STRING
-%token TYPEDEF_NAME CLASS_NAME ENUM_NAME TEMPLATE_NAME
+%token TYPEDEF_NAME CLASS_NAME ENUM_NAME
 
 %token ELLIPSIS COLONCOLON DOTSTAR ADDEQ SUBEQ MULEQ DIVEQ MODEQ
 %token XOREQ ANDEQ OREQ SL SR SREQ SLEQ EQ NOTEQ LTEQ GTEQ ANDAND OROR
@@ -50,7 +50,7 @@ static void yyerror(char *s);
 %token DEFAULT DELETE DO DOUBLE DYNAMIC_CAST ELSE ENUM EXPLICIT EXPORT EXTERN
 %token FALSE FLOAT FOR FRIEND GOTO IF INLINE INT LONG MUTABLE NEW
 %token OPERATOR PRIVATE PROTECTED PUBLIC REGISTER REINTERPRET_CAST RETURN
-%token SHORT SIGNED SIZEOF STATIC STATIC_CAST STRUCT SWITCH TEMPLATE THIS
+%token SHORT SIGNED SIZEOF STATIC STATIC_CAST STRUCT SWITCH THIS
 %token THROW TRUE TRY TYPEDEF TYPEID TYPENAME UNION UNSIGNED VIRTUAL
 %token VOID VOLATILE WCHAR_T WHILE
 
@@ -70,17 +70,11 @@ typedef_name:
 class_name:
 	/* identifier */
 	CLASS_NAME
-	| template_id
 	;
 
 enum_name:
 	/* identifier */
 	ENUM_NAME
-	;
-
-template_name:
-	/* identifier */
-	TEMPLATE_NAME
 	;
 
 /*----------------------------------------------------------------------
@@ -152,11 +146,10 @@ unqualified_id:
 	| operator_function_id
 	| conversion_function_id
 	| '~' class_name
-	| template_id
 	;
 
 qualified_id:
-	nested_name_specifier TEMPLATE_opt unqualified_id
+	nested_name_specifier unqualified_id
 	;
 
 nested_name_specifier:
@@ -172,8 +165,8 @@ postfix_expression:
 	| postfix_expression '[' expression ']'
 	| postfix_expression '(' expression_list_opt ')'
 	| simple_type_specifier '(' expression_list_opt ')'
-	| postfix_expression '.' TEMPLATE_opt COLONCOLON_opt id_expression
-	| postfix_expression ARROW TEMPLATE_opt COLONCOLON_opt id_expression
+	| postfix_expression '.' COLONCOLON_opt id_expression
+	| postfix_expression ARROW COLONCOLON_opt id_expression
 	| postfix_expression '.' pseudo_destructor_name
 	| postfix_expression ARROW pseudo_destructor_name
 	| postfix_expression PLUSPLUS
@@ -430,7 +423,6 @@ declaration_seq:
 declaration:
 	block_declaration
 	| function_definition
-	| template_declaration
 	| explicit_instantiation
 	| explicit_specialization
 	| linkage_specification
@@ -509,7 +501,6 @@ elaborated_type_specifier:
 	class_key COLONCOLON_opt nested_name_specifier_opt identifier
 	| ENUM COLONCOLON_opt nested_name_specifier_opt identifier
 	| TYPENAME COLONCOLON_opt nested_name_specifier identifier
-	| TYPENAME COLONCOLON_opt nested_name_specifier identifier '<' template_argument_list '>'
 	;
 
 /*
@@ -651,13 +642,6 @@ initializer_list:
  * Classes.
  *----------------------------------------------------------------------*/
 
-/*
-class_name:
-	identifier
-	| template_id
-	;
-*/
-
 class_specifier:
 	class_head '{' member_specification_opt '}'
 	;
@@ -682,7 +666,6 @@ member_declaration:
 	decl_specifier_seq_opt member_declarator_list_opt ';'
 	| function_definition SEMICOLON_opt
 	| qualified_id ';'
-	| template_declaration
 	;
 
 member_declarator_list:
@@ -821,60 +804,12 @@ operator:
 	| '[' ']'
 	;
 
-/*----------------------------------------------------------------------
- * Templates.
- *----------------------------------------------------------------------*/
-
-template_declaration:
-	EXPORT_opt TEMPLATE '<' template_parameter_list '>' declaration
-	;
-
-template_parameter_list:
-	template_parameter
-	| template_parameter_list ',' template_parameter
-	;
-
-template_parameter:
-	type_parameter
-	| parameter_declaration
-	;
 
 type_parameter:
 	CLASS identifier_opt
 	| CLASS identifier_opt '=' type_id
 	| TYPENAME identifier_opt
 	| TYPENAME identifier_opt '=' type_id
-	| TEMPLATE '<' template_parameter_list '>' CLASS identifier_opt
-	| TEMPLATE '<' template_parameter_list '>' CLASS identifier_opt '=' template_name
-	;
-
-template_id:
-	template_name '<' template_argument_list '>'
-	;
-
-/*
-template_name:
-	identifier
-	;
-*/
-
-template_argument_list:
-	template_argument
-	| template_argument_list ',' template_argument
-	;
-
-template_argument:
-	assignment_expression
-	| type_id
-	| template_name
-	;
-
-explicit_instantiation:
-	TEMPLATE declaration
-	;
-
-explicit_specialization:
-	TEMPLATE '<' '>' declaration
 	;
 
 /*----------------------------------------------------------------------
@@ -924,11 +859,6 @@ type_id_list:
 declaration_seq_opt:
 	/* epsilon */
 	| declaration_seq
-	;
-
-TEMPLATE_opt:
-	/* epsilon */
-	| TEMPLATE
 	;
 
 nested_name_specifier_opt:
