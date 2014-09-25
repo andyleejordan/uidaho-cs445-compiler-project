@@ -46,12 +46,12 @@ static void yyerror(char *s);
 %token XOREQ ANDEQ OREQ SL SR SREQ SLEQ EQ NOTEQ LTEQ GTEQ ANDAND OROR
 %token PLUSPLUS MINUSMINUS ARROWSTAR ARROW
 
-%token BOOL BREAK CASE CATCH CHAR CLASS CONST CONTINUE
+%token BOOL BREAK CASE CHAR CLASS CONST CONTINUE
 %token DEFAULT DELETE DO DOUBLE ELSE ENUM EXPLICIT EXTERN
 %token FALSE FLOAT FOR GOTO IF INLINE INT LONG NEW
 %token OPERATOR PRIVATE PROTECTED PUBLIC RETURN
 %token SHORT SIGNED SIZEOF STRUCT SWITCH
-%token THROW TRUE TRY TYPEDEF TYPEID TYPENAME UNION UNSIGNED
+%token TRUE TYPEDEF TYPEID TYPENAME UNION UNSIGNED
 %token VOID VOLATILE WCHAR_T WHILE
 
 %start translation_unit
@@ -313,7 +313,6 @@ conditional_expression:
 assignment_expression:
 	conditional_expression
 	| logical_or_expression assignment_operator assignment_expression
-	| throw_expression
 	;
 
 assignment_operator:
@@ -351,7 +350,6 @@ statement:
 	| iteration_statement
 	| jump_statement
 	| declaration_statement
-	| try_block
 	;
 
 labeled_statement:
@@ -541,7 +539,7 @@ declarator:
 
 direct_declarator:
 	declarator_id
-	| direct_declarator '('parameter_declaration_clause ')' cv_qualifier_seq_opt exception_specification_opt
+	| direct_declarator '('parameter_declaration_clause ')' cv_qualifier_seq_opt
 	| direct_declarator '[' constant_expression_opt ']'
 	| '(' declarator ')'
 	;
@@ -580,7 +578,7 @@ abstract_declarator:
 	;
 
 direct_abstract_declarator:
-	direct_abstract_declarator_opt '(' parameter_declaration_clause ')' cv_qualifier_seq_opt exception_specification_opt
+	direct_abstract_declarator_opt '(' parameter_declaration_clause ')' cv_qualifier_seq_opt
 	| direct_abstract_declarator_opt '[' constant_expression_opt ']'
 	| '(' abstract_declarator ')'
 	;
@@ -603,7 +601,7 @@ parameter_declaration:
 
 function_definition:
 	decl_specifier_seq_opt declarator ctor_initializer_opt function_body
-	| decl_specifier_seq_opt declarator function_try_block
+	| decl_specifier_seq_opt declarator
 	;
 
 function_body:
@@ -800,40 +798,6 @@ type_parameter:
 	| TYPENAME identifier_opt '=' type_id
 	;
 
-/*----------------------------------------------------------------------
- * Exception handling.
- *----------------------------------------------------------------------*/
-
-try_block:
-	TRY compound_statement handler_seq
-	;
-
-function_try_block:
-	TRY ctor_initializer_opt function_body handler_seq
-	;
-
-handler_seq:
-	handler handler_seq_opt
-	;
-
-handler:
-	CATCH '(' exception_declaration ')' compound_statement
-	;
-
-exception_declaration:
-	type_specifier_seq declarator
-	| type_specifier_seq abstract_declarator
-	| type_specifier_seq
-	;
-
-throw_expression:
-	THROW assignment_expression_opt
-	;
-
-exception_specification:
-	THROW '(' type_id_list_opt ')'
-	;
-
 type_id_list:
 	type_id
 	| type_id_list ',' type_id
@@ -926,11 +890,6 @@ initializer_opt:
 cv_qualifier_seq_opt:
 	/* epsilon */
 	| cv_qualifier_seq
-	;
-
-exception_specification_opt:
-	/* epsilon */
-	| exception_specification
 	;
 
 constant_expression_opt:
