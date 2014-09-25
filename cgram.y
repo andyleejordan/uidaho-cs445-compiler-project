@@ -49,7 +49,7 @@ static void yyerror(char *s);
 %token BOOL BREAK CASE CHAR CLASS CONST CONTINUE
 %token DEFAULT DELETE DO DOUBLE ELSE ENUM EXTERN
 %token FALSE FLOAT FOR IF INT LONG NEW
-%token OPERATOR PRIVATE PROTECTED PUBLIC RETURN
+%token PRIVATE PROTECTED PUBLIC RETURN
 %token SHORT SIGNED SIZEOF STRUCT SWITCH
 %token TRUE TYPEDEF TYPEID TYPENAME UNSIGNED
 %token VOID WHILE
@@ -129,7 +129,6 @@ translation_unit:
 primary_expression:
 	literal
 	| COLONCOLON identifier
-	| COLONCOLON operator_function_id
 	| COLONCOLON qualified_id
 	| '(' expression ')'
 	| id_expression
@@ -142,8 +141,6 @@ id_expression:
 
 unqualified_id:
 	identifier
-	| operator_function_id
-	| conversion_function_id
 	| '~' class_name
 	;
 
@@ -695,18 +692,6 @@ access_specifier:
  * Special member functions.
  *----------------------------------------------------------------------*/
 
-conversion_function_id:
-	OPERATOR conversion_type_id
-	;
-
-conversion_type_id:
-	type_specifier_seq conversion_declarator_opt
-	;
-
-conversion_declarator:
-	ptr_operator conversion_declarator_opt
-	;
-
 ctor_initializer:
 	':' mem_initializer_list
 	;
@@ -724,60 +709,6 @@ mem_initializer_id:
 	COLONCOLON_opt nested_name_specifier_opt class_name
 	| identifier
 	;
-
-/*----------------------------------------------------------------------
- * Overloading.
- *----------------------------------------------------------------------*/
-
-operator_function_id:
-	OPERATOR operator
-	;
-
-operator:
-	NEW
-	| DELETE
-	| NEW '[' ']'
-	| DELETE '[' ']'
-	| '+'
-	| '_'
-	| '*'
-	| '/'
-	| '%'
-	| '^'
-	| '&'
-	| '|'
-	| '~'
-	| '!'
-	| '='
-	| '<'
-	| '>'
-	| ADDEQ
-	| SUBEQ
-	| MULEQ
-	| DIVEQ
-	| MODEQ
-	| XOREQ
-	| ANDEQ
-	| OREQ
-	| SL
-	| SR
-	| SREQ
-	| SLEQ
-	| EQ
-	| NOTEQ
-	| LTEQ
-	| GTEQ
-	| ANDAND
-	| OROR
-	| PLUSPLUS
-	| MINUSMINUS
-	| ','
-	| ARROWSTAR
-	| ARROW
-	| '(' ')'
-	| '[' ']'
-	;
-
 
 type_parameter:
 	CLASS identifier_opt
@@ -949,11 +880,6 @@ constant_initializer_opt:
 access_specifier_opt:
 	/* epsilon */
 	| access_specifier
-	;
-
-conversion_declarator_opt:
-	/* epsilon */
-	| conversion_declarator
 	;
 
 handler_seq_opt:
