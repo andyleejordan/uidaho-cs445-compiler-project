@@ -49,7 +49,7 @@ void yyerror(const char *s);
 %token FALSE FLOAT FOR IF INT LONG NEW
 %token PRIVATE PROTECTED PUBLIC RETURN
 %token SHORT SIGNED SIZEOF STRUCT SWITCH
-%token TRUE TYPEDEF TYPEID TYPENAME UNSIGNED
+%token TRUE TYPEDEF UNSIGNED
 %token VOID WHILE
 
 %start translation_unit
@@ -165,8 +165,6 @@ postfix_expression:
 	| postfix_expression ARROW pseudo_destructor_name
 	| postfix_expression PLUSPLUS
 	| postfix_expression MINUSMINUS
-	| TYPEID '(' expression ')'
-	| TYPEID '(' type_id ')'
 	;
 
 expression_list:
@@ -471,7 +469,6 @@ type_name:
 elaborated_type_specifier:
 	class_key COLONCOLON_opt nested_name_specifier_opt identifier
 	| ENUM COLONCOLON_opt nested_name_specifier_opt identifier
-	| TYPENAME COLONCOLON_opt nested_name_specifier identifier
 	;
 
 /*
@@ -699,18 +696,6 @@ mem_initializer_id:
 	| identifier
 	;
 
-type_parameter:
-	CLASS identifier_opt
-	| CLASS identifier_opt '=' type_id
-	| TYPENAME identifier_opt
-	| TYPENAME identifier_opt '=' type_id
-	;
-
-type_id_list:
-	type_id
-	| type_id_list ',' type_id
-	;
-
 /*----------------------------------------------------------------------
  * Epsilon (optional) definitions.
  *----------------------------------------------------------------------*/
@@ -783,11 +768,6 @@ identifier_opt:
 enumerator_list_opt:
 	/* epsilon */
 	| enumerator_list
-	;
-
-TYPENAME_opt:
-	/* epsilon */
-	| TYPENAME
 	;
 
 initializer_opt:
@@ -869,11 +849,6 @@ access_specifier_opt:
 assignment_expression_opt:
 	/* epsilon */
 	| assignment_expression
-	;
-
-type_id_list_opt:
-	/* epsilon */
-	| type_id_list
 	;
 
 %%
