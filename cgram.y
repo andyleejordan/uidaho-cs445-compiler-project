@@ -828,9 +828,4 @@ access_specifier_opt:
 	| access_specifier
 	;
 
-assignment_expression_opt:
-	/* epsilon */
-	| assignment_expression
-	;
-
 %%
