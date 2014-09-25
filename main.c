@@ -48,9 +48,6 @@ void parse_files()
 		int category = yylex();
 		if (category == 0) {
 			break;
-		} else if (category < BEGTOKEN || category > ENDTOKEN ) {
-			fprintf(stderr, "Unkown return value from yylex %d\n", category);
-			exit(EXIT_FAILURE);
 		}
 		list_push(tokens, yytoken);
 	}
