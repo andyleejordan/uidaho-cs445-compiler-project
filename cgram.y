@@ -40,7 +40,7 @@ static void yyerror(char *s);
 %}
 
 %token IDENTIFIER INTEGER FLOATING CHARACTER STRING
-%token TYPEDEF_NAME NAMESPACE_NAME CLASS_NAME ENUM_NAME TEMPLATE_NAME
+%token TYPEDEF_NAME CLASS_NAME ENUM_NAME TEMPLATE_NAME
 
 %token ELLIPSIS COLONCOLON DOTSTAR ADDEQ SUBEQ MULEQ DIVEQ MODEQ
 %token XOREQ ANDEQ OREQ SL SR SREQ SLEQ EQ NOTEQ LTEQ GTEQ ANDAND OROR
@@ -48,10 +48,10 @@ static void yyerror(char *s);
 
 %token ASM AUTO BOOL BREAK CASE CATCH CHAR CLASS CONST CONST_CAST CONTINUE
 %token DEFAULT DELETE DO DOUBLE DYNAMIC_CAST ELSE ENUM EXPLICIT EXPORT EXTERN
-%token FALSE FLOAT FOR FRIEND GOTO IF INLINE INT LONG MUTABLE NAMESPACE NEW
+%token FALSE FLOAT FOR FRIEND GOTO IF INLINE INT LONG MUTABLE NEW
 %token OPERATOR PRIVATE PROTECTED PUBLIC REGISTER REINTERPRET_CAST RETURN
 %token SHORT SIGNED SIZEOF STATIC STATIC_CAST STRUCT SWITCH TEMPLATE THIS
-%token THROW TRUE TRY TYPEDEF TYPEID TYPENAME UNION UNSIGNED USING VIRTUAL
+%token THROW TRUE TRY TYPEDEF TYPEID TYPENAME UNION UNSIGNED VIRTUAL
 %token VOID VOLATILE WCHAR_T WHILE
 
 %start translation_unit
@@ -65,21 +65,6 @@ static void yyerror(char *s);
 typedef_name:
 	/* identifier */
 	TYPEDEF_NAME
-	;
-
-namespace_name:
-	original_namespace_name
-	| namespace_alias
-	;
-
-original_namespace_name:
-	/* identifier */
-	NAMESPACE_NAME
-	;
-
-namespace_alias:
-	/* identifier */
-	NAMESPACE_NAME
 	;
 
 class_name:
@@ -175,12 +160,11 @@ qualified_id:
 	;
 
 nested_name_specifier:
-	class_or_namespace_name COLONCOLON nested_name_specifier_opt
+	class_name COLONCOLON nested_name_specifier_opt
 	;
 
-class_or_namespace_name:
+class_name:
 	class_name
-	| namespace_name
 	;
 
 postfix_expression:
@@ -450,15 +434,11 @@ declaration:
 	| explicit_instantiation
 	| explicit_specialization
 	| linkage_specification
-	| namespace_definition
 	;
 
 block_declaration:
 	simple_declaration
 	| asm_definition
-	| namespace_alias_definition
-	| using_declaration
-	| using_directive
 	;
 
 simple_declaration:
@@ -555,66 +535,6 @@ enumerator_definition:
 
 enumerator:
 	identifier
-	;
-
-/*
-namespace_name:
-	original_namespace_name
-	| namespace_alias
-	;
-
-original_namespace_name:
-	identifier
-	;
-*/
-
-namespace_definition:
-	named_namespace_definition
-	| unnamed_namespace_definition
-	;
-
-named_namespace_definition:
-	original_namespace_definition
-	| extension_namespace_definition
-	;
-
-original_namespace_definition:
-	NAMESPACE identifier '{' namespace_body '}'
-	;
-
-extension_namespace_definition:
-	NAMESPACE original_namespace_name '{' namespace_body '}'
-	;
-
-unnamed_namespace_definition:
-	NAMESPACE '{' namespace_body '}'
-	;
-
-namespace_body:
-	declaration_seq_opt
-	;
-
-/*
-namespace_alias:
-	identifier
-	;
-*/
-
-namespace_alias_definition:
-	NAMESPACE identifier '=' qualified_namespace_specifier ';'
-	;
-
-qualified_namespace_specifier:
-	COLONCOLON_opt nested_name_specifier_opt namespace_name
-	;
-
-using_declaration:
-	USING TYPENAME_opt COLONCOLON_opt nested_name_specifier unqualified_id ';'
-	| USING COLONCOLON unqualified_id ';'
-	;
-
-using_directive:
-	USING NAMESPACE COLONCOLON_opt nested_name_specifier_opt namespace_name ';'
 	;
 
 asm_definition:
@@ -767,7 +687,6 @@ member_declaration:
 	decl_specifier_seq_opt member_declarator_list_opt ';'
 	| function_definition SEMICOLON_opt
 	| qualified_id ';'
-	| using_declaration
 	| template_declaration
 	;
 
