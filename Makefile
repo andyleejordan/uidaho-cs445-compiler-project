@@ -8,6 +8,7 @@ RM=rm -f
 
 # compile options
 CFLAGS=-g -Wall -std=gnu99
+YFLAGS=-Wall
 
 # archive options
 GITREF=HEAD
@@ -42,7 +43,7 @@ $(BIN): $(OBJECTS)
 main.c: clex.h cgram.tab.h
 
 cgram.tab.h cgram.tab.c: cgram.y
-	$(YACC) -d $<
+	$(YACC) $(YFLAGS) $<
 
 clex.h: lex.yy.c
 

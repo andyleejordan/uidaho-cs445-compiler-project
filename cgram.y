@@ -1,5 +1,3 @@
-/*	$Id: parser.y,v 1.3 1997/11/19 15:13:16 sandro Exp $	*/
-
 /*
  * Copyright (c) 1997 Sandro Sigala <ssigala@globalnet.it>.
  * All rights reserved.
@@ -36,6 +34,8 @@
 
 void yyerror(const char *s);
 %}
+
+%defines
 
 %token IDENTIFIER INTEGER FLOATING CHARACTER STRING
 %token TYPEDEF_NAME CLASS_NAME ENUM_NAME
