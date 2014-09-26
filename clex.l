@@ -1,5 +1,4 @@
-/* -*- mode: flex; -*-
- *
+/*
  * clex.l - Flex scanner for 120++.
  *
  * Copyright (C) 2014 Andrew Schwartzmeyer
