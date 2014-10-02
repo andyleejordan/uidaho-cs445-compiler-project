@@ -1,4 +1,19 @@
 /*
+ * cgram.y - Merged adaptation of Dr. Jeffery's adaptation of Sigala's
+ * grammar.
+ */
+
+/*
+ * Grammar for 120++, a subset of C++ used in CS 120 at University of Idaho
+ *
+ * Adaptation by Clinton Jeffery, with help from Matthew Brown, Ranger
+ * Adams, and Shea Newton.
+ *
+ * Based on Sandro Sigala's transcription of the ISO C++ 1996 draft standard.
+ * 
+ */
+
+/*
  * Copyright (c) 1997 Sandro Sigala <ssigala@globalnet.it>.
  * All rights reserved.
  *
@@ -126,8 +141,6 @@ translation_unit:
 
 primary_expression:
 	literal
-	| COLONCOLON identifier
-	| COLONCOLON qualified_id
 	| '(' expression ')'
 	| id_expression
 	;
@@ -147,7 +160,8 @@ qualified_id:
 	;
 
 nested_name_specifier:
-	class_name COLONCOLON nested_name_specifier_opt
+	class_name COLONCOLON nested_name_specifier
+	| class_name COLONCOLON
 	;
 
 postfix_expression:
@@ -155,10 +169,10 @@ postfix_expression:
 	| postfix_expression '[' expression ']'
 	| postfix_expression '(' expression_list_opt ')'
 	| simple_type_specifier '(' expression_list_opt ')'
-	| postfix_expression '.' COLONCOLON_opt id_expression
-	| postfix_expression ARROW COLONCOLON_opt id_expression
-	| postfix_expression '.' pseudo_destructor_name
-	| postfix_expression ARROW pseudo_destructor_name
+	| postfix_expression '.' COLONCOLON id_expression
+	| postfix_expression '.' id_expression
+	| postfix_expression ARROW COLONCOLON id_expression
+	| postfix_expression ARROW id_expression
 	| postfix_expression PLUSPLUS
 	| postfix_expression MINUSMINUS
 	;
@@ -168,16 +182,11 @@ expression_list:
 	| expression_list ',' assignment_expression
 	;
 
-pseudo_destructor_name:
-	COLONCOLON_opt nested_name_specifier_opt type_name COLONCOLON '~' type_name
-	| COLONCOLON_opt nested_name_specifier_opt '~' type_name
-	;
-
 unary_expression:
 	postfix_expression
-	| PLUSPLUS cast_expression
-	| MINUSMINUS cast_expression
-	| unary_operator cast_expression
+	| PLUSPLUS unary_expression
+	| MINUSMINUS unary_expression
+	| unary_operator unary_expression
 	| SIZEOF unary_expression
 	| SIZEOF '(' type_id ')'
 	| new_expression
@@ -194,8 +203,8 @@ unary_operator:
 	;
 
 new_expression:
-	COLONCOLON_opt NEW new_placement_opt new_type_id new_initializer_opt
-	| COLONCOLON_opt NEW new_placement_opt '(' type_id ')' new_initializer_opt
+	  NEW new_placement_opt new_type_id new_initializer_opt
+	| COLONCOLON NEW new_placement_opt new_type_id new_initializer_opt
 	;
 
 new_placement:
@@ -221,19 +230,16 @@ new_initializer:
 	;
 
 delete_expression:
-	COLONCOLON_opt DELETE cast_expression
-	| COLONCOLON_opt DELETE '[' ']' cast_expression
-	;
-
-cast_expression:
-	unary_expression
-	| '(' type_id ')' cast_expression
+	  DELETE unary_expression
+	| COLONCOLON DELETE unary_expression
+	| DELETE '[' ']' unary_expression
+	| COLONCOLON DELETE '[' ']' unary_expression
 	;
 
 pm_expression:
-	cast_expression
-	| pm_expression DOTSTAR cast_expression
-	| pm_expression ARROWSTAR cast_expression
+	unary_expression
+	| pm_expression DOTSTAR unary_expression
+	| pm_expression ARROWSTAR unary_expression
 	;
 
 multiplicative_expression:
@@ -405,7 +411,8 @@ block_declaration:
 	;
 
 simple_declaration:
-	decl_specifier_seq_opt init_declarator_list_opt ';'
+	  decl_specifier_seq init_declarator_list ';'
+	|  decl_specifier_seq ';'
 	;
 
 decl_specifier:
@@ -415,18 +422,13 @@ decl_specifier:
 	;
 
 decl_specifier_seq:
-	decl_specifier_seq_opt decl_specifier
+	  decl_specifier
+	| decl_specifier_seq decl_specifier
 	;
 
 storage_class_specifier:
 	EXTERN
 	;
-
-/*
-typedef_name:
-	identifier
-	;
-*/
 
 type_specifier:
 	simple_type_specifier
@@ -436,7 +438,10 @@ type_specifier:
 	;
 
 simple_type_specifier:
-	COLONCOLON_opt nested_name_specifier_opt type_name
+	  type_name
+	| nested_name_specifier type_name
+	| COLONCOLON nested_name_specifier type_name
+	| COLONCOLON type_name
 	| CHAR
 	| BOOL
 	| SHORT
@@ -456,8 +461,8 @@ type_name:
 	;
 
 elaborated_type_specifier:
-	class_key COLONCOLON_opt nested_name_specifier_opt identifier
-	| ENUM COLONCOLON_opt nested_name_specifier_opt identifier
+	  class_key COLONCOLON nested_name_specifier identifier
+	| class_key COLONCOLON identifier
 	;
 
 /*
@@ -467,7 +472,7 @@ enum_name:
 */
 
 enum_specifier:
-	ENUM identifier_opt '{' enumerator_list_opt '}'
+	ENUM identifier '{' enumerator_list_opt '}'
 	;
 
 enumerator_list:
@@ -517,12 +522,15 @@ direct_declarator:
 ptr_operator:
 	'*'
 	| '&'
-	| COLONCOLON_opt nested_name_specifier '*'
+	| nested_name_specifier '*'		
+	| COLONCOLON nested_name_specifier '*'
 	;
 
 declarator_id:
-	COLONCOLON_opt id_expression
-	| COLONCOLON_opt nested_name_specifier_opt type_name
+	  id_expression
+	| COLONCOLON id_expression
+	| COLONCOLON nested_name_specifier type_name
+	| COLONCOLON type_name
 	;
 
 type_id:
@@ -539,13 +547,16 @@ abstract_declarator:
 	;
 
 direct_abstract_declarator:
-	direct_abstract_declarator_opt '(' parameter_declaration_clause ')'
-	| direct_abstract_declarator_opt '[' constant_expression_opt ']'
+         '(' parameter_declaration_clause ')'		
+	| direct_abstract_declarator '(' parameter_declaration_clause ')'
+	| '[' constant_expression_opt ']'		
+	| direct_abstract_declarator '[' constant_expression_opt ']'
 	| '(' abstract_declarator ')'
 	;
 
 parameter_declaration_clause:
-	parameter_declaration_list_opt
+	/* epsilon */
+	| parameter_declaration_list
 	;
 
 parameter_declaration_list:
@@ -561,8 +572,8 @@ parameter_declaration:
 	;
 
 function_definition:
-	decl_specifier_seq_opt declarator ctor_initializer_opt function_body
-	| decl_specifier_seq_opt declarator
+	  declarator ctor_initializer_opt function_body
+	| decl_specifier_seq declarator ctor_initializer_opt function_body
 	;
 
 function_body:
@@ -594,8 +605,10 @@ class_specifier:
 	;
 
 class_head:
-	class_key identifier_opt base_clause_opt
-	| class_key nested_name_specifier identifier base_clause_opt
+	  class_key identifier
+	| class_key identifier base_clause
+	| class_key nested_name_specifier identifier
+	| class_key nested_name_specifier identifier base_clause
 	;
 
 class_key:
@@ -609,7 +622,10 @@ member_specification:
 	;
 
 member_declaration:
-	decl_specifier_seq_opt member_declarator_list_opt ';'
+	  decl_specifier_seq member_declarator_list ';'
+	| decl_specifier_seq ';'
+	| member_declarator_list ';'
+	| ';'
 	| function_definition SEMICOLON_opt
 	| qualified_id ';'
 	;
@@ -620,9 +636,9 @@ member_declarator_list:
 	;
 
 member_declarator:
-	declarator
-	| declarator constant_initializer_opt
-	| identifier_opt ':' constant_expression
+	| declarator
+	| declarator constant_initializer
+	| identifier ':' constant_expression
 	;
 
 constant_initializer:
@@ -643,9 +659,14 @@ base_specifier_list:
 	;
 
 base_specifier:
-	COLONCOLON_opt nested_name_specifier_opt class_name
-	| access_specifier_opt COLONCOLON_opt nested_name_specifier_opt class_name
-	| access_specifier COLONCOLON_opt nested_name_specifier_opt class_name
+	  COLONCOLON nested_name_specifier class_name
+	| COLONCOLON class_name
+	| nested_name_specifier class_name
+	| class_name
+	| access_specifier COLONCOLON nested_name_specifier class_name
+	| access_specifier COLONCOLON class_name
+	| access_specifier nested_name_specifier class_name
+	| access_specifier class_name
 	;
 
 access_specifier:
@@ -672,7 +693,10 @@ mem_initializer:
 	;
 
 mem_initializer_id:
-	COLONCOLON_opt nested_name_specifier_opt class_name
+	  COLONCOLON nested_name_specifier class_name
+	| COLONCOLON class_name
+	| nested_name_specifier class_name
+	| class_name
 	| identifier
 	;
 
@@ -685,19 +709,9 @@ declaration_seq_opt:
 	| declaration_seq
 	;
 
-nested_name_specifier_opt:
-	/* epsilon */
-	| nested_name_specifier
-	;
-
 expression_list_opt:
 	/* epsilon */
 	| expression_list
-	;
-
-COLONCOLON_opt:
-	/* epsilon */
-	| COLONCOLON
 	;
 
 new_placement_opt:
@@ -730,21 +744,6 @@ condition_opt:
 	| condition
 	;
 
-decl_specifier_seq_opt:
-	/* epsilon */
-	| decl_specifier_seq
-	;
-
-init_declarator_list_opt:
-	/* epsilon */
-	| init_declarator_list
-	;
-
-identifier_opt:
-	/* epsilon */
-	| identifier
-	;
-
 enumerator_list_opt:
 	/* epsilon */
 	| enumerator_list
@@ -770,17 +769,6 @@ type_specifier_seq_opt:
 	| type_specifier_seq
 	;
 
-direct_abstract_declarator_opt:
-	/* epsilon */
-	| direct_abstract_declarator
-	;
-
-parameter_declaration_list_opt:
-	/* epsilon */
-	| parameter_declaration_list
-	;
-
-
 ctor_initializer_opt:
 	/* epsilon */
 	| ctor_initializer
@@ -796,29 +784,9 @@ member_specification_opt:
 	| member_specification
 	;
 
-base_clause_opt:
-	/* epsilon */
-	| base_clause
-	;
-
-member_declarator_list_opt:
-	/* epsilon */
-	| member_declarator_list
-	;
-
 SEMICOLON_opt:
 	/* epsilon */
 	| ';'
-	;
-
-constant_initializer_opt:
-	/* epsilon */
-	| constant_initializer
-	;
-
-access_specifier_opt:
-	/* epsilon */
-	| access_specifier
 	;
 
 %%
