@@ -524,7 +524,7 @@ direct_abstract_declarator:
 	;
 
 parameter_declaration_clause:
-	/* epsilon */
+	%empty
 	| parameter_declaration_list
 	;
 
@@ -605,7 +605,7 @@ member_declarator_list:
 	;
 
 member_declarator:
-	| declarator
+	declarator
 	| declarator constant_initializer
 	| identifier ':' constant_expression
 	;
@@ -674,82 +674,82 @@ mem_initializer_id:
  *----------------------------------------------------------------------*/
 
 declaration_seq_opt:
-	/* epsilon */
+	%empty
 	| declaration_seq
 	;
 
 expression_list_opt:
-	/* epsilon */
+	%empty
 	| expression_list
 	;
 
 new_placement_opt:
-	/* epsilon */
+	%empty
 	| new_placement
 	;
 
 new_initializer_opt:
-	/* epsilon */
+	%empty
 	| new_initializer
 	;
 
 new_declarator_opt:
-	/* epsilon */
+	%empty
 	| new_declarator
 	;
 
 expression_opt:
-	/* epsilon */
+	%empty
 	| expression
 	;
 
 statement_seq_opt:
-	/* epsilon */
+	%empty
 	| statement_seq
 	;
 
 condition_opt:
-	/* epsilon */
+	%empty
 	| condition
 	;
 
 initializer_opt:
-	/* epsilon */
+	%empty
 	| initializer
 	;
 
 constant_expression_opt:
-	/* epsilon */
+	%empty
 	| constant_expression
 	;
 
 abstract_declarator_opt:
-	/* epsilon */
+	%empty
 	| abstract_declarator
 	;
 
 type_specifier_seq_opt:
-	/* epsilon */
+	%empty
 	| type_specifier_seq
 	;
 
 ctor_initializer_opt:
-	/* epsilon */
+	%empty
 	| ctor_initializer
 	;
 
 COMMA_opt:
-	/* epsilon */
+	%empty
 	| ','
 	;
 
 member_specification_opt:
-	/* epsilon */
+	%empty
 	| member_specification
 	;
 
 SEMICOLON_opt:
-	/* epsilon */
+	%empty
 	| ';'
 	;
 
