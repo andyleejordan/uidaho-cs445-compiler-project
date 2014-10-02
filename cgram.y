@@ -53,7 +53,7 @@ void yyerror(const char *s);
 %defines
 
 %token IDENTIFIER INTEGER FLOATING CHARACTER STRING
-%token TYPEDEF_NAME CLASS_NAME
+%token CLASS_NAME
 
 %token COLONCOLON DOTSTAR ADDEQ SUBEQ MULEQ DIVEQ MODEQ
 %token XOREQ ANDEQ OREQ SL SR SREQ SLEQ EQ NOTEQ LTEQ GTEQ ANDAND OROR
@@ -64,7 +64,7 @@ void yyerror(const char *s);
 %token FALSE FLOAT FOR IF INT LONG NEW
 %token PRIVATE PROTECTED PUBLIC RETURN
 %token SHORT SIGNED SIZEOF STRUCT SWITCH
-%token TRUE TYPEDEF UNSIGNED
+%token TRUE UNSIGNED
 %token VOID WHILE
 
 %start translation_unit
@@ -74,11 +74,6 @@ void yyerror(const char *s);
 /*----------------------------------------------------------------------
  * Context-dependent identifiers.
  *----------------------------------------------------------------------*/
-
-typedef_name:
-	/* identifier */
-	TYPEDEF_NAME
-	;
 
 class_name:
 	/* identifier */
@@ -413,7 +408,6 @@ simple_declaration:
 decl_specifier:
 	storage_class_specifier
 	| type_specifier
-	| TYPEDEF
 	;
 
 decl_specifier_seq:
@@ -450,7 +444,6 @@ simple_type_specifier:
 
 type_name:
 	class_name
-	| typedef_name
 	;
 
 elaborated_type_specifier:
