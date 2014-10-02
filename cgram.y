@@ -53,14 +53,14 @@ void yyerror(const char *s);
 %defines
 
 %token IDENTIFIER INTEGER FLOATING CHARACTER STRING
-%token TYPEDEF_NAME CLASS_NAME ENUM_NAME
+%token TYPEDEF_NAME CLASS_NAME
 
 %token COLONCOLON DOTSTAR ADDEQ SUBEQ MULEQ DIVEQ MODEQ
 %token XOREQ ANDEQ OREQ SL SR SREQ SLEQ EQ NOTEQ LTEQ GTEQ ANDAND OROR
 %token PLUSPLUS MINUSMINUS ARROWSTAR ARROW
 
 %token BOOL BREAK CASE CHAR CLASS CONTINUE
-%token DEFAULT DELETE DO DOUBLE ELSE ENUM EXTERN
+%token DEFAULT DELETE DO DOUBLE ELSE EXTERN
 %token FALSE FLOAT FOR IF INT LONG NEW
 %token PRIVATE PROTECTED PUBLIC RETURN
 %token SHORT SIGNED SIZEOF STRUCT SWITCH
@@ -83,11 +83,6 @@ typedef_name:
 class_name:
 	/* identifier */
 	CLASS_NAME
-	;
-
-enum_name:
-	/* identifier */
-	ENUM_NAME
 	;
 
 /*----------------------------------------------------------------------
@@ -433,7 +428,6 @@ storage_class_specifier:
 type_specifier:
 	simple_type_specifier
 	| class_specifier
-	| enum_specifier
 	| elaborated_type_specifier
 	;
 
@@ -456,37 +450,12 @@ simple_type_specifier:
 
 type_name:
 	class_name
-	| enum_name
 	| typedef_name
 	;
 
 elaborated_type_specifier:
 	  class_key COLONCOLON nested_name_specifier identifier
 	| class_key COLONCOLON identifier
-	;
-
-/*
-enum_name:
-	identifier
-	;
-*/
-
-enum_specifier:
-	ENUM identifier '{' enumerator_list_opt '}'
-	;
-
-enumerator_list:
-	enumerator_definition
-	| enumerator_list ',' enumerator_definition
-	;
-
-enumerator_definition:
-	enumerator
-	| enumerator '=' constant_expression
-	;
-
-enumerator:
-	identifier
 	;
 
 linkage_specification:
@@ -742,11 +711,6 @@ statement_seq_opt:
 condition_opt:
 	/* epsilon */
 	| condition
-	;
-
-enumerator_list_opt:
-	/* epsilon */
-	| enumerator_list
 	;
 
 initializer_opt:

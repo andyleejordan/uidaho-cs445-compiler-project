@@ -103,7 +103,6 @@ void handle_include(const char *s);
 "do"                    { new_token(DO); return DO; }
 "double"                { new_token(DOUBLE); return DOUBLE; }
 "else"                  { new_token(ELSE); return ELSE; }
-"enum"                  { new_token(ENUM); return ENUM; }
 "extern"                { new_token(EXTERN); return EXTERN; }
 "false"                 { new_token(FALSE); return FALSE; }
 "float"                 { new_token(FLOAT); return FLOAT; }
