@@ -60,7 +60,7 @@ void yyerror(const char *s);
 %token PLUSPLUS MINUSMINUS ARROWSTAR ARROW
 
 %token BOOL BREAK CASE CHAR CLASS CONTINUE
-%token DEFAULT DELETE DO DOUBLE ELSE EXTERN
+%token DEFAULT DELETE DO DOUBLE ELSE
 %token FALSE FLOAT FOR IF INT LONG NEW
 %token PRIVATE PROTECTED PUBLIC RETURN
 %token SHORT SIGNED SIZEOF STRUCT SWITCH
@@ -393,7 +393,6 @@ declaration_seq:
 declaration:
 	block_declaration
 	| function_definition
-	| linkage_specification
 	;
 
 block_declaration:
@@ -406,17 +405,12 @@ simple_declaration:
 	;
 
 decl_specifier:
-	storage_class_specifier
-	| type_specifier
+	type_specifier
 	;
 
 decl_specifier_seq:
 	  decl_specifier
 	| decl_specifier_seq decl_specifier
-	;
-
-storage_class_specifier:
-	EXTERN
 	;
 
 type_specifier:
@@ -449,11 +443,6 @@ type_name:
 elaborated_type_specifier:
 	  class_key COLONCOLON nested_name_specifier identifier
 	| class_key COLONCOLON identifier
-	;
-
-linkage_specification:
-	EXTERN string_literal '{' declaration_seq_opt '}'
-	| EXTERN string_literal declaration
 	;
 
 /*----------------------------------------------------------------------
