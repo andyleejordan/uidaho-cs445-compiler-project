@@ -103,7 +103,6 @@ void handle_include(const char *s);
 "do"                    { new_token(DO); return DO; }
 "double"                { new_token(DOUBLE); return DOUBLE; }
 "else"                  { new_token(ELSE); return ELSE; }
-"extern"                { new_token(EXTERN); return EXTERN; }
 "false"                 { new_token(FALSE); return FALSE; }
 "float"                 { new_token(FLOAT); return FLOAT; }
 "for"                   { new_token(FOR); return FOR; }
@@ -121,7 +120,6 @@ void handle_include(const char *s);
 "struct"                { new_token(STRUCT); return STRUCT; }
 "switch"                { new_token(SWITCH); return SWITCH; }
 "true"                  { new_token(TRUE); return TRUE; }
-"typedef"               { new_token(TYPEDEF); return TYPEDEF; }
 "unsigned"              { new_token(UNSIGNED); return UNSIGNED; }
 "void"                  { new_token(VOID); return VOID; }
 "while"                 { new_token(WHILE); return WHILE; }
