@@ -51,7 +51,7 @@ void yyerror(const char *s);
 %}
 
 %union {
-    struct tree *t;
+	struct tree *t;
 }
 
 %defines
@@ -93,8 +93,7 @@ void yyerror(const char *s);
 %type <t> initializer_clause initializer_list class_specifier
 %type <t> class_head class_key member_specification member_declaration
 %type <t> member_declarator_list member_declarator
-%type <t> constant_initializer base_clause base_specifier_list
-%type <t> base_specifier access_specifier ctor_initializer
+%type <t> constant_initializer access_specifier ctor_initializer
 %type <t> mem_initializer_list mem_initializer mem_initializer_id
 %type <t> declaration_seq_opt expression_list_opt new_placement_opt
 %type <t> new_initializer_opt new_declarator_opt expression_opt
@@ -593,9 +592,7 @@ class_specifier:
 
 class_head:
 	  class_key identifier
-	| class_key identifier base_clause
 	| class_key nested_name_specifier identifier
-	| class_key nested_name_specifier identifier base_clause
 	;
 
 class_key:
@@ -630,30 +627,6 @@ member_declarator:
 
 constant_initializer:
 	'=' constant_expression
-	;
-
-/*----------------------------------------------------------------------
- * Derived classes.
- *----------------------------------------------------------------------*/
-
-base_clause:
-	':' base_specifier_list
-	;
-
-base_specifier_list:
-	base_specifier
-	| base_specifier_list ',' base_specifier
-	;
-
-base_specifier:
-	  COLONCOLON nested_name_specifier class_name
-	| COLONCOLON class_name
-	| nested_name_specifier class_name
-	| class_name
-	| access_specifier COLONCOLON nested_name_specifier class_name
-	| access_specifier COLONCOLON class_name
-	| access_specifier nested_name_specifier class_name
-	| access_specifier class_name
 	;
 
 access_specifier:
