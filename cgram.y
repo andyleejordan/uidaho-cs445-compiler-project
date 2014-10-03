@@ -508,7 +508,7 @@ direct_abstract_declarator:
 	;
 
 parameter_declaration_clause:
-	%empty
+	%empty { $$ = NULL; }
 	| parameter_declaration_list
 	;
 
@@ -632,82 +632,82 @@ mem_initializer_id:
  *----------------------------------------------------------------------*/
 
 declaration_seq_opt:
-	%empty
+	%empty { $$ = NULL; }
 	| declaration_seq
 	;
 
 expression_list_opt:
-	%empty
+	%empty { $$ = NULL; }
 	| expression_list
 	;
 
 new_placement_opt:
-	%empty
+	%empty { $$ = NULL; }
 	| new_placement
 	;
 
 new_initializer_opt:
-	%empty
+	%empty { $$ = NULL; }
 	| new_initializer
 	;
 
 new_declarator_opt:
-	%empty
+	%empty { $$ = NULL; }
 	| new_declarator
 	;
 
 expression_opt:
-	%empty
+	%empty { $$ = NULL; }
 	| expression
 	;
 
 statement_seq_opt:
-	%empty
+	%empty { $$ = NULL; }
 	| statement_seq
 	;
 
 condition_opt:
-	%empty
+	%empty { $$ = NULL; }
 	| condition
 	;
 
 initializer_opt:
-	%empty
+	%empty { $$ = NULL; }
 	| initializer
 	;
 
 constant_expression_opt:
-	%empty
+	%empty { $$ = NULL; }
 	| constant_expression
 	;
 
 abstract_declarator_opt:
-	%empty
+	%empty { $$ = NULL; }
 	| abstract_declarator
 	;
 
 type_specifier_seq_opt:
-	%empty
+	%empty { $$ = NULL; }
 	| type_specifier_seq
 	;
 
 ctor_initializer_opt:
-	%empty
+	%empty { $$ = NULL; }
 	| ctor_initializer
 	;
 
 COMMA_opt:
-	%empty
+	%empty { $$ = NULL; }
 	| ','
 	;
 
 member_specification_opt:
-	%empty
+	%empty { $$ = NULL; }
 	| member_specification
 	;
 
 SEMICOLON_opt:
-	%empty
+	%empty { $$ = NULL; }
 	| ';'
 	;
 
