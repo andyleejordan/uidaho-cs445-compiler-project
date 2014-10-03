@@ -74,6 +74,8 @@ void yyerror(const char *s);
 %type <t> multiplicative_expression additive_expression
 %type <t> shift_expression relational_expression equality_expression
 %type <t> and_expression exclusive_or_expression
+%token <t> ';' '{' '}' ',' ':' '=' '(' ')' '[' ']' '.' '&' '!' '~' '-'
+%token <t> '+' '*' '/' '%' '<' '>' '^' '|' '?'
 %type <t> inclusive_or_expression logical_and_expression
 %type <t> logical_or_expression conditional_expression
 %type <t> assignment_expression assignment_operator expression
