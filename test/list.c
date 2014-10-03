@@ -75,7 +75,7 @@ void test_non_empty(struct list *list)
 
 void test_head_data(struct list *list, char *data)
 {
-	if (strcmp(list_peek_front(list), data) != 0) {
+	if (!compare(list_peek_front(list), data)) {
 		sprintf(buffer, "head should have been '%s'", data);
 		failure(buffer);
 	}
@@ -83,14 +83,10 @@ void test_head_data(struct list *list, char *data)
 
 void test_tail_data(struct list *list, char *data)
 {
-	if (strcmp(list_peek(list), data) != 0) {
+	if (!compare(list_peek(list), data)) {
 		sprintf(buffer, "head should have been '%s'", data);
 		failure(buffer);
 	}
-}
-
-bool compare(const char* a, const char* b) {
-	return (0 == strcmp(a, b));
 }
 
 void test_find_data(struct list *list, char* data) {
