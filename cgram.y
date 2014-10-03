@@ -183,7 +183,7 @@ unary_expression:
 	| MINUSMINUS unary_expression { $$ = tree_initv(NULL, NULL, 2, $1, $2); }
 	| unary_operator unary_expression { $$ = tree_initv(NULL, NULL, 2, $1, $2); }
 	| SIZEOF unary_expression { $$ = tree_initv(NULL, NULL, 2, $1, $2); }
-        | SIZEOF '(' type_id ')' { $$ = tree_initv(NULL, NULL, 4, $1, $2, $3, $4); }
+	| SIZEOF '(' type_id ')' { $$ = tree_initv(NULL, NULL, 4, $1, $2, $3, $4); }
 	| new_expression
 	| delete_expression
 	;
@@ -199,7 +199,7 @@ unary_operator:
 
 new_expression:
 	NEW new_placement_opt new_type_id new_initializer_opt { $$ = tree_initv(NULL, NULL, 4, $1, $2, $3, $4); }
-        | COLONCOLON NEW new_placement_opt new_type_id new_initializer_opt { $$ = tree_initv(NULL, NULL, 5, $1, $2, $3, $4, $5); }
+	| COLONCOLON NEW new_placement_opt new_type_id new_initializer_opt { $$ = tree_initv(NULL, NULL, 5, $1, $2, $3, $4, $5); }
 	;
 
 new_placement:
@@ -216,7 +216,7 @@ new_declarator:
 	;
 
 direct_new_declarator:
-        '[' expression ']' { $$ = tree_initv(NULL, NULL, 3, $1, $2, $3); }
+	'[' expression ']' { $$ = tree_initv(NULL, NULL, 3, $1, $2, $3); }
 	| direct_new_declarator '[' constant_expression ']' { $$ = tree_initv(NULL, NULL, 4, $1, $2, $3, $4); }
 	;
 
@@ -343,7 +343,7 @@ statement:
 	;
 
 labeled_statement:
-        CASE constant_expression ':' statement { $$ = tree_initv(NULL, NULL, 4, $1, $2, $3, $4); }
+	CASE constant_expression ':' statement { $$ = tree_initv(NULL, NULL, 4, $1, $2, $3, $4); }
 	| DEFAULT ':' statement { $$ = tree_initv(NULL, NULL, 3, $1, $2, $3); }
 	;
 
@@ -361,8 +361,8 @@ statement_seq:
 	;
 
 selection_statement:
-        IF '(' condition ')' statement { $$ = tree_initv(NULL, NULL, 5, $1, $2, $3, $4, $5); }
-        | IF '(' condition ')' statement ELSE statement { $$ = tree_initv(NULL, NULL, 7, $1, $2, $3, $4, $5, $6, $7); }
+	IF '(' condition ')' statement { $$ = tree_initv(NULL, NULL, 5, $1, $2, $3, $4, $5); }
+	| IF '(' condition ')' statement ELSE statement { $$ = tree_initv(NULL, NULL, 7, $1, $2, $3, $4, $5, $6, $7); }
 	| SWITCH '(' condition ')' statement { $$ = tree_initv(NULL, NULL, 5, $1, $2, $3, $4, $5); }
 	;
 
@@ -411,7 +411,7 @@ block_declaration:
 	;
 
 simple_declaration:
-        decl_specifier_seq init_declarator_list ';' { $$ = tree_initv(NULL, NULL, 3, $1, $2, $3); }
+	decl_specifier_seq init_declarator_list ';' { $$ = tree_initv(NULL, NULL, 3, $1, $2, $3); }
 	| decl_specifier_seq ';' { $$ = tree_initv(NULL, NULL, 2, $1, $2); }
 	;
 
@@ -446,7 +446,7 @@ simple_type_specifier:
 	;
 
 elaborated_type_specifier:
-        class_key COLONCOLON nested_name_specifier IDENTIFIER { $$ = tree_initv(NULL, NULL, 4, $1, $2, $3, $4); }
+	class_key COLONCOLON nested_name_specifier IDENTIFIER { $$ = tree_initv(NULL, NULL, 4, $1, $2, $3, $4); }
 	| class_key COLONCOLON IDENTIFIER { $$ = tree_initv(NULL, NULL, 3, $1, $2, $3); }
 	;
 
@@ -503,7 +503,7 @@ abstract_declarator:
 	;
 
 direct_abstract_declarator:
-        '(' parameter_declaration_clause ')' { $$ = tree_initv(NULL, NULL, 3, $1, $2, $3); }
+	'(' parameter_declaration_clause ')' { $$ = tree_initv(NULL, NULL, 3, $1, $2, $3); }
 	| direct_abstract_declarator '(' parameter_declaration_clause ')' { $$ = tree_initv(NULL, NULL, 4, $1, $2, $3, $4); }
 	| '[' constant_expression_opt ']' { $$ = tree_initv(NULL, NULL, 3, $1, $2, $3); }
 	| direct_abstract_declarator '[' constant_expression_opt ']' { $$ = tree_initv(NULL, NULL, 4, $1, $2, $3, $4); }
@@ -557,7 +557,7 @@ initializer_list:
  *----------------------------------------------------------------------*/
 
 class_specifier:
-        class_head '{' member_specification_opt '}' { $$ = tree_initv(NULL, NULL, 4, $1, $2, $3, $4); }
+	class_head '{' member_specification_opt '}' { $$ = tree_initv(NULL, NULL, 4, $1, $2, $3, $4); }
 	;
 
 class_head:
