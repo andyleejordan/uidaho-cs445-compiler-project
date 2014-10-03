@@ -47,6 +47,9 @@
 %{
 #include <stdio.h>
 
+#include "clex.h"
+#include "tree.h"
+
 void yyerror(const char *s);
 %}
 
