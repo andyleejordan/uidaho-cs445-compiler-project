@@ -27,6 +27,7 @@ IS       (u|U|l|L)*
 #include <libgen.h>
 
 #include "list.h"
+#include "tree.h"
 #include "token.h"
 #include "cgram.tab.h"
 
@@ -52,11 +53,15 @@ void yyerror(const char *s)
 	exit(1);
 }
 
-/* allocates and prepares token, saving pointer into yytoken */
+/*
+ * creates a token with the necessary information, then allocates a
+ * tree node as a leaf for the token, saving it into yylval for Bison
+ */
 void new_token(int category)
 {
-	yytoken = token_create(category, yylineno, yytext,
-	                       (const char *)list_peek(filenames));
+	struct token *t = token_create(category, yylineno, yytext,
+                                       (const char *)list_peek(filenames));
+	yylval.t = tree_init(NULL, t);
 }
 
 void handle_include(const char *s);

@@ -50,6 +50,10 @@
 void yyerror(const char *s);
 %}
 
+%union {
+    struct tree *t;
+}
+
 %defines
 
 %token IDENTIFIER INTEGER FLOATING CHARACTER STRING
