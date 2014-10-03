@@ -10,7 +10,7 @@
  * Adams, and Shea Newton.
  *
  * Based on Sandro Sigala's transcription of the ISO C++ 1996 draft standard.
- * 
+ *
  */
 
 /*
@@ -513,7 +513,7 @@ direct_declarator:
 ptr_operator:
 	'*'
 	| '&'
-	| nested_name_specifier '*'		
+	| nested_name_specifier '*'
 	| COLONCOLON nested_name_specifier '*'
 	;
 
@@ -538,9 +538,9 @@ abstract_declarator:
 	;
 
 direct_abstract_declarator:
-         '(' parameter_declaration_clause ')'		
+         '(' parameter_declaration_clause ')'
 	| direct_abstract_declarator '(' parameter_declaration_clause ')'
-	| '[' constant_expression_opt ']'		
+	| '[' constant_expression_opt ']'
 	| direct_abstract_declarator '[' constant_expression_opt ']'
 	| '(' abstract_declarator ')'
 	;
