@@ -8,3 +8,5 @@
 /test-tree
 /cgram.tab.c
 /cgram.tab.h
+/test-list.dSYM/
+/test-tree.dSYM/
