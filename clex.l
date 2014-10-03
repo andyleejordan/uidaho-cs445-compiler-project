@@ -36,6 +36,7 @@ extern struct list *filenames;
 extern void handle_error(char *c);
 extern char *current_filename();
 
+bool usingstd = false;
 bool cstdlib  = false;
 bool cmath    = false;
 bool ctime    = false;
@@ -96,7 +97,7 @@ void handle_include(const char *s);
 	<<EOF>>         { yyerror("Unexpected EOF"); }
 	.               { yyerror("Unrecognized token following #include"); }
 }
-
+"using namespace std;"  { usingstd = true; }
 "bool"                  { new_token(BOOL); return BOOL; }
 "break"                 { new_token(BREAK); return BREAK; }
 "case"                  { new_token(CASE); return CASE; }
