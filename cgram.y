@@ -63,19 +63,17 @@ void yyerror(const char *s);
 %token <t> CLASS CONTINUE DEFAULT DELETE DO DOUBLE ELSE FALSE FLOAT
 %token <t> FOR IF INT LONG NEW PRIVATE PROTECTED PUBLIC RETURN SHORT
 %token <t> SIGNED SIZEOF STRUCT SWITCH TRUE UNSIGNED VOID WHILE
-
-%type <t> identifier literal integer_literal character_literal
-%type <t> floating_literal string_literal boolean_literal program
-%type <t> primary_expression id_expression unqualified_id qualified_id
-%type <t> nested_name_specifier postfix_expression expression_list
-%type <t> unary_expression unary_operator new_expression new_placement
-%type <t> new_type_id new_declarator direct_new_declarator
-%type <t> new_initializer delete_expression pm_expression
-%type <t> multiplicative_expression additive_expression
-%type <t> shift_expression relational_expression equality_expression
-%type <t> and_expression exclusive_or_expression
 %token <t> ';' '{' '}' ',' ':' '=' '(' ')' '[' ']' '.' '&' '!' '~' '-'
 %token <t> '+' '*' '/' '%' '<' '>' '^' '|' '?'
+
+%type <t> literal boolean program primary_expression id_expression
+%type <t> unqualified_id qualified_id nested_name_specifier
+%type <t> postfix_expression expression_list unary_expression
+%type <t> unary_operator new_expression new_placement new_type_id
+%type <t> new_declarator direct_new_declarator new_initializer
+%type <t> delete_expression pm_expression multiplicative_expression
+%type <t> additive_expression shift_expression relational_expression
+%type <t> equality_expression and_expression exclusive_or_expression
 %type <t> inclusive_or_expression logical_and_expression
 %type <t> logical_or_expression conditional_expression
 %type <t> assignment_expression assignment_operator expression
@@ -85,7 +83,7 @@ void yyerror(const char *s);
 %type <t> for_init_statement jump_statement declaration_statement
 %type <t> declaration_seq declaration block_declaration
 %type <t> simple_declaration decl_specifier decl_specifier_seq
-%type <t> type_specifier simple_type_specifier type_name
+%type <t> type_specifier simple_type_specifier
 %type <t> elaborated_type_specifier init_declarator_list
 %type <t> init_declarator declarator direct_declarator ptr_operator
 %type <t> declarator_id type_id type_specifier_seq abstract_declarator
@@ -109,47 +107,18 @@ void yyerror(const char *s);
 %%
 
 /*----------------------------------------------------------------------
- * Context-dependent identifiers.
- *----------------------------------------------------------------------*/
-
-class_name:
-	/* identifier */
-	CLASS_NAME
-	;
-
-/*----------------------------------------------------------------------
  * Lexical elements.
  *----------------------------------------------------------------------*/
 
-identifier:
-	IDENTIFIER
-	;
-
 literal:
-	integer_literal
-	| character_literal
-	| floating_literal
-	| string_literal
-	| boolean_literal
-	;
-
-integer_literal:
 	INTEGER
+	| CHARACTER
+	| FLOATING
+	| STRING
+	| boolean
 	;
 
-character_literal:
-	CHARACTER
-	;
-
-floating_literal:
-	FLOATING
-	;
-
-string_literal:
-	STRING
-	;
-
-boolean_literal:
+boolean:
 	TRUE
 	| FALSE
 	;
@@ -174,8 +143,8 @@ id_expression:
 	;
 
 unqualified_id:
-	identifier
-	| '~' class_name
+	IDENTIFIER
+	| '~' CLASS_NAME
 	;
 
 qualified_id:
@@ -183,8 +152,8 @@ qualified_id:
 	;
 
 nested_name_specifier:
-	class_name COLONCOLON
-	| class_name COLONCOLON nested_name_specifier
+	CLASS_NAME COLONCOLON
+	| CLASS_NAME COLONCOLON nested_name_specifier
 	;
 
 postfix_expression:
@@ -226,7 +195,7 @@ unary_operator:
 	;
 
 new_expression:
-	  NEW new_placement_opt new_type_id new_initializer_opt
+	NEW new_placement_opt new_type_id new_initializer_opt
 	| COLONCOLON NEW new_placement_opt new_type_id new_initializer_opt
 	;
 
@@ -253,7 +222,7 @@ new_initializer:
 	;
 
 delete_expression:
-	  DELETE unary_expression
+	DELETE unary_expression
 	| COLONCOLON DELETE unary_expression
 	| DELETE '[' ']' unary_expression
 	| COLONCOLON DELETE '[' ']' unary_expression
@@ -439,8 +408,8 @@ block_declaration:
 	;
 
 simple_declaration:
-	  decl_specifier_seq init_declarator_list ';'
-	|  decl_specifier_seq ';'
+        decl_specifier_seq init_declarator_list ';'
+	| decl_specifier_seq ';'
 	;
 
 decl_specifier:
@@ -448,7 +417,7 @@ decl_specifier:
 	;
 
 decl_specifier_seq:
-	  decl_specifier
+	decl_specifier
 	| decl_specifier_seq decl_specifier
 	;
 
@@ -459,8 +428,8 @@ type_specifier:
 	;
 
 simple_type_specifier:
-	  type_name
-	| nested_name_specifier type_name
+	CLASS_NAME
+	| nested_name_specifier CLASS_NAME
 	| CHAR
 	| BOOL
 	| SHORT
@@ -473,13 +442,9 @@ simple_type_specifier:
 	| VOID
 	;
 
-type_name:
-	class_name
-	;
-
 elaborated_type_specifier:
-	  class_key COLONCOLON nested_name_specifier identifier
-	| class_key COLONCOLON identifier
+	class_key COLONCOLON nested_name_specifier IDENTIFIER
+	| class_key COLONCOLON IDENTIFIER
 	;
 
 /*----------------------------------------------------------------------
@@ -515,10 +480,10 @@ ptr_operator:
 	;
 
 declarator_id:
-	  id_expression
+	id_expression
 	| COLONCOLON id_expression
-	| COLONCOLON nested_name_specifier type_name
-	| COLONCOLON type_name
+	| COLONCOLON nested_name_specifier CLASS_NAME
+	| COLONCOLON CLASS_NAME
 	;
 
 type_id:
@@ -560,7 +525,7 @@ parameter_declaration:
 	;
 
 function_definition:
-	  declarator ctor_initializer_opt function_body
+	declarator ctor_initializer_opt function_body
 	| decl_specifier_seq declarator ctor_initializer_opt function_body
 	;
 
@@ -593,8 +558,8 @@ class_specifier:
 	;
 
 class_head:
-	  class_key identifier
-	| class_key nested_name_specifier identifier
+	class_key IDENTIFIER
+	| class_key nested_name_specifier IDENTIFIER
 	;
 
 class_key:
@@ -608,7 +573,7 @@ member_specification:
 	;
 
 member_declaration:
-	  decl_specifier_seq member_declarator_list ';'
+	decl_specifier_seq member_declarator_list ';'
 	| decl_specifier_seq ';'
 	| member_declarator_list ';'
 	| ';'
@@ -624,7 +589,7 @@ member_declarator_list:
 member_declarator:
 	declarator
 	| declarator constant_initializer
-	| identifier ':' constant_expression
+	| IDENTIFIER ':' constant_expression
 	;
 
 constant_initializer:
@@ -655,11 +620,11 @@ mem_initializer:
 	;
 
 mem_initializer_id:
-	  COLONCOLON nested_name_specifier class_name
-	| COLONCOLON class_name
-	| nested_name_specifier class_name
-	| class_name
-	| identifier
+	COLONCOLON nested_name_specifier CLASS_NAME
+	| COLONCOLON CLASS_NAME
+	| nested_name_specifier CLASS_NAME
+	| CLASS_NAME
+	| IDENTIFIER
 	;
 
 /*----------------------------------------------------------------------
