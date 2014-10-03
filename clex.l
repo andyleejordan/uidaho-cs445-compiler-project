@@ -31,10 +31,11 @@ IS       (u|U|l|L)*
 #include "token.h"
 #include "cgram.tab.h"
 
-extern struct token *yytoken;
 extern struct list *filenames;
 extern void handle_error(char *c);
 extern char *current_filename();
+
+struct token *yytoken = NULL;
 
 bool usingstd = false;
 bool cstdlib  = false;
@@ -60,9 +61,9 @@ void yyerror(const char *s)
  */
 void new_token(int category)
 {
-	struct token *t = token_create(category, yylineno, yytext,
+	yytoken = token_create(category, yylineno, yytext,
                                        (const char *)list_peek(filenames));
-	yylval.t = tree_init(NULL, t);
+	yylval.t = tree_init(NULL, yytoken);
 }
 
 void handle_include(const char *s);

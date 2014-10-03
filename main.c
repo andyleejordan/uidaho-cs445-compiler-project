@@ -18,7 +18,6 @@
 #include "list.h"
 #include "cgram.tab.h"
 
-struct token *yytoken = NULL;
 struct tree *yyprogram;
 struct list *tokens = NULL;
 struct list *filenames = NULL;
