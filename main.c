@@ -40,21 +40,6 @@ char *current_filename()
 	return copy;
 }
 
-/* start the parser via yylex; error on relevant tokens; add good
-   tokens to token list */
-void parse_files()
-{
-	while (true) {
-		int category = yylex();
-		if (category == 0) {
-			break;
-		}
-		list_push(tokens, yytoken);
-	}
-	yylex_destroy();
-	return;
-}
-
 int main(int argc, char **argv)
 {
 	tokens = list_init();
@@ -85,49 +70,16 @@ int main(int argc, char **argv)
 			if (yyin == NULL)
 				handle_error("main file open");
 			yypush_buffer_state(yy_create_buffer(yyin, YY_BUF_SIZE));
+
+			/* call bison */
+			yyparse();
+
+			/* tree_print(program); */
+
+			/* clean up */
+			yylex_destroy();
 		}
-		/* start is a special case where we need to chdir to
-		   the directory of the first file to be parsed; all
-		   other files are chdir'ed to after the previous has
-		   been popped */
-		char *filename = current_filename();
-		if (filename) {
-			chdir(dirname(filename));
-			free(filename);
-		}
-	}
 
-	parse_files();
-
-	printf("Line/Filename    Token   Text -> Ival/Sval\n");
-	printf("------------------------------------------\n");
-	const struct list_node *iter = list_head(tokens);
-	while (!list_end(iter)) {
-		const struct token *t = iter->data;
-
-		char *filename = strdup(t->filename);
-		if (filename == NULL)
-			handle_error("main token filename");
-
-		printf("%-5d%-12s%-8d%s ",
-		       t->lineno,
-		       basename(filename),
-		       t->category,
-		       t->text);
-
-		free(filename);
-
-		if (t->category == INTEGER)
-			printf("-> %d", t->ival);
-		else if (t->category == FLOATING)
-			printf("-> %f", t->fval);
-		else if (t->category == CHARACTER)
-			printf("-> %c", t->ival);
-		else if (t->category == STRING)
-			printf("-> %s", t->sval);
-
-		printf("\n");
-		iter = iter->next;
 	}
 
 	return EXIT_SUCCESS;
