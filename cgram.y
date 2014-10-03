@@ -65,15 +65,15 @@ void yyerror(const char *s);
 %token <t> SIGNED SIZEOF STRUCT SWITCH TRUE UNSIGNED VOID WHILE
 
 %type <t> identifier literal integer_literal character_literal
-%type <t> floating_literal string_literal boolean_literal
-%type <t> translation_unit primary_expression id_expression
-%type <t> unqualified_id qualified_id nested_name_specifier
-%type <t> postfix_expression expression_list unary_expression
-%type <t> unary_operator new_expression new_placement new_type_id
-%type <t> new_declarator direct_new_declarator new_initializer
-%type <t> delete_expression pm_expression multiplicative_expression
-%type <t> additive_expression shift_expression relational_expression
-%type <t> equality_expression and_expression exclusive_or_expression
+%type <t> floating_literal string_literal boolean_literal program
+%type <t> primary_expression id_expression unqualified_id qualified_id
+%type <t> nested_name_specifier postfix_expression expression_list
+%type <t> unary_expression unary_operator new_expression new_placement
+%type <t> new_type_id new_declarator direct_new_declarator
+%type <t> new_initializer delete_expression pm_expression
+%type <t> multiplicative_expression additive_expression
+%type <t> shift_expression relational_expression equality_expression
+%type <t> and_expression exclusive_or_expression
 %type <t> inclusive_or_expression logical_and_expression
 %type <t> logical_or_expression conditional_expression
 %type <t> assignment_expression assignment_operator expression
@@ -103,7 +103,7 @@ void yyerror(const char *s);
 %type <t> type_specifier_seq_opt ctor_initializer_opt COMMA_opt
 %type <t> member_specification_opt SEMICOLON_opt
 
-%start translation_unit
+%start program
 
 %%
 
@@ -153,11 +153,7 @@ boolean_literal:
 	| FALSE
 	;
 
-/*----------------------------------------------------------------------
- * Translation unit.
- *----------------------------------------------------------------------*/
-
-translation_unit:
+program:
 	declaration_seq_opt
 	;
 
