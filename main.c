@@ -55,44 +55,45 @@ int main(int argc, char **argv)
 	if (filenames == NULL)
 		handle_error("main filenames");
 
-	if (argc == 1) { /* setup lexer and parse for stdin */
-		printf("no CLI arguments, reading from stdin\n");
-		list_push(filenames, "stdin");
-		yyin = stdin;
-		yypush_buffer_state(yy_create_buffer(yyin, YY_BUF_SIZE));
-	} else { /* setup lexer and parse each argument as a new 'program' */
-		for (int i = 1; i < argc; ++i) {
+	/* setup lexer and parse each argument (or stdin) as a new 'program' */
+	for (int i = 1; i <= argc; ++i) {
+		char *filename = NULL;
+		if (argc == 1) {
+			printf("No CLI arguments, reading from stdin\n");
+			filename = "stdin";
+			yyin = stdin;
+		} else {
+			if (i == argc)
+				break;
+			printf("Reading from %s\n", argv[i]);
 			/* get real path for argument */
 			chdir(cwd);
-			char *filename = realpath(argv[i], NULL);
+			filename = realpath(argv[i], NULL);
 			if (filename == NULL) {
-				sprintf(error_buf, "couldn't resolve CLI argument '%s'", argv[i]);
+				sprintf(error_buf, "Could not resolve CLI argument '%s'", argv[i]);
 				handle_error(error_buf);
 			}
-
-			/* push to list for lexer */
-			list_push(filenames, filename);
-
-			/* change to directory for relative path lookups */
-			chdir(dirname(filename));
+			chdir(dirname(filename)); /* relative path lookups */
 
 			/* open file and push buffer for flex */
-			yyin = fopen(filename, "r");
-			if (yyin == NULL) {
-				sprintf(error_buf, "couldn't open CLI argument '%s'", argv[i]);
+			if (!(yyin = fopen(filename, "r"))) {
+				sprintf(error_buf, "Could not open CLI argument '%s'", argv[i]);
 				handle_error(error_buf);
 			}
-			yypush_buffer_state(yy_create_buffer(yyin, YY_BUF_SIZE));
-
-			/* call bison */
-			yyparse();
-
-			/* tree_print(program); */
-
-			/* clean up */
-			yylex_destroy();
 		}
 
+		/* push filename and buffer state for lexer */
+		list_push(filenames, filename);
+		yypush_buffer_state(yy_create_buffer(yyin, YY_BUF_SIZE));
+
+		yyparse(); /* call bison */
+
+		/* tree_print(program); */
+
+		/* clean up */
+		yylex_destroy();
+		if (!fclose(yyin))
+			handle_error("main fclose");
 	}
 
 	return EXIT_SUCCESS;
