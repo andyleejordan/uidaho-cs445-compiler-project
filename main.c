@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <libgen.h>
+#include <unistd.h>
 
 #include "clex.h"
 #include "token.h"
@@ -43,6 +44,10 @@ char *current_filename()
 
 int main(int argc, char **argv)
 {
+	char *cwd = getcwd(NULL, 0);
+	if (cwd == NULL)
+		handle_error("getcwd");
+
 	tokens = list_init();
 	filenames = list_init();
 	if (tokens == NULL)
@@ -62,14 +67,20 @@ int main(int argc, char **argv)
 	} else {
 		for (int i = 1; i < argc; ++i) {
 			/* get real path for argument */
+			chdir(cwd);
 			char *filename = realpath(argv[i], NULL);
 			if (filename == NULL) {
 				sprintf(error_buf, "couldn't resolve CLI argument '%s'", argv[i]);
 				handle_error(error_buf);
 			}
 
-			/* open file and push filename and buffer */
+			/* push to list for lexer */
 			list_push(filenames, filename);
+
+			/* change to directory for relative path lookups */
+			chdir(dirname(filename));
+
+			/* open file and push buffer for flex */
 			yyin = fopen(filename, "r");
 			if (yyin == NULL) {
 				sprintf(error_buf, "couldn't open CLI argument '%s'", argv[i]);
