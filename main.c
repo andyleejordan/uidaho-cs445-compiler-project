@@ -21,6 +21,7 @@
 struct tree *yyprogram;
 struct list *tokens = NULL;
 struct list *filenames = NULL;
+char error_buf[256];
 
 /* multiple error labels were redundant when all we can do is exit */
 void handle_error(char *c)
@@ -55,20 +56,25 @@ int main(int argc, char **argv)
 		if (filename == NULL)
 			handle_error("main filename");
 		list_push(filenames, filename);
+		printf("no CLI arguments, reading from stdin\n");
 		yyin = stdin;
 		yypush_buffer_state(yy_create_buffer(yyin, YY_BUF_SIZE));
 	} else {
 		for (int i = 1; i < argc; ++i) {
 			/* get real path for argument */
 			char *filename = realpath(argv[i], NULL);
-			if (filename == NULL)
-				handle_error("main real path");
+			if (filename == NULL) {
+				sprintf(error_buf, "couldn't resolve CLI argument '%s'", argv[i]);
+				handle_error(error_buf);
+			}
 
 			/* open file and push filename and buffer */
 			list_push(filenames, filename);
 			yyin = fopen(filename, "r");
-			if (yyin == NULL)
-				handle_error("main file open");
+			if (yyin == NULL) {
+				sprintf(error_buf, "couldn't open CLI argument '%s'", argv[i]);
+				handle_error(error_buf);
+			}
 			yypush_buffer_state(yy_create_buffer(yyin, YY_BUF_SIZE));
 
 			/* call bison */
