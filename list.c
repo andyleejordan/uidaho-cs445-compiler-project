@@ -65,7 +65,8 @@ void list_destroy(struct list *self, void (*destroy)(void *data))
 
 	while (!list_empty(self)) {
 		void *d = list_pop(self);
-		destroy(d);
+		if (destroy != NULL)
+			destroy(d);
 	}
 	free(self->sentinel);
 	free(self);
