@@ -55,16 +55,12 @@ int main(int argc, char **argv)
 	if (filenames == NULL)
 		handle_error("main filenames");
 
-	if (argc == 1) {
-		/* not 'char filename[] = "stdin"' because list_destroy */
-		char *filename = strdup("stdin");
-		if (filename == NULL)
-			handle_error("main filename");
-		list_push(filenames, filename);
+	if (argc == 1) { /* setup lexer and parse for stdin */
 		printf("no CLI arguments, reading from stdin\n");
+		list_push(filenames, "stdin");
 		yyin = stdin;
 		yypush_buffer_state(yy_create_buffer(yyin, YY_BUF_SIZE));
-	} else {
+	} else { /* setup lexer and parse each argument as a new 'program' */
 		for (int i = 1; i < argc; ++i) {
 			/* get real path for argument */
 			chdir(cwd);
