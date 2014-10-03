@@ -150,8 +150,8 @@ qualified_id:
 	;
 
 nested_name_specifier:
-	class_name COLONCOLON nested_name_specifier
-	| class_name COLONCOLON
+	class_name COLONCOLON
+	| class_name COLONCOLON nested_name_specifier
 	;
 
 postfix_expression:
@@ -428,8 +428,6 @@ type_specifier:
 simple_type_specifier:
 	  type_name
 	| nested_name_specifier type_name
-	| COLONCOLON nested_name_specifier type_name
-	| COLONCOLON type_name
 	| CHAR
 	| BOOL
 	| SHORT
