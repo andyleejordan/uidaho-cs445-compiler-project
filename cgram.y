@@ -64,6 +64,45 @@ void yyerror(const char *s);
 %token <t> FOR IF INT LONG NEW PRIVATE PROTECTED PUBLIC RETURN SHORT
 %token <t> SIGNED SIZEOF STRUCT SWITCH TRUE UNSIGNED VOID WHILE
 
+%type <t> identifier literal integer_literal character_literal
+%type <t> floating_literal string_literal boolean_literal
+%type <t> translation_unit primary_expression id_expression
+%type <t> unqualified_id qualified_id nested_name_specifier
+%type <t> postfix_expression expression_list unary_expression
+%type <t> unary_operator new_expression new_placement new_type_id
+%type <t> new_declarator direct_new_declarator new_initializer
+%type <t> delete_expression pm_expression multiplicative_expression
+%type <t> additive_expression shift_expression relational_expression
+%type <t> equality_expression and_expression exclusive_or_expression
+%type <t> inclusive_or_expression logical_and_expression
+%type <t> logical_or_expression conditional_expression
+%type <t> assignment_expression assignment_operator expression
+%type <t> constant_expression statement labeled_statement
+%type <t> expression_statement compound_statement statement_seq
+%type <t> selection_statement condition iteration_statement
+%type <t> for_init_statement jump_statement declaration_statement
+%type <t> declaration_seq declaration block_declaration
+%type <t> simple_declaration decl_specifier decl_specifier_seq
+%type <t> type_specifier simple_type_specifier type_name
+%type <t> elaborated_type_specifier init_declarator_list
+%type <t> init_declarator declarator direct_declarator ptr_operator
+%type <t> declarator_id type_id type_specifier_seq abstract_declarator
+%type <t> direct_abstract_declarator parameter_declaration_clause
+%type <t> parameter_declaration_list parameter_declaration
+%type <t> function_definition function_body initializer
+%type <t> initializer_clause initializer_list class_specifier
+%type <t> class_head class_key member_specification member_declaration
+%type <t> member_declarator_list member_declarator
+%type <t> constant_initializer base_clause base_specifier_list
+%type <t> base_specifier access_specifier ctor_initializer
+%type <t> mem_initializer_list mem_initializer mem_initializer_id
+%type <t> declaration_seq_opt expression_list_opt new_placement_opt
+%type <t> new_initializer_opt new_declarator_opt expression_opt
+%type <t> statement_seq_opt condition_opt initializer_opt
+%type <t> constant_expression_opt abstract_declarator_opt
+%type <t> type_specifier_seq_opt ctor_initializer_opt COMMA_opt
+%type <t> member_specification_opt SEMICOLON_opt
+
 %start translation_unit
 
 %%
