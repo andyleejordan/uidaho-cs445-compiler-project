@@ -95,6 +95,7 @@ int main(int argc, char **argv)
 		yylex_destroy();
 		if (!fclose(yyin))
 			handle_error("main fclose");
+		list_destroy(typenames, NULL);
 	}
 
 	return EXIT_SUCCESS;
