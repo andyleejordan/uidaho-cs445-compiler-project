@@ -563,7 +563,7 @@ class_specifier:
 	;
 
 class_head:
-	class_key IDENTIFIER { $$ = tree_initv(NULL, NULL, 2, $1, $2); }
+	class_key IDENTIFIER { $$ = tree_initv(NULL, NULL, 2, $1, $2); typenames_insert_tree($2, CLASS_NAME); }
 	| class_key nested_name_specifier IDENTIFIER { $$ = tree_initv(NULL, NULL, 3, $1, $2, $3); }
 	;
 

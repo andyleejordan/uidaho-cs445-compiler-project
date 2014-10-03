@@ -20,7 +20,7 @@
 #include "cgram.tab.h"
 
 struct tree *yyprogram;
-struct list *tokens = NULL;
+struct list *typenames = NULL;
 struct list *filenames = NULL;
 char error_buf[256];
 
@@ -48,15 +48,16 @@ int main(int argc, char **argv)
 	if (cwd == NULL)
 		handle_error("getcwd");
 
-	tokens = list_init();
 	filenames = list_init();
-	if (tokens == NULL)
-		handle_error("main tokens");
 	if (filenames == NULL)
 		handle_error("main filenames");
 
 	/* setup lexer and parse each argument (or stdin) as a new 'program' */
 	for (int i = 1; i <= argc; ++i) {
+		typenames = list_init();
+		if (typenames == NULL)
+			handle_error("main typenames");
+
 		char *filename = NULL;
 		if (argc == 1) {
 			printf("No CLI arguments, reading from stdin\n");

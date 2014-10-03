@@ -31,7 +31,14 @@ IS       (u|U|l|L)*
 #include "token.h"
 #include "cgram.tab.h"
 
+struct typename {
+	char *name;
+	int category;
+};
+
+extern struct list *typenames;
 extern struct list *filenames;
+extern char *error_buf;
 extern void handle_error(char *c);
 extern char *current_filename();
 
@@ -66,6 +73,52 @@ void new_token(int category)
 	yylval.t = tree_init(NULL, yytoken);
 }
 
+bool typename_compare(const char *s, const struct typename *t)
+{
+	return 0 == strcmp(s, t->name);
+}
+
+/*
+ * inserts a new typename into typenames list
+ */
+void typenames_insert(char *s, int category)
+{
+	struct list_node *l = list_find(typenames, (void *)s,
+					(bool (*)(void *, void *))&typename_compare);
+	if (!list_end(l)) {
+		sprintf(error_buf, "Identifier %s already in typenames\n", s);
+		handle_error(error_buf);
+	}
+	struct typename *type = malloc(sizeof(*type));
+	type->name = strdup(s);
+	type->category = category;
+	list_push(typenames, type);
+}
+
+/*
+ * unwraps a tree leaf and passes token text as name to insert function
+ */
+void typenames_insert_tree(struct tree *t, int category)
+{
+	typenames_insert(((struct token *)t->data)->text, category);
+}
+
+/*
+ * returns corresponding category for identifier
+ */
+int check_identifier(const char *s)
+{
+	struct list_node *l = list_find(typenames, (void *)s,
+					(bool (*)(void *, void *))&typename_compare);
+	if (list_end(l)) {
+		new_token(IDENTIFIER);
+		return IDENTIFIER;
+	}
+	else {
+		return ((struct typename *)l->data)->category;
+	}
+}
+
 void handle_include(const char *s);
 %}
 
@@ -91,7 +144,7 @@ void handle_include(const char *s);
 	"<cstring>"     { cstring  = true; BEGIN(INITIAL); }
 	"<fstream>"     { fstream  = true; BEGIN(INITIAL); }
 	"<iostream>"    { iostream = true; BEGIN(INITIAL); }
-	"<string>"      { string   = true; BEGIN(INITIAL); }
+	"<string>"      { string   = true; typenames_insert("string", CLASS_NAME); BEGIN(INITIAL); }
 	"<iomanip>"     { iomanip  = true; BEGIN(INITIAL); }
 	\"[^\"]+\"      { handle_include(yytext); BEGIN(INITIAL); }
 	"<"[^<>]*">"    { yyerror("Unrecognized system library"); }
@@ -232,7 +285,7 @@ L?\"                    { new_token(STRING); BEGIN(STR); }
 "|"                     { new_token('|'); return '|'; }
 "?"                     { new_token('?'); return '?'; }
 
-{L}({L}|{D})*           { new_token(IDENTIFIER); return IDENTIFIER; }
+{L}({L}|{D})*           { return check_identifier(yytext); }
 
 <*>.                    { yyerror("Unrecognized token"); }
 
