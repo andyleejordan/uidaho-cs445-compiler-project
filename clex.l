@@ -267,11 +267,11 @@ void handle_include(const char *s)
 
 	/* get the real path */
 	char *filename = realpath(include, NULL);
-	free(include);
 	if (filename == NULL) {
 		fprintf(stderr, "Could not resolve path to included file: %s, included from %s\n", include, current_filename());
 		exit(EXIT_FAILURE);
 	}
+	free(include);
 	list_push(filenames, filename);
 
 	/* open file and push buffer */
