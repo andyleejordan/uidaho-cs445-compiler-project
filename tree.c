@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdarg.h>
 
 #include "tree.h"
 #include "list.h"
@@ -36,6 +37,24 @@ struct tree *tree_init(struct tree *parent, void *data)
 	t->data = data;
 	t->children = l;
 
+	return t;
+}
+
+/*
+ * Initializes tree with reference to parent and data, and pushes
+ * count number of following 'void *' arguments to tree as children.
+ */
+struct tree *tree_initv(struct tree *parent, void *data, int count, ...)
+{
+	va_list ap;
+	va_start(ap, count);
+
+	struct tree *t = tree_init(parent, data);
+
+	for (int i = 0; i < count; ++i)
+		tree_push(t, va_arg(ap, void *));
+
+	va_end(ap);
 	return t;
 }
 

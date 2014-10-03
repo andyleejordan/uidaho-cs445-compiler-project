@@ -32,6 +32,27 @@ void test_init(struct tree *tree, struct tree *parent, void *data)
 		failure("new children list wasn't empty");
 }
 
+void test_initv()
+{
+	struct tree *tree = tree_initv(NULL, "root", 2, "foo", "bar");
+
+	test_size(tree, 3);
+
+	if (tree->parent != NULL)
+		failure("parent wasn't NULL");
+
+	if (!compare(tree->data, "root"))
+		failure("data wasn't 'root'");
+
+	struct tree *c1 = list_pop(tree->children);
+	if (!compare(c1->data, "bar"))
+		failure("last child wasn't 'bar'");
+
+	struct tree *c2 = list_pop(tree->children);
+	if (!compare(c2->data, "foo"))
+		failure("first child wasn't 'foo'");
+}
+
 int main(int argc, char *argv[])
 {
 	running("tree");
@@ -67,6 +88,9 @@ int main(int argc, char *argv[])
 	printf("\n");
 
 	tree_destroy(root, &free);
+
+	testing("variadic push 2 args");
+	test_initv();
 
 	return status;
 }
