@@ -50,6 +50,8 @@
 #include "clex.h"
 #include "tree.h"
 
+extern struct tree *yyprogram;
+
 void yyerror(const char *s);
 %}
 
@@ -127,7 +129,7 @@ boolean:
 	;
 
 program:
-	declaration_seq_opt
+	declaration_seq_opt { yyprogram = $$; }
 	;
 
 /*----------------------------------------------------------------------
