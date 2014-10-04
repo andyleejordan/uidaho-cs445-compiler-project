@@ -5,9 +5,9 @@
 #include "../tree.h"
 #include "../list.h"
 
-char *convert(char *data)
+void print_tree(struct tree *t)
 {
-	return (char *)data;
+	printf("%s ", t->data);
 }
 
 void test_size(struct tree *tree, size_t size)
@@ -84,7 +84,7 @@ int main(int argc, char *argv[])
 	test_size(root, 5);
 
 	testing("printing:");
-	tree_print(root, (char *(*)(void *))&convert);
+	tree_preorder(root, &print_tree);
 	printf("\n");
 
 	tree_destroy(root, &free);

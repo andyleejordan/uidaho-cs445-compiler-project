@@ -78,19 +78,17 @@ size_t tree_size(struct tree *self)
 }
 
 /*
- * Basic pre-order print of data. Takes a function that converts the
- * data to its string representation (simplest form being a return for
- * char* types).
+ * Pre-order traversal of tree. Takes a function and applies it to
+ * each subtree.
  */
-void tree_print(struct tree *self, char *(*convert)(void *data))
+void tree_preorder(struct tree *self, void (*f)(struct tree *t))
 {
-	printf("(%s", convert(self->data));
+	f(self);
 	const struct list_node *iter = list_head(self->children);
 	while (!list_end(iter)) {
-		tree_print((struct tree *)iter->data, convert);
+		tree_preorder((struct tree *)iter->data, f);
 		iter = iter->next;
 	}
-	printf(")");
 }
 
 /*
