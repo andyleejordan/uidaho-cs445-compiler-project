@@ -111,9 +111,14 @@ struct tree *tree_push(struct tree *self, void *data)
 	return child;
 }
 
+/*
+ * Recursively deallocates a tree, and optionally frees data if given
+ * a non-NULL function pointer.
+ */
 void tree_destroy(struct tree *self, void (*destroy)(void *data))
 {
-	destroy(self->data);
+	if (destroy != NULL)
+		destroy(self->data);
 
 	while (!list_empty(self->children)) {
 		void *d = list_pop(self->children);
