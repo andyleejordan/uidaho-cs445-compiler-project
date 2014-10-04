@@ -18,10 +18,10 @@ int main(int argc, char *argv[])
 	} while (argc > 0);
 
 	// the /* c */ is a char
-	const char c = 'C';
-	const char newline = '\n';
-	const char backslash = '\\';
-	const char tick = '\'';
+	char c = 'C';
+	char newline = '\n';
+	char backslash = '\\';
+	char tick = '\'';
 
 	switch (c) {
 	case 'C': {
@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
 	/*************************
 	 * use "malloc" -> "free"
 	 *************************/
-	struct test *tmp = (struct test*)malloc(sizeof(*tmp));
+	struct test *tmp = malloc(sizeof(*tmp));
 
 	tmp->data = (1 == true)
 		? 1

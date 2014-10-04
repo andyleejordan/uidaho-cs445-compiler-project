@@ -30,19 +30,19 @@ int main(int argc, char *argv[])
 	 * comment
 	 */
 
+	TestClass myclass;
+
 	int double_array[2][2] = {{1, 2}, {3, 4}};
 
-	union types {
-		bool is = false;
-		char character = 'A';
-		short quick = 2;
-		short int small = 4;
-		long big = 123234;
-		long long huge = 1000000000;
-		double pi = 3.14159;
-		double zero = .0000000001;
-		float one = 1.;
-	};
+	bool is = false;
+	char character = 'A';
+	short quick = 2;
+	short int small = 4;
+	long big = 123234;
+	long long huge = 1000000000;
+	double pi = 3.14159;
+	double zero = .0000000001;
+	float one = 1.;
 
 	string empty = "";
 
