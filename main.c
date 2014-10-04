@@ -17,6 +17,7 @@
 #include "clex.h"
 #include "token.h"
 #include "list.h"
+#include "tree.h"
 #include "cgram.tab.h"
 
 struct tree *yyprogram;
@@ -40,6 +41,14 @@ char *current_filename()
 	if (copy == NULL)
 		handle_error("current_filename()");
 	return copy;
+}
+
+void print_tree(struct tree *t)
+{
+	if (tree_size(t) == 0) /* holds a token */
+		printf("%s\n", ((struct token*)t->data)->text);
+	else /* holds a production rule name */
+		printf("%s\n", t->data);
 }
 
 int main(int argc, char **argv)
@@ -89,7 +98,7 @@ int main(int argc, char **argv)
 
 		yyparse(); /* call bison */
 
-		/* tree_print(program); */
+		tree_preorder(yyprogram, &print_tree);
 
 		/* clean up */
 		yylex_destroy();
