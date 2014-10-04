@@ -43,16 +43,16 @@
  *
  * Based on the ISO C++ draft standard of December '96.
  */
-
+			
 %{
-#include <stdio.h>
-
 #include "clex.h"
 #include "tree.h"
 
+void yyerror(const char *s);
+void typenames_insert_tree(struct tree *t, int category);
+
 extern struct tree *yyprogram;
 
-void yyerror(const char *s);
 %}
 
 %union {
