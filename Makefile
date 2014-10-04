@@ -8,7 +8,7 @@ RM=rm -f
 
 # compile options
 CFLAGS=-g -Wall -std=gnu99
-YFLAGS=-Wall
+YFLAGS=-Wall --report=all
 
 # archive options
 GITREF=HEAD
