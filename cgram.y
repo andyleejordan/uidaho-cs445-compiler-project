@@ -157,8 +157,8 @@ qualified_id:
 	;
 
 nested_name_specifier:
-	CLASS_NAME COLONCOLON { $$ = tree_initv(NULL, NULL, 2, $1, $2); }
-| CLASS_NAME COLONCOLON nested_name_specifier { $$ = tree_initv(NULL, NULL, 3, $1, $2, $3); }
+	CLASS_NAME COLONCOLON nested_name_specifier { $$ = tree_initv(NULL, NULL, 3, $1, $2, $3); }
+	| CLASS_NAME COLONCOLON { $$ = tree_initv(NULL, NULL, 2, $1, $2); }
 	;
 
 postfix_expression:
@@ -183,6 +183,8 @@ unary_expression:
 	postfix_expression
 	| PLUSPLUS unary_expression { $$ = tree_initv(NULL, NULL, 2, $1, $2); }
 	| MINUSMINUS unary_expression { $$ = tree_initv(NULL, NULL, 2, $1, $2); }
+	| '*' unary_expression { $$ = tree_initv(NULL, NULL, 2, $1, $2); }
+	| '&' unary_expression { $$ = tree_initv(NULL, NULL, 2, $1, $2); }
 	| unary_operator unary_expression { $$ = tree_initv(NULL, NULL, 2, $1, $2); }
 	| SIZEOF unary_expression { $$ = tree_initv(NULL, NULL, 2, $1, $2); }
 	| SIZEOF '(' type_id ')' { $$ = tree_initv(NULL, NULL, 4, $1, $2, $3, $4); }
@@ -191,9 +193,7 @@ unary_expression:
 	;
 
 unary_operator:
-	'*'
-	| '&'
-	| '+'
+	'+'
 	| '-'
 	| '!'
 	| '~'
@@ -435,6 +435,8 @@ type_specifier:
 simple_type_specifier:
 	CLASS_NAME
 	| nested_name_specifier CLASS_NAME { $$ = tree_initv(NULL, NULL, 2, $1, $2); }
+	| COLONCOLON nested_name_specifier CLASS_NAME { $$ = tree_initv(NULL, NULL, 3, $1, $2, $3); }
+	| COLONCOLON CLASS_NAME { $$ = tree_initv(NULL, NULL, 2, $1, $2); }
 	| CHAR
 	| BOOL
 	| SHORT
@@ -473,6 +475,9 @@ declarator:
 direct_declarator:
 	declarator_id
 	| direct_declarator '(' parameter_declaration_clause ')' { $$ = tree_initv(NULL, NULL, 4, $1, $2, $3, $4); }
+	| CLASS_NAME '(' parameter_declaration_clause ')' { $$ = tree_initv(NULL, NULL, 4, $1, $2, $3, $4); }
+	| CLASS_NAME COLONCOLON declarator_id '(' parameter_declaration_clause ')' { $$ = tree_initv(NULL, NULL, 6, $1, $2, $3, $4, $5, $6); }
+	| CLASS_NAME COLONCOLON CLASS_NAME '(' parameter_declaration_clause ')' { $$ = tree_initv(NULL, NULL, 6, $1, $2, $3, $4, $5, $6); }
 	| direct_declarator '[' constant_expression_opt ']' { $$ = tree_initv(NULL, NULL, 4, $1, $2, $3, $4); }
 	| '(' declarator ')' { $$ = tree_initv(NULL, NULL, 3, $1, $2, $3); }
 	;
@@ -505,16 +510,16 @@ abstract_declarator:
 	;
 
 direct_abstract_declarator:
-	'(' parameter_declaration_clause ')' { $$ = tree_initv(NULL, NULL, 3, $1, $2, $3); }
-	| direct_abstract_declarator '(' parameter_declaration_clause ')' { $$ = tree_initv(NULL, NULL, 4, $1, $2, $3, $4); }
-	| '[' constant_expression_opt ']' { $$ = tree_initv(NULL, NULL, 3, $1, $2, $3); }
+	direct_abstract_declarator '(' parameter_declaration_clause ')' { $$ = tree_initv(NULL, NULL, 4, $1, $2, $3, $4); }
+	| '(' parameter_declaration_clause ')' { $$ = tree_initv(NULL, NULL, 3, $1, $2, $3); }
 	| direct_abstract_declarator '[' constant_expression_opt ']' { $$ = tree_initv(NULL, NULL, 4, $1, $2, $3, $4); }
+	| '[' constant_expression_opt ']' { $$ = tree_initv(NULL, NULL, 3, $1, $2, $3); }
 	| '(' abstract_declarator ')' { $$ = tree_initv(NULL, NULL, 3, $1, $2, $3); }
 	;
 
 parameter_declaration_clause:
-	%empty { $$ = NULL; }
-	| parameter_declaration_list
+	parameter_declaration_list
+	| %empty { $$ = NULL; }
 	;
 
 parameter_declaration_list:
