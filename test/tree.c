@@ -90,11 +90,11 @@ int main(int argc, char *argv[])
 	tree_destroy(root, &free);
 
 	testing("variadic push 2 args");
-	struct tree *v = tree_initv(NULL, "root", 2, "foo", "bar");
+	struct tree *v = tree_initv(NULL, "root", 2, tree_init(NULL, "foo"), tree_init(NULL, "bar"));
 	test_initv(v);
 
 	testing("macro p push 2 args");
-	struct tree *p = p(root, 2, "foo", "bar");
+	struct tree *p = p(root, 2, tree_init(NULL, "foo"), tree_init(NULL, "bar"));
 	test_initv(p);
 
 	return status;

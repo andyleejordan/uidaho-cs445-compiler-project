@@ -42,7 +42,7 @@ struct tree *tree_init(struct tree *parent, void *data)
 
 /*
  * Initializes tree with reference to parent and data, and pushes
- * count number of following 'void *' arguments to tree as children.
+ * count number of following struct tree * as children.
  */
 struct tree *tree_initv(struct tree *parent, void *data, int count, ...)
 {
@@ -51,8 +51,11 @@ struct tree *tree_initv(struct tree *parent, void *data, int count, ...)
 
 	struct tree *t = tree_init(parent, data);
 
-	for (int i = 0; i < count; ++i)
-		tree_push(t, va_arg(ap, void *));
+	for (int i = 0; i < count; ++i) {
+		struct tree *c = va_arg(ap, void *);
+		c->parent = t;
+		list_push(t->children, c);
+	}
 
 	va_end(ap);
 	return t;
