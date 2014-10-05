@@ -5,7 +5,7 @@
 #include "../tree.h"
 #include "../list.h"
 
-#define p(name, ...) tree_initv(NULL, #name, __VA_ARGS__)
+#define P(name, ...) tree_initv(NULL, #name, __VA_ARGS__)
 
 void print_tree(struct tree *t)
 {
@@ -94,7 +94,7 @@ int main(int argc, char *argv[])
 	test_initv(v);
 
 	testing("macro p push 2 args");
-	struct tree *p = p(root, 2, tree_init(NULL, "foo"), tree_init(NULL, "bar"));
+	struct tree *p = P(root, 2, tree_init(NULL, "foo"), tree_init(NULL, "bar"));
 	test_initv(p);
 
 	return status;
