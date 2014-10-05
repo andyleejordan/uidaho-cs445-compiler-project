@@ -12,7 +12,7 @@ main ()
 //   b[0] = "every"; b[1] = "good"; b[2] = "bear";
 //   b[3] = "deserves"; b[4] = "fudge";
 // warning, non-standard but works
-   b[0] = { 'e','v','e','r','y' };
+//   b[0] = { 'e','v','e','r','y' };
    cout << "b: " << b[0] << endl;
    char b0[5][9] = {'e','v','e','r','y',
                     'g','o','o','d',
