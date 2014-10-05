@@ -115,7 +115,9 @@ int check_identifier(const char *s)
 		return IDENTIFIER;
 	}
 	else {
-		return ((struct typename *)l->data)->category;
+		int category = ((struct typename *)l->data)->category;
+		new_token(category);
+		return category;
 	}
 }
 
