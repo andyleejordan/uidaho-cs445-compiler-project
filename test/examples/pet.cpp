@@ -93,7 +93,7 @@ pet::pet() {
     name = "John Doe";
 }
 
-pet::pet(const pet& orig) {
+pet::pet(pet& orig) {
 }
 
 pet::~pet() {
