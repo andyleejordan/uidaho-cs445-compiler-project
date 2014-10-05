@@ -89,10 +89,9 @@ void tree_preorder(struct tree *self, int depth, void (*f)(struct tree *t, int d
 	if (self == NULL)
 		return;
 	f(self, depth);
-	++depth;
 	const struct list_node *iter = list_head(self->children);
 	while (!list_end(iter)) {
-		tree_preorder(iter->data, depth, f);
+		tree_preorder(iter->data, depth+1, f);
 		iter = iter->next;
 	}
 }
