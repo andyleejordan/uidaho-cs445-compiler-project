@@ -30,11 +30,9 @@ struct token *token_create(int category, int lineno,
 	t->category = category;
 	t->lineno = lineno;
 
-	t->text = calloc(strlen(text)+1, sizeof(char));
-	strcpy(t->text, text);
+	t->text = strdup(text);
 
-	t->filename = calloc(strlen(filename)+1, sizeof(char));
-	strcpy(t->filename, filename);
+	t->filename = strdup(filename);
 
 	if (category == INTEGER)
 		t->ival = atoi(text);
