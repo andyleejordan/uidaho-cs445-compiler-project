@@ -42,7 +42,8 @@ struct tree *tree_init(struct tree *parent, void *data)
 
 /*
  * Initializes tree with reference to parent and data, and pushes
- * count number of following struct tree * as children.
+ * count number of following struct tree * as children. If given child
+ * is NULL it is not added.
  */
 struct tree *tree_initv(struct tree *parent, void *data, int count, ...)
 {
@@ -53,8 +54,10 @@ struct tree *tree_initv(struct tree *parent, void *data, int count, ...)
 
 	for (int i = 0; i < count; ++i) {
 		struct tree *c = va_arg(ap, void *);
-		c->parent = t;
-		list_push(t->children, c);
+		if (c != NULL) {
+			c->parent = t;
+			list_push(t->children, c);
+		}
 	}
 
 	va_end(ap);
@@ -73,7 +76,7 @@ size_t tree_size(struct tree *self)
 
 	const struct list_node *iter = list_head(self->children);
 	while (!list_end(iter)) {
-		size += tree_size((struct tree *)iter->data);
+		size += tree_size(iter->data);
 		iter = iter->next;
 	}
 
@@ -88,7 +91,9 @@ void tree_preorder(struct tree *self, int depth, void (*f)(struct tree *t, int d
 {
 	if (self == NULL)
 		return;
+
 	f(self, depth);
+
 	const struct list_node *iter = list_head(self->children);
 	while (!list_end(iter)) {
 		tree_preorder(iter->data, depth+1, f);

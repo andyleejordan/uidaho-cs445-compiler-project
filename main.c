@@ -45,14 +45,10 @@ char *current_filename()
 
 void print_tree(struct tree *t, int d)
 {
-	if (list_size(t->children) == 0) { 
-		if (t->data == NULL) /* was epsilon */
-			return;
-		else /* holds a token */
-			printf("%*s\n", d*2, ((struct token *)t->data)->text);
-	} else { /* holds a production rule name */
+	if (tree_size(t) == 1) /* holds a token */
+		printf("%*s\n", d*2, ((struct token *)t->data)->text);
+	else /* holds a production rule name */
 		printf("%*s\n", d*2, t->data);
-	}
 }
 
 int main(int argc, char **argv)

@@ -54,7 +54,7 @@ void typenames_insert_tree(struct tree *t, int category);
 extern struct tree *yyprogram;
 
 #define P(name, ...) tree_initv(NULL, #name, __VA_ARGS__)
-#define E() tree_init(NULL, NULL)
+#define E() NULL
 
 %}
 
