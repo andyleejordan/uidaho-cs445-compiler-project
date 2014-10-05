@@ -7,9 +7,9 @@
 
 #define P(name, ...) tree_initv(NULL, #name, __VA_ARGS__)
 
-void print_tree(struct tree *t)
+void print_tree(struct tree *t, int d)
 {
-	printf("%s ", t->data);
+	printf("%*s\n", d*2, t->data);
 }
 
 void test_size(struct tree *tree, size_t size)
@@ -84,7 +84,7 @@ int main(int argc, char *argv[])
 	test_size(root, 5);
 
 	testing("printing:");
-	tree_preorder(root, &print_tree);
+	tree_preorder(root, 0, &print_tree);
 	printf("\n");
 
 	tree_destroy(root, &free);

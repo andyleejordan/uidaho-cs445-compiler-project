@@ -43,12 +43,16 @@ char *current_filename()
 	return copy;
 }
 
-void print_tree(struct tree *t)
+void print_tree(struct tree *t, int d)
 {
-	if (tree_size(t) == 0) /* holds a token */
-		printf("%s\n", ((struct token*)t->data)->text);
-	else /* holds a production rule name */
-		printf("%s\n", t->data);
+	if (list_size(t->children) == 0) { 
+		if (t->data == NULL) /* was epsilon */
+			return;
+		else /* holds a token */
+			printf("%*s\n", d*2, ((struct token *)t->data)->text);
+	} else { /* holds a production rule name */
+		printf("%*s\n", d*2, t->data);
+	}
 }
 
 int main(int argc, char **argv)

@@ -84,12 +84,15 @@ size_t tree_size(struct tree *self)
  * Pre-order traversal of tree. Takes a function and applies it to
  * each subtree.
  */
-void tree_preorder(struct tree *self, void (*f)(struct tree *t))
+void tree_preorder(struct tree *self, int depth, void (*f)(struct tree *t, int d))
 {
-	f(self);
+	if (self == NULL)
+		return;
+	f(self, depth);
+	++depth;
 	const struct list_node *iter = list_head(self->children);
 	while (!list_end(iter)) {
-		tree_preorder((struct tree *)iter->data, f);
+		tree_preorder(iter->data, depth, f);
 		iter = iter->next;
 	}
 }
