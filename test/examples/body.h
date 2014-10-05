@@ -7,4 +7,4 @@ private:
 public:
    /* update the body's position for one time step forward */
    void update();
-}
+};
