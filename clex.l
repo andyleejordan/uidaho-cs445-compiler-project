@@ -142,9 +142,16 @@ void handle_include(const char *s);
 	"<cmath>"       { cmath	   = true; BEGIN(INITIAL); }
 	"<ctime>"       { ctime	   = true; BEGIN(INITIAL); }
 	"<cstring>"     { cstring  = true; BEGIN(INITIAL); }
-	"<fstream>"     { fstream  = true; BEGIN(INITIAL); }
+	"<fstream>"     { fstream  = true;
+			  typenames_insert("ifstream", CLASS_NAME);
+			  typenames_insert("ofstream", CLASS_NAME);
+			  BEGIN(INITIAL);
+			}
 	"<iostream>"    { iostream = true; BEGIN(INITIAL); }
-	"<string>"      { string   = true; typenames_insert("string", CLASS_NAME); BEGIN(INITIAL); }
+	"<string>"      { string   = true;
+			  typenames_insert("string", CLASS_NAME); 
+			  BEGIN(INITIAL);
+			}
 	"<iomanip>"     { iomanip  = true; BEGIN(INITIAL); }
 	\"[^\"]+\"      { handle_include(yytext); BEGIN(INITIAL); }
 	"<"[^<>]*">"    { yyerror("Unrecognized system library"); }
