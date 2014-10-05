@@ -100,9 +100,11 @@ int main(int argc, char **argv)
 		list_push(filenames, filename);
 		yypush_buffer_state(yy_create_buffer(yyin, YY_BUF_SIZE));
 
-		yyparse(); /* call bison */
-
-		tree_preorder(yyprogram, &print_tree);
+		int result = yyparse(); /* call bison */
+		if (result == 0)
+			tree_preorder(yyprogram, 0, &print_tree);
+		else
+			return 2;
 
 		/* clean up */
 		yylex_destroy();
