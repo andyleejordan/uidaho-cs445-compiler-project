@@ -1,6 +1,6 @@
 /*
- * cgram.y - Merged adaptation of Dr. Jeffery's adaptation of Sigala's
- * grammar.
+ * cgram.y - Merged and modified adaptation of Dr. Jeffery's
+ * adaptation of Sigala's grammar.
  */
 
 /*
@@ -10,7 +10,6 @@
  * Adams, and Shea Newton.
  *
  * Based on Sandro Sigala's transcription of the ISO C++ 1996 draft standard.
- *
  */
 
 /*
@@ -45,13 +44,16 @@
  */
 
 %{
+
 #include "clex.h"
+#include "list.h"
 #include "tree.h"
+
+extern struct tree *yyprogram;
+extern struct list *filenames;
 
 void yyerror(const char *s);
 void typenames_insert_tree(struct tree *t, int category);
-
-extern struct tree *yyprogram;
 
 #define P(name, ...) tree_initv(NULL, #name, __VA_ARGS__)
 #define E() NULL
@@ -725,3 +727,14 @@ SEMICOLON_opt:
 	;
 
 %%
+
+/*
+ * Prints relevant information for syntax errors and exits returning 2
+ * per assignment requirements.
+ */
+void yyerror(const char *s)
+{
+	fprintf(stderr, "Syntax error: file %s, line %d, token %s: %s\n",
+	        (const char *)list_peek(filenames), yylineno, yytext, s);
+	exit(2);
+}
