@@ -2,8 +2,8 @@
 
 struct test
 {
-	struct test *next;
-	struct test *prev;
+	/* struct test *next; */
+	/* struct test *prev; */
 	int data;
 };
 
@@ -35,13 +35,13 @@ int main(int argc, char *argv[])
 	/*************************
 	 * use "malloc" -> "free"
 	 *************************/
-	struct test *tmp = malloc(sizeof(*tmp));
+	/* struct test *tmp = malloc(sizeof(*tmp)); */
 
-	tmp->data = (1 == true)
-		? 1
-		: 2;
+	/* tmp->data = (1 == 0) */
+	/* 	? 1 */
+	/* 	: 2; */
 
-	free(tmp);
+	/* free(tmp); */
 
 	/* 512 bytes */
 	char *loremipsum = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque tincidunt id velit nec laoreet. Maecenas feugiat cursus finibus. Ut convallis volutpat urna, nec cursus nisl. Nullam malesuada sapien et maximus ultricies. Suspendisse ut justo dui. Nulla bibendum id turpis sed lobortis. Sed vitae turpis vitae arcu pulvinar aliquet. Nam a faucibus mi. Integer rutrum mattis nisl, facilisis pharetra lorem dapibus finibus. Aenean eget lacus non augue faucibus lobortis et a sapien. Duis eleifend maximus cras amet.";
