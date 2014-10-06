@@ -9,7 +9,7 @@
 
 void print_tree(struct tree *t, int d)
 {
-	printf("%*s\n", d*2, t->data);
+	printf("%*s\n", d*2, (char *)t->data);
 }
 
 void test_size(struct tree *tree, size_t size)
