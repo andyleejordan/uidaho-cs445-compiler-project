@@ -23,7 +23,7 @@ test-lex: $(BIN)
 	./$(BIN) $(LEX_TESTS)
 
 tar:
-	git archive --format=tar.gz --prefix=$(PREFIX)/ $(GITREF) > $(PREFIX).tar.gz
+	git archive --format=tar --prefix=$(PREFIX)/ $(GITREF) > $(PREFIX).tar
 
 clean:
 	$(RM) $(BIN) $(TESTS) $(OBJECTS) $(TEST_OBJECTS) lex.yy.c clex.h cgram.tab.h
