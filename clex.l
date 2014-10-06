@@ -19,6 +19,7 @@ FS       (f|F|l|L)
 IS       (u|U|l|L)*
 
 %{
+
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
@@ -38,7 +39,6 @@ struct typename {
 
 extern struct list *typenames;
 extern struct list *filenames;
-extern char *error_buf;
 extern void handle_error(char *c);
 extern char *current_filename();
 
@@ -54,74 +54,14 @@ bool iostream = false;
 bool string   = false;
 bool iomanip  = false;
 
-/* print error message to stderr and terminate (for now) */
-void yyerror(const char *s)
-{
-	fprintf (stderr, "File %s line %d, token %s: %s\n",
-	         (const char *)list_peek(filenames), yylineno, yytext, s);
-	exit(1);
-}
-
-/*
- * creates a token with the necessary information, then allocates a
- * tree node as a leaf for the token, saving it into yylval for Bison
- */
-void new_token(int category)
-{
-	yytoken = token_create(category, yylineno, yytext,
-                                       (const char *)list_peek(filenames));
-	yylval.t = tree_init(NULL, yytoken);
-}
-
-bool typename_compare(const char *s, const struct typename *t)
-{
-	return 0 == strcmp(s, t->name);
-}
-
-/*
- * inserts a new typename into typenames list
- */
-void typenames_insert(char *s, int category)
-{
-	struct list_node *l = list_find(typenames, (void *)s,
-					(bool (*)(void *, void *))&typename_compare);
-	if (!list_end(l)) {
-		sprintf(error_buf, "Identifier %s already in typenames\n", s);
-		handle_error(error_buf);
-	}
-	struct typename *type = malloc(sizeof(*type));
-	type->name = strdup(s);
-	type->category = category;
-	list_push(typenames, type);
-}
-
-/*
- * unwraps a tree leaf and passes token text as name to insert function
- */
-void typenames_insert_tree(struct tree *t, int category)
-{
-	typenames_insert(((struct token *)t->data)->text, category);
-}
-
-/*
- * returns corresponding category for identifier
- */
-int check_identifier(const char *s)
-{
-	struct list_node *l = list_find(typenames, (void *)s,
-					(bool (*)(void *, void *))&typename_compare);
-	if (list_end(l)) {
-		new_token(IDENTIFIER);
-		return IDENTIFIER;
-	}
-	else {
-		int category = ((struct typename *)l->data)->category;
-		new_token(category);
-		return category;
-	}
-}
-
+void lexerror(const char *s);
+void new_token(int category);
 void handle_include(const char *s);
+bool typename_compare(const char *s, const struct typename *t);
+void typenames_insert(char *s, int category);
+void typenames_insert_tree(struct tree *t, int category);
+int check_identifier(const char *s);
+
 %}
 
 %%
@@ -156,9 +96,9 @@ void handle_include(const char *s);
 			}
 	"<iomanip>"     { iomanip  = true; BEGIN(INITIAL); }
 	\"[^\"]+\"      { handle_include(yytext); BEGIN(INITIAL); }
-	"<"[^<>]*">"    { yyerror("Unrecognized system library"); }
-	<<EOF>>         { yyerror("Unexpected EOF"); }
-	.               { yyerror("Unrecognized token following #include"); }
+	"<"[^<>]*">"    { lexerror("Unrecognized system library"); }
+	<<EOF>>         { lexerror("Unexpected EOF"); }
+	.               { lexerror("Unrecognized token following #include"); }
 }
 "using namespace std;"  { usingstd = true; }
 "bool"                  { new_token(BOOL); return BOOL; }
@@ -201,7 +141,7 @@ void handle_include(const char *s);
 
 \'                      { new_token(CHARACTER); BEGIN(CHR); }
 <CHR>{
-	\'              { yyerror("Empty char literal"); }
+	\'              { lexerror("Empty char literal"); }
 	"\\'"           { yytoken->ival = '\''; token_append_text(yytoken, yytext); BEGIN(CHREND); }
 	"\\\""          { yytoken->ival = '"';  token_append_text(yytoken, yytext); BEGIN(CHREND); }
 	"\\?"           { yytoken->ival = '\?'; token_append_text(yytoken, yytext); BEGIN(CHREND); }
@@ -215,12 +155,12 @@ void handle_include(const char *s);
 	"\\0"           { yytoken->ival = '\0'; token_append_text(yytoken, yytext); BEGIN(CHREND); }
 	"\\\\"          { yytoken->ival = '\\'; token_append_text(yytoken, yytext); BEGIN(CHREND); }
 	[^\\"'"]        { yytoken->ival = *yytext; token_append_text(yytoken, yytext); BEGIN(CHREND); }
-	.               { yyerror("Unrecognized token in char literal"); }
+	.               { lexerror("Unrecognized token in char literal"); }
 }
 <CHREND>{
 	\'              { token_append_text(yytoken, yytext); BEGIN(INITIAL); return CHARACTER; }
-	\n              { yyerror("Unexpected newline in char literal"); }
-	.               { yyerror("Too many symbols in char literal"); }
+	\n              { lexerror("Unexpected newline in char literal"); }
+	.               { lexerror("Too many symbols in char literal"); }
 }
 
 
@@ -240,9 +180,9 @@ L?\"                    { new_token(STRING); BEGIN(STR); }
 	"\\0"           { token_append_sval_char(yytoken, '\0'); token_append_text(yytoken, yytext); }
 	"\\\\"          { token_append_sval_char(yytoken, '\\'); token_append_text(yytoken, yytext); }
 	[^\\\"\n]+      { token_append_sval_string(yytoken, yytext); token_append_text(yytoken, yytext); }
-	\n              { yyerror("Unexpected newline in string literal"); }
-	.               { yyerror("Unrecognized token in string literal"); }
-	<<EOF>>         { yyerror("Unterminated string literal"); }
+	\n              { lexerror("Unexpected newline in string literal"); }
+	.               { lexerror("Unrecognized token in string literal"); }
+	<<EOF>>         { lexerror("Unterminated string literal"); }
 }
 
   /* operators */
@@ -296,7 +236,7 @@ L?\"                    { new_token(STRING); BEGIN(STR); }
 
 {L}({L}|{D})*           { return check_identifier(yytext); }
 
-<*>.                    { yyerror("Unrecognized token"); }
+<*>.                    { lexerror("Unrecognized token"); }
 
 <<EOF>>                 {
 	/* pop the current buffer and filename */
@@ -317,6 +257,35 @@ L?\"                    { new_token(STRING); BEGIN(STR); }
   }
 %%
 
+/*
+ * Prints relevant information for lexical errors and exits returning 1
+ * per assignment requirements;
+ */
+void lexerror(const char *s)
+{
+	fprintf(stderr, "Lexical error: file %s, line %d, token %s: %s",
+	        (const char *)list_peek(filenames), yylineno, yytext, s);
+	exit(1);
+}
+
+/*
+ * Creates a token with the necessary information, then allocates a
+ * tree node as a leaf for the token, saving it into yylval for Bison.
+ */
+void new_token(int category)
+{
+	yytoken = token_create(category, yylineno, yytext,
+                                       (const char *)list_peek(filenames));
+	yylval.t = tree_init(NULL, yytoken);
+}
+
+/*
+ * Given yytext of the literal form "somefile.h", this extracts the
+ * substring corresponding to the path, determines the full path to
+ * the file, pushes that path to the filenames list, opens the file
+ * into yyin, resets the line number count to 1, and pushes a new Flex
+ * buffer for the file.
+ */
 void handle_include(const char *s)
 {
 	/* get the include path */
@@ -346,4 +315,57 @@ void handle_include(const char *s)
 	yypush_buffer_state(yy_create_buffer(yyin, YY_BUF_SIZE));
 
 	return;
+}
+
+/*
+ * Returns true if given name string matches the typename's name.
+ */
+bool typename_compare(const char *s, const struct typename *t)
+{
+	return 0 == strcmp(s, t->name);
+}
+
+/*
+ * Given name string and integer category, inserts a new typename into
+ * typenames list.
+ */
+void typenames_insert(char *s, int category)
+{
+	struct list_node *l = list_find(typenames, (void *)s,
+					(bool (*)(void *, void *))&typename_compare);
+	if (!list_end(l)) {
+		lexerror("token previously declared as identifier");
+	}
+	struct typename *type = malloc(sizeof(*type));
+	type->name = strdup(s);
+	type->category = category;
+	list_push(typenames, type);
+}
+
+/*
+ * Unwraps a tree leaf and passes token text as name to insert
+ * function.
+ */
+void typenames_insert_tree(struct tree *t, int category)
+{
+	typenames_insert(((struct token *)t->data)->text, category);
+}
+
+/*
+ * Returns corresponding integer category for given identifier name
+ * and creates the necessary token.
+ */
+int check_identifier(const char *s)
+{
+	struct list_node *l = list_find(typenames, (void *)s,
+					(bool (*)(void *, void *))&typename_compare);
+	if (list_end(l)) {
+		new_token(IDENTIFIER);
+		return IDENTIFIER;
+	}
+	else {
+		int category = ((struct typename *)l->data)->category;
+		new_token(category);
+		return category;
+	}
 }
