@@ -11,7 +11,8 @@
 
 #include "test.h"
 
-bool compare(const char *a, const char *b) {
+bool compare(const char *a, const char *b)
+{
 	return (0 == strcmp(a, b));
 }
 
