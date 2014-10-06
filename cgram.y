@@ -440,8 +440,6 @@ type_specifier:
 simple_type_specifier:
 	CLASS_NAME				      { $$ = $1; }
 	| nested_name_specifier CLASS_NAME	      { $$ = P(simple-type-spec2, 2, $1, $2); }
-	| COLONCOLON nested_name_specifier CLASS_NAME { $$ = P(simple-type-spec3, 3, $1, $2, $3); }
-	| COLONCOLON CLASS_NAME			      { $$ = P(simple-type-spec4, 2, $1, $2); }
 	| CHAR					      { $$ = $1; }
 	| BOOL					      { $$ = $1; }
 	| SHORT					      { $$ = $1; }
