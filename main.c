@@ -86,8 +86,6 @@ int main(int argc, char **argv)
 		/* clean up */
 		tree_destroy(yyprogram, &destroy_syntax_tree);
 		yylex_destroy();
-		if (!fclose(yyin))
-			handle_error("main fclose");
 		list_destroy(typenames, NULL);
 	}
 
