@@ -132,9 +132,13 @@ char *current_filename()
 void print_tree(struct tree *t, int d)
 {
 	if (tree_size(t) == 1) /* holds a token */
-		printf("%*s\n", d*2, (char *)((struct token *)t->data)->text);
+		printf("%*s %s (%d)\n", d*2, " ",
+		       (char *)((struct token *)t->data)->text,
+		       (int)((struct token *)t->data)->category);
 	else /* holds a production rule name */
-		printf("%*s\n", d*2, (char *)t->data);
+		printf("%*s %s: %zu\n", d*2, " ",
+		       (char *)t->data,
+		       list_size(t->children));
 }
 
 /*
