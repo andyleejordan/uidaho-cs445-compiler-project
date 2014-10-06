@@ -16,10 +16,11 @@
 
 #define TEXT_CHUNK_SIZE 128
 
-size_t token_sval_size = 0;
-
 extern void handle_error(char *c);
 
+size_t token_sval_size = 0;
+
+/* malloc token and assign values */
 struct token *token_create(int category, int lineno,
                            const char *text, const char* filename)
 {
@@ -49,7 +50,8 @@ struct token *token_create(int category, int lineno,
 	return t;
 }
 
-void token_free(struct token *t)
+/* free internal values */
+void token_destroy(struct token *t)
 {
 	free(t->text);
 	free(t->filename);
