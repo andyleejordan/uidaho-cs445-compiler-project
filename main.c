@@ -21,35 +21,14 @@
 #include "cgram.tab.h"
 
 struct tree *yyprogram;
-struct list *typenames = NULL;
 struct list *filenames = NULL;
+struct list *typenames = NULL;
 char error_buf[256];
 
-/* multiple error labels were redundant when all we can do is exit */
-void handle_error(char *c)
-{
-	perror(c);
-	exit(EXIT_FAILURE);
-}
-
-char *current_filename()
-{
-	const char *filename = list_peek(filenames);
-	if (filename == NULL)
-		return NULL;
-	char *copy = strdup(filename);
-	if (copy == NULL)
-		handle_error("current_filename()");
-	return copy;
-}
-
-void print_tree(struct tree *t, int d)
-{
-	if (tree_size(t) == 1) /* holds a token */
-		printf("%*s\n", d*2, (char *)((struct token *)t->data)->text);
-	else /* holds a production rule name */
-		printf("%*s\n", d*2, (char *)t->data);
-}
+void handle_error(char *c);
+char *current_filename();
+void print_tree(struct tree *t, int d);
+void destroy_syntax_tree(void *data, bool leaf);
 
 int main(int argc, char **argv)
 {
@@ -75,7 +54,8 @@ int main(int argc, char **argv)
 		} else {
 			if (i == argc)
 				break;
-			printf("Reading from %s\n", argv[i]);
+			printf("Reading from argument %d: %s\n", i, argv[i]);
+
 			/* get real path for argument */
 			chdir(cwd);
 			filename = realpath(argv[i], NULL);
@@ -83,7 +63,7 @@ int main(int argc, char **argv)
 				sprintf(error_buf, "Could not resolve CLI argument '%s'", argv[i]);
 				handle_error(error_buf);
 			}
-			chdir(dirname(filename)); /* relative path lookups */
+			chdir(dirname(filename)); /* for relative path lookups */
 
 			/* open file and push buffer for flex */
 			if (!(yyin = fopen(filename, "r"))) {
@@ -96,18 +76,76 @@ int main(int argc, char **argv)
 		list_push(filenames, filename);
 		yypush_buffer_state(yy_create_buffer(yyin, YY_BUF_SIZE));
 
-		int result = yyparse(); /* call bison */
+		/* call Bison */
+		int result = yyparse();
 		if (result == 0)
 			tree_preorder(yyprogram, 0, &print_tree);
 		else
 			return 2;
 
 		/* clean up */
+		tree_destroy(yyprogram, &destroy_syntax_tree);
 		yylex_destroy();
 		if (!fclose(yyin))
 			handle_error("main fclose");
 		list_destroy(typenames, NULL);
 	}
 
+	list_destroy(filenames, NULL);
+
 	return EXIT_SUCCESS;
+}
+
+/*
+ * Passes given string to perror and exits with EXIT_FAILURE, used for
+ * internal program errors.
+ */
+void handle_error(char *c)
+{
+	perror(c);
+	exit(EXIT_FAILURE);
+}
+
+/*
+ * Returns current filename string on top of stack (filenames list),
+ * copied and thus safe for potential modification by library
+ * functions.
+ */
+char *current_filename()
+{
+	const char *filename = list_peek(filenames);
+	if (filename == NULL)
+		return NULL;
+
+	char *copy = strdup(filename);
+	if (copy == NULL)
+		handle_error("current_filename()");
+
+	return copy;
+}
+
+/*
+ * Helper function passed to tree_preorder().
+ *
+ * Given a terminal tree node, prints its contained token's value.
+ * Given a non-terminal tree node, prints its contained production
+ * rule name.
+ */
+void print_tree(struct tree *t, int d)
+{
+	if (tree_size(t) == 1) /* holds a token */
+		printf("%*s\n", d*2, (char *)((struct token *)t->data)->text);
+	else /* holds a production rule name */
+		printf("%*s\n", d*2, (char *)t->data);
+}
+
+/*
+ * Destroys tokens contained in leaves of syntax tree. Internal nodes
+ * contain statically allocated string literals and are thus ignored
+ * here.
+ */
+void destroy_syntax_tree(void *data, bool leaf)
+{
+	if (leaf)
+		token_destroy(data);
 }
