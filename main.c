@@ -63,7 +63,7 @@ int main(int argc, char **argv)
 				sprintf(error_buf, "Could not resolve CLI argument '%s'", argv[i]);
 				handle_error(error_buf);
 			}
-			chdir(dirname(filename)); /* for relative path lookups */
+			chdir(dirname(strdup(filename))); /* for relative path lookups */
 
 			/* open file and push buffer for flex */
 			if (!(yyin = fopen(filename, "r"))) {
