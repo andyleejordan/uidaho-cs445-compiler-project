@@ -11,6 +11,7 @@
 #define TREE_H
 
 #include <stdlib.h>
+#include <stdbool.h>
 
 struct list;
 
@@ -22,7 +23,7 @@ struct tree {
 
 struct tree *tree_init(struct tree *parent, void *data);
 struct tree *tree_initv(struct tree *parent, void *data, int count, ...);
-void tree_destroy(struct tree *self, void (*destroy)(void *data));
+void tree_destroy(struct tree *self, void (*destroy)(void *data, bool leaf));
 size_t tree_size(struct tree *self);
 void tree_preorder(struct tree *self, int depth, void (*f)(struct tree *t, int d));
 struct tree *tree_push(struct tree *self, void *data);
