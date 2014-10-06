@@ -263,7 +263,7 @@ L?\"                    { new_token(STRING); BEGIN(STR); }
  */
 void lexerror(const char *s)
 {
-	fprintf(stderr, "Lexical error: file %s, line %d, token %s: %s",
+	fprintf(stderr, "Lexical error: file %s, line %d, token %s: %s\n",
 	        (const char *)list_peek(filenames), yylineno, yytext, s);
 	exit(1);
 }
