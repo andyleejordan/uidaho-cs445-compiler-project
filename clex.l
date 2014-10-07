@@ -84,23 +84,24 @@ int check_identifier(const char *s);
 	"<cmath>"       { cmath	   = true; BEGIN(INITIAL); }
 	"<ctime>"       { ctime	   = true; BEGIN(INITIAL); }
 	"<cstring>"     { cstring  = true; BEGIN(INITIAL); }
-	"<fstream>"     { fstream  = true;
-			  typenames_insert("ifstream", CLASS_NAME);
-			  typenames_insert("ofstream", CLASS_NAME);
-			  BEGIN(INITIAL);
-			}
+	"<fstream>"     { fstream  = true; BEGIN(INITIAL); }
 	"<iostream>"    { iostream = true; BEGIN(INITIAL); }
-	"<string>"      { string   = true;
-			  typenames_insert("string", CLASS_NAME); 
-			  BEGIN(INITIAL);
-			}
+	"<string>"      { string   = true; BEGIN(INITIAL); }
 	"<iomanip>"     { iomanip  = true; BEGIN(INITIAL); }
 	\"[^\"]+\"      { handle_include(yytext); BEGIN(INITIAL); }
 	"<"[^<>]*">"    { lexerror("Unrecognized system library"); }
 	<<EOF>>         { lexerror("Unexpected EOF"); }
 	.               { lexerror("Unrecognized token following #include"); }
 }
-"using namespace std;"  { usingstd = true; }
+
+"using namespace std;"  { usingstd = true;
+			  if (fstream) {
+			  	typenames_insert("ifstream", CLASS_NAME);
+			  	typenames_insert("ofstream", CLASS_NAME);
+		          }
+			  if (string)
+			  	typenames_insert("string", CLASS_NAME);
+                        }
 "bool"                  { new_token(BOOL); return BOOL; }
 "break"                 { new_token(BREAK); return BREAK; }
 "case"                  { new_token(CASE); return CASE; }
