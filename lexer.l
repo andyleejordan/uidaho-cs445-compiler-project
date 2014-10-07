@@ -283,6 +283,10 @@ int check_identifier(const char *s);
 }
 %%
 
+#undef TOKEN
+#undef YYAPPENDTEXT
+#undef YYAPPENDCHAR
+
 /*
  * Prints relevant information for lexical errors and exits returning 1
  * per assignment requirements;

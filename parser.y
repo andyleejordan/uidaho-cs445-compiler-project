@@ -726,6 +726,9 @@ SEMICOLON_opt:
 
 %%
 
+#undef P
+#undef E
+
 /*
  * Prints relevant information for syntax errors and exits returning 2
  * per assignment requirements.
