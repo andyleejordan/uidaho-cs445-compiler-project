@@ -1,5 +1,14 @@
 * Tasks
-** DONE Finish [[http://www2.cs.uidaho.edu/~jeffery/courses/445/hw1.html][Homework #1]]
-** TODO flyweight pattern for repeated strings
-** TODO Respect include guards(?)
-** TODO Add libraries to their own struct(?)
+** TODO Use flyweight pattern for repeated strings
+** TODO Respect include guards (?)
+** TODO Add libraries to their own struct (?)
+** TODO Expand list library
+- =list_copy=
+- =list_concat=
+- =list_insert=
+- =list_split=
+- =list_sort=
+** TODO Expand tree library (using TDD)
+- =tree_push_subtree=
+** TODO Add hash table for identifier lookups
+** TODO Add semantic errors for (C++ - 120++)
