@@ -32,6 +32,10 @@ IS       (u|U|l|L)*
 #include "token.h"
 #include "cgram.tab.h"
 
+#define TOKEN(name) do { new_token(name); return name; } while(0)
+#define YYAPPENDTEXT() token_append_text(yytoken, yytext)
+#define YYAPPENDCHAR(character) token_append_sval_char(yytoken, character)
+
 struct typename {
 	char *name;
 	int category;
@@ -69,15 +73,18 @@ int check_identifier(const char *s);
 [ \r\t\v\f\n]*          { /* eat whitespace */ }
 
 "//".*$                 { /* eat C++ comments */ }
+
 "/*"                    { BEGIN(COMMENT); /* eat C comments */ }
+
 <COMMENT>{
 	[^*]*           { /* eat comment in chunks */ }
 	"*"+[^*/]*      { /* eat the lone star */ }
 	"*"+"/"         { BEGIN(INITIAL); }
 }
 
-  /* keywords */
+  /* includes */
 "#include"              { BEGIN(INC); }
+
 <INC>{
 	[ \t]*          { /* eat whitespace */ }
 	"<cstdlib>"     { cstdlib  = true; BEGIN(INITIAL); }
@@ -94,7 +101,9 @@ int check_identifier(const char *s);
 	.               { lexerror("Unrecognized token following #include"); }
 }
 
+  /* only allowed namespace directive */
 "using namespace std;"  { usingstd = true;
+                          /* add necessary std classes */
 			  if (fstream) {
 			  	typenames_insert("ifstream", CLASS_NAME);
 			  	typenames_insert("ofstream", CLASS_NAME);
@@ -102,139 +111,155 @@ int check_identifier(const char *s);
 			  if (string)
 			  	typenames_insert("string", CLASS_NAME);
                         }
-"bool"                  { new_token(BOOL); return BOOL; }
-"break"                 { new_token(BREAK); return BREAK; }
-"case"                  { new_token(CASE); return CASE; }
-"char"                  { new_token(CHAR); return CHAR; }
-"class"                 { new_token(CLASS); return CLASS; }
-"continue"              { new_token(CONTINUE); return CONTINUE; }
-"default"               { new_token(DEFAULT); return DEFAULT; }
-"delete"                { new_token(DELETE); return DELETE; }
-"do"                    { new_token(DO); return DO; }
-"double"                { new_token(DOUBLE); return DOUBLE; }
-"else"                  { new_token(ELSE); return ELSE; }
-"false"                 { new_token(FALSE); return FALSE; }
-"float"                 { new_token(FLOAT); return FLOAT; }
-"for"                   { new_token(FOR); return FOR; }
-"if"                    { new_token(IF); return IF; }
-"int"                   { new_token(INT); return INT; }
-"long"                  { new_token(LONG); return LONG; }
-"new"                   { new_token(NEW); return NEW; }
-"private"               { new_token(PRIVATE); return PRIVATE; }
-"protected"             { new_token(PROTECTED); return PROTECTED; }
-"public"                { new_token(PUBLIC); return PUBLIC; }
-"return"                { new_token(RETURN); return RETURN; }
-"short"                 { new_token(SHORT); return SHORT; }
-"signed"                { new_token(SIGNED); return SIGNED; }
-"sizeof"                { new_token(SIZEOF); return SIZEOF; }
-"struct"                { new_token(STRUCT); return STRUCT; }
-"switch"                { new_token(SWITCH); return SWITCH; }
-"true"                  { new_token(TRUE); return TRUE; }
-"unsigned"              { new_token(UNSIGNED); return UNSIGNED; }
-"void"                  { new_token(VOID); return VOID; }
-"while"                 { new_token(WHILE); return WHILE; }
 
-  /* constants */
-{D}+{IS}?               { new_token(INTEGER); return INTEGER; }
-{D}+{FS}?               { new_token(FLOATING); return FLOATING; }
-{D}*"."{D}+{FS}?        { new_token(FLOATING); return FLOATING; }
-{D}+"."{D}*{FS}?        { new_token(FLOATING); return FLOATING; }
+  /* keywords */
+"bool"                  { TOKEN(BOOL); }
+"break"                 { TOKEN(BREAK); }
+"case"                  { TOKEN(CASE); }
+"char"                  { TOKEN(CHAR); }
+"class"                 { TOKEN(CLASS); }
+"continue"              { TOKEN(CONTINUE); }
+"default"               { TOKEN(DEFAULT); }
+"delete"                { TOKEN(DELETE); }
+"do"                    { TOKEN(DO); }
+"double"                { TOKEN(DOUBLE); }
+"else"                  { TOKEN(ELSE); }
+"false"                 { TOKEN(FALSE); }
+"float"                 { TOKEN(FLOAT); }
+"for"                   { TOKEN(FOR); }
+"if"                    { TOKEN(IF); }
+"int"                   { TOKEN(INT); }
+"long"                  { TOKEN(LONG); }
+"new"                   { TOKEN(NEW); }
+"private"               { TOKEN(PRIVATE); }
+"protected"             { TOKEN(PROTECTED); }
+"public"                { TOKEN(PUBLIC); }
+"return"                { TOKEN(RETURN); }
+"short"                 { TOKEN(SHORT); }
+"signed"                { TOKEN(SIGNED); }
+"sizeof"                { TOKEN(SIZEOF); }
+"struct"                { TOKEN(STRUCT); }
+"switch"                { TOKEN(SWITCH); }
+"true"                  { TOKEN(TRUE); }
+"unsigned"              { TOKEN(UNSIGNED); }
+"void"                  { TOKEN(VOID); }
+"while"                 { TOKEN(WHILE); }
 
+  /* integer and floating constants */
+{D}+{IS}?               { TOKEN(INTEGER); }
+{D}+{FS}?               { TOKEN(FLOATING); }
+{D}*"."{D}+{FS}?        { TOKEN(FLOATING); }
+{D}+"."{D}*{FS}?        { TOKEN(FLOATING); }
+
+  /* character literal */
 \'                      { new_token(CHARACTER); BEGIN(CHR); }
+
 <CHR>{
 	\'              { lexerror("Empty char literal"); }
-	"\\'"           { yytoken->ival = '\''; token_append_text(yytoken, yytext); BEGIN(CHREND); }
-	"\\\""          { yytoken->ival = '"';  token_append_text(yytoken, yytext); BEGIN(CHREND); }
-	"\\?"           { yytoken->ival = '\?'; token_append_text(yytoken, yytext); BEGIN(CHREND); }
-	"\\a"           { yytoken->ival = '\a'; token_append_text(yytoken, yytext); BEGIN(CHREND); }
-	"\\b"           { yytoken->ival = '\b'; token_append_text(yytoken, yytext); BEGIN(CHREND); }
-	"\\f"           { yytoken->ival = '\f'; token_append_text(yytoken, yytext); BEGIN(CHREND); }
-	"\\n"           { yytoken->ival = '\n'; token_append_text(yytoken, yytext); BEGIN(CHREND); }
-	"\\r"           { yytoken->ival = '\r'; token_append_text(yytoken, yytext); BEGIN(CHREND); }
-	"\\t"           { yytoken->ival = '\t'; token_append_text(yytoken, yytext); BEGIN(CHREND); }
-	"\\v"           { yytoken->ival = '\v'; token_append_text(yytoken, yytext); BEGIN(CHREND); }
-	"\\0"           { yytoken->ival = '\0'; token_append_text(yytoken, yytext); BEGIN(CHREND); }
-	"\\\\"          { yytoken->ival = '\\'; token_append_text(yytoken, yytext); BEGIN(CHREND); }
-	[^\\"'"]        { yytoken->ival = *yytext; token_append_text(yytoken, yytext); BEGIN(CHREND); }
+	"\\'"           { yytoken->ival = '\''; YYAPPENDTEXT(); BEGIN(CHREND); }
+	"\\\""          { yytoken->ival = '"';  YYAPPENDTEXT(); BEGIN(CHREND); }
+	"\\?"           { yytoken->ival = '\?'; YYAPPENDTEXT(); BEGIN(CHREND); }
+	"\\a"           { yytoken->ival = '\a'; YYAPPENDTEXT(); BEGIN(CHREND); }
+	"\\b"           { yytoken->ival = '\b'; YYAPPENDTEXT(); BEGIN(CHREND); }
+	"\\f"           { yytoken->ival = '\f'; YYAPPENDTEXT(); BEGIN(CHREND); }
+	"\\n"           { yytoken->ival = '\n'; YYAPPENDTEXT(); BEGIN(CHREND); }
+	"\\r"           { yytoken->ival = '\r'; YYAPPENDTEXT(); BEGIN(CHREND); }
+	"\\t"           { yytoken->ival = '\t'; YYAPPENDTEXT(); BEGIN(CHREND); }
+	"\\v"           { yytoken->ival = '\v'; YYAPPENDTEXT(); BEGIN(CHREND); }
+	"\\0"           { yytoken->ival = '\0'; YYAPPENDTEXT(); BEGIN(CHREND); }
+	"\\\\"          { yytoken->ival = '\\'; YYAPPENDTEXT(); BEGIN(CHREND); }
+	[^\\"'"]        { yytoken->ival = *yytext;
+                          YYAPPENDTEXT();
+                          BEGIN(CHREND);
+                        }
 	.               { lexerror("Unrecognized token in char literal"); }
 }
+
 <CHREND>{
-	\'              { token_append_text(yytoken, yytext); BEGIN(INITIAL); return CHARACTER; }
+	\'              { YYAPPENDTEXT(); BEGIN(INITIAL); return CHARACTER; }
 	\n              { lexerror("Unexpected newline in char literal"); }
 	.               { lexerror("Too many symbols in char literal"); }
 }
 
+  /* string literal */
+\"                      { new_token(STRING); BEGIN(STR); }
 
-L?\"                    { new_token(STRING); BEGIN(STR); }
 <STR>{
-	\"              { token_finish_sval(yytoken); token_append_text(yytoken, yytext); BEGIN(INITIAL); return STRING; }
-	"\\'"           { token_append_sval_char(yytoken, '\''); token_append_text(yytoken, yytext); }
-	"\\\""          { token_append_sval_char(yytoken, '"');  token_append_text(yytoken, yytext); }
-	"\\?"           { token_append_sval_char(yytoken, '\?'); token_append_text(yytoken, yytext); }
-	"\\a"           { token_append_sval_char(yytoken, '\a'); token_append_text(yytoken, yytext); }
-	"\\b"           { token_append_sval_char(yytoken, '\b'); token_append_text(yytoken, yytext); }
-	"\\f"           { token_append_sval_char(yytoken, '\f'); token_append_text(yytoken, yytext); }
-	"\\n"           { token_append_sval_char(yytoken, '\n'); token_append_text(yytoken, yytext); }
-	"\\r"           { token_append_sval_char(yytoken, '\r'); token_append_text(yytoken, yytext); }
-	"\\t"           { token_append_sval_char(yytoken, '\t'); token_append_text(yytoken, yytext); }
-	"\\v"           { token_append_sval_char(yytoken, '\v'); token_append_text(yytoken, yytext); }
-	"\\0"           { token_append_sval_char(yytoken, '\0'); token_append_text(yytoken, yytext); }
-	"\\\\"          { token_append_sval_char(yytoken, '\\'); token_append_text(yytoken, yytext); }
-	[^\\\"\n]+      { token_append_sval_string(yytoken, yytext); token_append_text(yytoken, yytext); }
+	\"              { token_finish_sval(yytoken);
+			  YYAPPENDTEXT();
+			  BEGIN(INITIAL);
+			  return STRING;
+			}
+	"\\'"           { YYAPPENDCHAR('\''); YYAPPENDTEXT(); }
+	"\\\""          { YYAPPENDCHAR('"');  YYAPPENDTEXT(); }
+	"\\?"           { YYAPPENDCHAR('\?'); YYAPPENDTEXT(); }
+	"\\a"           { YYAPPENDCHAR('\a'); YYAPPENDTEXT(); }
+	"\\b"           { YYAPPENDCHAR('\b'); YYAPPENDTEXT(); }
+	"\\f"           { YYAPPENDCHAR('\f'); YYAPPENDTEXT(); }
+	"\\n"           { YYAPPENDCHAR('\n'); YYAPPENDTEXT(); }
+	"\\r"           { YYAPPENDCHAR('\r'); YYAPPENDTEXT(); }
+	"\\t"           { YYAPPENDCHAR('\t'); YYAPPENDTEXT(); }
+	"\\v"           { YYAPPENDCHAR('\v'); YYAPPENDTEXT(); }
+	"\\0"           { YYAPPENDCHAR('\0'); YYAPPENDTEXT(); }
+	"\\\\"          { YYAPPENDCHAR('\\'); YYAPPENDTEXT(); }
+	[^\\\"\n]+      { token_append_sval_string(yytoken, yytext);
+                          YYAPPENDTEXT();
+                        }
 	\n              { lexerror("Unexpected newline in string literal"); }
 	.               { lexerror("Unrecognized token in string literal"); }
 	<<EOF>>         { lexerror("Unterminated string literal"); }
 }
 
   /* operators */
-">>="                   { new_token(SREQ); return SREQ; }
-"<<="                   { new_token(SLEQ); return SLEQ; }
-"+="                    { new_token(ADDEQ); return ADDEQ; }
-"-="                    { new_token(SUBEQ); return SUBEQ; }
-"*="                    { new_token(MULEQ); return MULEQ; }
-"/="                    { new_token(DIVEQ); return DIVEQ; }
-"%="                    { new_token(MODEQ); return MODEQ; }
-"&="                    { new_token(ANDEQ); return ANDEQ; }
-"^="                    { new_token(XOREQ); return XOREQ; }
-"|="                    { new_token(OREQ); return OREQ; }
-">>"                    { new_token(SR); return SR; }
-"<<"                    { new_token(SL); return SL; }
-"++"                    { new_token(PLUSPLUS); return PLUSPLUS; }
-"--"                    { new_token(MINUSMINUS); return MINUSMINUS; }
-"->"                    { new_token(ARROW); return ARROW; }
-"->*"                   { new_token(ARROWSTAR); return ARROWSTAR; }
-"&&"                    { new_token(ANDAND); return ANDAND; }
-"||"                    { new_token(OROR); return OROR; }
-"<="                    { new_token(LTEQ); return LTEQ; }
-">="                    { new_token(GTEQ); return GTEQ; }
-"=="                    { new_token(EQ); return EQ; }
-"!="                    { new_token(NOTEQ); return NOTEQ; }
-";"                     { new_token(';'); return ';'; }
-"{"                     { new_token('{'); return '{'; }
-"}"                     { new_token('}'); return '}'; }
-","                     { new_token(','); return ','; }
-"::"                    { new_token(COLONCOLON); return COLONCOLON; }
-":"                     { new_token(':'); return ':'; }
-"="                     { new_token('='); return '='; }
-"("                     { new_token('('); return '('; }
-")"                     { new_token(')'); return ')'; }
-"["                     { new_token('['); return '['; }
-"]"                     { new_token(']'); return ']'; }
-"."                     { new_token('.'); return '.'; }
-"&"                     { new_token('&'); return '&'; }
-"!"                     { new_token('!'); return '!'; }
-"~"                     { new_token('~'); return '~'; }
-"-"                     { new_token('-'); return '-'; }
-"+"                     { new_token('+'); return '+'; }
-"*"                     { new_token('*'); return '*'; }
-"/"                     { new_token('/'); return '/'; }
-"%"                     { new_token('%'); return '%'; }
-"<"                     { new_token('<'); return '<'; }
-">"                     { new_token('>'); return '>'; }
-"^"                     { new_token('^'); return '^'; }
-"|"                     { new_token('|'); return '|'; }
-"?"                     { new_token('?'); return '?'; }
+">>="                   { TOKEN(SREQ); }
+"<<="                   { TOKEN(SLEQ); }
+"+="                    { TOKEN(ADDEQ); }
+"-="                    { TOKEN(SUBEQ); }
+"*="                    { TOKEN(MULEQ); }
+"/="                    { TOKEN(DIVEQ); }
+"%="                    { TOKEN(MODEQ); }
+"&="                    { TOKEN(ANDEQ); }
+"^="                    { TOKEN(XOREQ); }
+"|="                    { TOKEN(OREQ); }
+">>"                    { TOKEN(SR); }
+"<<"                    { TOKEN(SL); }
+"++"                    { TOKEN(PLUSPLUS); }
+"--"                    { TOKEN(MINUSMINUS); }
+"->"                    { TOKEN(ARROW); }
+"->*"                   { TOKEN(ARROWSTAR); }
+"&&"                    { TOKEN(ANDAND); }
+"||"                    { TOKEN(OROR); }
+"<="                    { TOKEN(LTEQ); }
+">="                    { TOKEN(GTEQ); }
+"=="                    { TOKEN(EQ); }
+"!="                    { TOKEN(NOTEQ); }
+";"                     { TOKEN(';'); }
+"{"                     { TOKEN('{'); }
+"}"                     { TOKEN('}'); }
+","                     { TOKEN(','); }
+"::"                    { TOKEN(COLONCOLON); }
+":"                     { TOKEN(':'); }
+"="                     { TOKEN('='); }
+"("                     { TOKEN('('); }
+")"                     { TOKEN(')'); }
+"["                     { TOKEN('['); }
+"]"                     { TOKEN(']'); }
+"."                     { TOKEN('.'); }
+"&"                     { TOKEN('&'); }
+"!"                     { TOKEN('!'); }
+"~"                     { TOKEN('~'); }
+"-"                     { TOKEN('-'); }
+"+"                     { TOKEN('+'); }
+"*"                     { TOKEN('*'); }
+"/"                     { TOKEN('/'); }
+"%"                     { TOKEN('%'); }
+"<"                     { TOKEN('<'); }
+">"                     { TOKEN('>'); }
+"^"                     { TOKEN('^'); }
+"|"                     { TOKEN('|'); }
+"?"                     { TOKEN('?'); }
 
+  /* identifer */
 {L}({L}|{D})*           { return check_identifier(yytext); }
 
 <*>.                    { lexerror("Unrecognized token"); }
@@ -255,7 +280,7 @@ L?\"                    { new_token(STRING); BEGIN(STR); }
 
 	if (!YY_CURRENT_BUFFER) /* if buffer stack is empty, stop */
 		yyterminate();
-  }
+}
 %%
 
 /*
