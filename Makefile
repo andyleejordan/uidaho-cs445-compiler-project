@@ -25,8 +25,9 @@ test-lex: $(BIN)
 tar:
 	git archive --format=tar --prefix=$(PREFIX)/ $(GITREF) > $(PREFIX).tar
 
+TEMP_OBJECTS=lex.yy.c clex.h cgram.tab.h cgram.output cgram.tab.c
 clean:
-	$(RM) $(BIN) $(TESTS) $(OBJECTS) $(TEST_OBJECTS) lex.yy.c clex.h cgram.tab.h
+	$(RM) $(BIN) $(TESTS) $(OBJECTS) $(TEST_OBJECTS) $(TEMP_OBJECTS)
 
 .PHONY: all test-lex tar clean
 
