@@ -12,7 +12,7 @@
 #include <stdio.h>
 
 #include "token.h"
-#include "cgram.tab.h"
+#include "parser.tab.h"
 
 #define TEXT_CHUNK_SIZE 128
 

@@ -1,5 +1,5 @@
 /*
- * cgram.y - Merged and modified adaptation of Dr. Jeffery's
+ * parser.y - Merged and modified adaptation of Dr. Jeffery's
  * adaptation of Sigala's grammar.
  */
 
@@ -45,9 +45,9 @@
 
 %{
 
-#include "clex.h"
 #include "list.h"
 #include "tree.h"
+#include "lexer.h"
 
 extern struct tree *yyprogram;
 extern struct list *filenames;

@@ -25,14 +25,14 @@ test-lex: $(BIN)
 tar:
 	git archive --format=tar --prefix=$(PREFIX)/ $(GITREF) > $(PREFIX).tar
 
-TEMP_OBJECTS=lex.yy.c clex.h cgram.tab.h cgram.output cgram.tab.c
+TEMP_OBJECTS=lexer.h lex.yy.c parser.tab.h parser.tab.c parser.output
 clean:
 	$(RM) $(BIN) $(TESTS) $(OBJECTS) $(TEST_OBJECTS) $(TEMP_OBJECTS)
 
 .PHONY: all test-lex tar clean
 
 # source
-SOURCES=main.c token.c list.c tree.c lex.yy.c cgram.tab.c
+SOURCES=main.c token.c list.c tree.c lex.yy.c parser.tab.c
 OBJECTS=$(SOURCES:.c=.o)
 
 $(BIN): $(OBJECTS)
@@ -41,14 +41,14 @@ $(BIN): $(OBJECTS)
 .c.o:
 	$(CC) $(CFLAGS) -c $< -o $@
 
-main.c: clex.h cgram.tab.h
+main.c: lexer.h parser.tab.h
 
-cgram.tab.h cgram.tab.c: cgram.y
+parser.tab.h parser.tab.c: parser.y
 	$(YACC) $(YFLAGS) $<
 
-clex.h: lex.yy.c
+lexer.h: lex.yy.c
 
-lex.yy.c: clex.l cgram.tab.h
+lex.yy.c: lexer.l parser.tab.h
 	$(LEX) $<
 
 token.c: token.h

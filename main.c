@@ -14,11 +14,11 @@
 #include <libgen.h>
 #include <unistd.h>
 
-#include "clex.h"
 #include "token.h"
 #include "list.h"
 #include "tree.h"
-#include "cgram.tab.h"
+#include "lexer.h"
+#include "parser.tab.h"
 
 struct tree *yyprogram;
 struct list *filenames = NULL;

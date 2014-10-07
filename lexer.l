@@ -1,5 +1,5 @@
 /*
- * clex.l - Flex scanner for 120++.
+ * lexer.l - Flex scanner for 120++.
  *
  * Copyright (C) 2014 Andrew Schwartzmeyer
  *
@@ -8,7 +8,7 @@
  */
 
 %option warn nounput noinput
-%option header-file="clex.h"
+%option header-file="lexer.h"
 %option yylineno noyywrap
 %x COMMENT STR CHR CHREND INC
 
@@ -30,7 +30,7 @@ IS       (u|U|l|L)*
 #include "list.h"
 #include "tree.h"
 #include "token.h"
-#include "cgram.tab.h"
+#include "parser.tab.h"
 
 #define TOKEN(name) do { new_token(name); return name; } while(0)
 #define YYAPPENDTEXT() token_append_text(yytoken, yytext)
