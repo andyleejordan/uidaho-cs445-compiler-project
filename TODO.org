@@ -8,9 +8,12 @@
 - =list_insert=
 - =list_split=
 - =list_sort=
-** TODO Expand tree library (using TDD)
+** TODO Expand tree library
 - =tree_push_subtree=
-** TODO Add hash table for identifier lookups
+** TODO Add hash table library (using TDD)
+** TODO Use hash table for identifier lookups
 ** TODO Add semantic errors for (C++ - 120++)
 ** TODO Use macro in grammar for =new_token n; return n= pattern
 ** TODO Rename Flex/Bison files to lexer and parser
+** TODO Remove unneeded punctation from syntax tree
+** TODO Undef macros at EOF
