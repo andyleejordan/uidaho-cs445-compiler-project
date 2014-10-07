@@ -19,6 +19,10 @@ our CS 120 course, dubbed "120++".
 Per the [[http://www2.cs.uidaho.edu/~jeffery/courses/445/hw2.html][requirements]], my next goal is to write (or reuse) a 120++
 grammar that works with Bison.
 
+** Assignment #3: Semantic Analysis
+Per the [[http://www2.cs.uidaho.edu/~jeffery/courses/445/hw3.html][requirements]], my next goal is to perform semantic analysis on
+the syntax tree for 120++.
+
 ** Potential Improvments
 *** TODO Expand list library
 - =list_copy=
