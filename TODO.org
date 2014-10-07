@@ -12,3 +12,5 @@
 - =tree_push_subtree=
 ** TODO Add hash table for identifier lookups
 ** TODO Add semantic errors for (C++ - 120++)
+** TODO Use macro in grammar for =new_token n; return n= pattern
+** TODO Rename Flex/Bison files to lexer and parser
