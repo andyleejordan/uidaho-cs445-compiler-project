@@ -193,8 +193,7 @@ int check_identifier(const char *s);
         "\\\\"          { yytoken->ival = '\\'; YYAPPENDTEXT(); BEGIN(CHREND); }
         [^\\"'"]        { yytoken->ival = *yytext;
                           YYAPPENDTEXT();
-                          BEGIN(CHREND);
-                        }
+                          BEGIN(CHREND); }
         .               { lexerror("Unrecognized token in char literal"); }
 }
 
@@ -211,8 +210,7 @@ int check_identifier(const char *s);
         \"              { token_finish_sval(yytoken);
                           YYAPPENDTEXT();
                           BEGIN(INITIAL);
-                          return STRING;
-                        }
+                          return STRING; }
         "\\'"           { YYAPPENDCHAR('\''); YYAPPENDTEXT(); }
         "\\\""          { YYAPPENDCHAR('"');  YYAPPENDTEXT(); }
         "\\?"           { YYAPPENDCHAR('\?'); YYAPPENDTEXT(); }
@@ -226,8 +224,7 @@ int check_identifier(const char *s);
         "\\0"           { YYAPPENDCHAR('\0'); YYAPPENDTEXT(); }
         "\\\\"          { YYAPPENDCHAR('\\'); YYAPPENDTEXT(); }
         [^\\\"\n]+      { token_append_sval_string(yytoken, yytext);
-                          YYAPPENDTEXT();
-                        }
+                          YYAPPENDTEXT(); }
         \n              { lexerror("Unexpected newline in string literal"); }
         .               { lexerror("Unrecognized token in string literal"); }
         <<EOF>>         { lexerror("Unterminated string literal"); }
@@ -287,23 +284,22 @@ int check_identifier(const char *s);
 
 <*>.                    { lexerror("Unrecognized token"); }
 
-<<EOF>>                 {
-        /* pop the current buffer and filename */
-        yypop_buffer_state();
-        list_pop(filenames);
+<<EOF>>                 { /* pop the current buffer and filename */
+                          yypop_buffer_state();
+                          list_pop(filenames);
 
-        /* if there's another file to process, chdir to it */
-        char *filename = current_filename();
-        if (filename) {
-                chdir(dirname(filename));
-                free(filename);
-        }
+                          /* if there's another file to process, chdir to it */
+                          char *filename = current_filename();
+                          if (filename) {
+                                  chdir(dirname(filename));
+                                  free(filename);
+                          }
 
-        yylineno = 1; /* restart line numbering count */
+                          yylineno = 1; /* restart line numbering count */
 
-        if (!YY_CURRENT_BUFFER) /* if buffer stack is empty, stop */
-                yyterminate();
-}
+                          /* if buffer stack is empty, stop */
+                          if (!YY_CURRENT_BUFFER)
+                                  yyterminate(); }
 %%
 
 #undef TOKEN
@@ -326,9 +322,9 @@ void lexerror(const char *s)
  */
 void unsupported()
 {
-	fprintf(stderr, "C++ operation unsupported in 120++: file %s, line %d, token: %s\n",
-	        (const char *)list_peek(filenames), yylineno, yytext);
-	exit(3);
+        fprintf(stderr, "C++ operation unsupported in 120++: file %s, line %d, token: %s\n",
+                (const char *)list_peek(filenames), yylineno, yytext);
+        exit(3);
 }
 
 /*
