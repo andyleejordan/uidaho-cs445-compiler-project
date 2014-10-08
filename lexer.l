@@ -37,8 +37,8 @@ IS       (u|U|l|L)*
 #define YYAPPENDCHAR(character) token_append_sval_char(yytoken, character)
 
 struct typename {
-	char *name;
-	int category;
+        char *name;
+        int category;
 };
 
 extern struct list *typenames;
@@ -77,39 +77,39 @@ int check_identifier(const char *s);
 "/*"                    { BEGIN(COMMENT); /* eat C comments */ }
 
 <COMMENT>{
-	[^*]*           { /* eat comment in chunks */ }
-	"*"+[^*/]*      { /* eat the lone star */ }
-	"*"+"/"         { BEGIN(INITIAL); }
+        [^*]*           { /* eat comment in chunks */ }
+        "*"+[^*/]*      { /* eat the lone star */ }
+        "*"+"/"         { BEGIN(INITIAL); }
 }
 
   /* includes */
 "#include"              { BEGIN(INC); }
 
 <INC>{
-	[ \t]*          { /* eat whitespace */ }
-	"<cstdlib>"     { cstdlib  = true; BEGIN(INITIAL); }
-	"<cmath>"       { cmath	   = true; BEGIN(INITIAL); }
-	"<ctime>"       { ctime	   = true; BEGIN(INITIAL); }
-	"<cstring>"     { cstring  = true; BEGIN(INITIAL); }
-	"<fstream>"     { fstream  = true; BEGIN(INITIAL); }
-	"<iostream>"    { iostream = true; BEGIN(INITIAL); }
-	"<string>"      { string   = true; BEGIN(INITIAL); }
-	"<iomanip>"     { iomanip  = true; BEGIN(INITIAL); }
-	\"[^\"]+\"      { handle_include(yytext); BEGIN(INITIAL); }
-	"<"[^<>]*">"    { lexerror("Unrecognized system library"); }
-	<<EOF>>         { lexerror("Unexpected EOF"); }
-	.               { lexerror("Unrecognized token following #include"); }
+        [ \t]*          { /* eat whitespace */ }
+        "<cstdlib>"     { cstdlib  = true; BEGIN(INITIAL); }
+        "<cmath>"       { cmath    = true; BEGIN(INITIAL); }
+        "<ctime>"       { ctime    = true; BEGIN(INITIAL); }
+        "<cstring>"     { cstring  = true; BEGIN(INITIAL); }
+        "<fstream>"     { fstream  = true; BEGIN(INITIAL); }
+        "<iostream>"    { iostream = true; BEGIN(INITIAL); }
+        "<string>"      { string   = true; BEGIN(INITIAL); }
+        "<iomanip>"     { iomanip  = true; BEGIN(INITIAL); }
+        \"[^\"]+\"      { handle_include(yytext); BEGIN(INITIAL); }
+        "<"[^<>]*">"    { lexerror("Unrecognized system library"); }
+        <<EOF>>         { lexerror("Unexpected EOF"); }
+        .               { lexerror("Unrecognized token following #include"); }
 }
 
   /* only allowed namespace directive */
 "using namespace std;"  { usingstd = true;
                           /* add necessary std classes */
-			  if (fstream) {
-			  	typenames_insert("ifstream", CLASS_NAME);
-			  	typenames_insert("ofstream", CLASS_NAME);
-		          }
-			  if (string)
-			  	typenames_insert("string", CLASS_NAME);
+                          if (fstream) {
+                                typenames_insert("ifstream", CLASS_NAME);
+                                typenames_insert("ofstream", CLASS_NAME);
+                          }
+                          if (string)
+                                typenames_insert("string", CLASS_NAME);
                         }
 
   /* keywords */
@@ -155,59 +155,59 @@ int check_identifier(const char *s);
 \'                      { new_token(CHARACTER); BEGIN(CHR); }
 
 <CHR>{
-	\'              { lexerror("Empty char literal"); }
-	"\\'"           { yytoken->ival = '\''; YYAPPENDTEXT(); BEGIN(CHREND); }
-	"\\\""          { yytoken->ival = '"';  YYAPPENDTEXT(); BEGIN(CHREND); }
-	"\\?"           { yytoken->ival = '\?'; YYAPPENDTEXT(); BEGIN(CHREND); }
-	"\\a"           { yytoken->ival = '\a'; YYAPPENDTEXT(); BEGIN(CHREND); }
-	"\\b"           { yytoken->ival = '\b'; YYAPPENDTEXT(); BEGIN(CHREND); }
-	"\\f"           { yytoken->ival = '\f'; YYAPPENDTEXT(); BEGIN(CHREND); }
-	"\\n"           { yytoken->ival = '\n'; YYAPPENDTEXT(); BEGIN(CHREND); }
-	"\\r"           { yytoken->ival = '\r'; YYAPPENDTEXT(); BEGIN(CHREND); }
-	"\\t"           { yytoken->ival = '\t'; YYAPPENDTEXT(); BEGIN(CHREND); }
-	"\\v"           { yytoken->ival = '\v'; YYAPPENDTEXT(); BEGIN(CHREND); }
-	"\\0"           { yytoken->ival = '\0'; YYAPPENDTEXT(); BEGIN(CHREND); }
-	"\\\\"          { yytoken->ival = '\\'; YYAPPENDTEXT(); BEGIN(CHREND); }
-	[^\\"'"]        { yytoken->ival = *yytext;
+        \'              { lexerror("Empty char literal"); }
+        "\\'"           { yytoken->ival = '\''; YYAPPENDTEXT(); BEGIN(CHREND); }
+        "\\\""          { yytoken->ival = '"';  YYAPPENDTEXT(); BEGIN(CHREND); }
+        "\\?"           { yytoken->ival = '\?'; YYAPPENDTEXT(); BEGIN(CHREND); }
+        "\\a"           { yytoken->ival = '\a'; YYAPPENDTEXT(); BEGIN(CHREND); }
+        "\\b"           { yytoken->ival = '\b'; YYAPPENDTEXT(); BEGIN(CHREND); }
+        "\\f"           { yytoken->ival = '\f'; YYAPPENDTEXT(); BEGIN(CHREND); }
+        "\\n"           { yytoken->ival = '\n'; YYAPPENDTEXT(); BEGIN(CHREND); }
+        "\\r"           { yytoken->ival = '\r'; YYAPPENDTEXT(); BEGIN(CHREND); }
+        "\\t"           { yytoken->ival = '\t'; YYAPPENDTEXT(); BEGIN(CHREND); }
+        "\\v"           { yytoken->ival = '\v'; YYAPPENDTEXT(); BEGIN(CHREND); }
+        "\\0"           { yytoken->ival = '\0'; YYAPPENDTEXT(); BEGIN(CHREND); }
+        "\\\\"          { yytoken->ival = '\\'; YYAPPENDTEXT(); BEGIN(CHREND); }
+        [^\\"'"]        { yytoken->ival = *yytext;
                           YYAPPENDTEXT();
                           BEGIN(CHREND);
                         }
-	.               { lexerror("Unrecognized token in char literal"); }
+        .               { lexerror("Unrecognized token in char literal"); }
 }
 
 <CHREND>{
-	\'              { YYAPPENDTEXT(); BEGIN(INITIAL); return CHARACTER; }
-	\n              { lexerror("Unexpected newline in char literal"); }
-	.               { lexerror("Too many symbols in char literal"); }
+        \'              { YYAPPENDTEXT(); BEGIN(INITIAL); return CHARACTER; }
+        \n              { lexerror("Unexpected newline in char literal"); }
+        .               { lexerror("Too many symbols in char literal"); }
 }
 
   /* string literal */
 \"                      { new_token(STRING); BEGIN(STR); }
 
 <STR>{
-	\"              { token_finish_sval(yytoken);
-			  YYAPPENDTEXT();
-			  BEGIN(INITIAL);
-			  return STRING;
-			}
-	"\\'"           { YYAPPENDCHAR('\''); YYAPPENDTEXT(); }
-	"\\\""          { YYAPPENDCHAR('"');  YYAPPENDTEXT(); }
-	"\\?"           { YYAPPENDCHAR('\?'); YYAPPENDTEXT(); }
-	"\\a"           { YYAPPENDCHAR('\a'); YYAPPENDTEXT(); }
-	"\\b"           { YYAPPENDCHAR('\b'); YYAPPENDTEXT(); }
-	"\\f"           { YYAPPENDCHAR('\f'); YYAPPENDTEXT(); }
-	"\\n"           { YYAPPENDCHAR('\n'); YYAPPENDTEXT(); }
-	"\\r"           { YYAPPENDCHAR('\r'); YYAPPENDTEXT(); }
-	"\\t"           { YYAPPENDCHAR('\t'); YYAPPENDTEXT(); }
-	"\\v"           { YYAPPENDCHAR('\v'); YYAPPENDTEXT(); }
-	"\\0"           { YYAPPENDCHAR('\0'); YYAPPENDTEXT(); }
-	"\\\\"          { YYAPPENDCHAR('\\'); YYAPPENDTEXT(); }
-	[^\\\"\n]+      { token_append_sval_string(yytoken, yytext);
+        \"              { token_finish_sval(yytoken);
+                          YYAPPENDTEXT();
+                          BEGIN(INITIAL);
+                          return STRING;
+                        }
+        "\\'"           { YYAPPENDCHAR('\''); YYAPPENDTEXT(); }
+        "\\\""          { YYAPPENDCHAR('"');  YYAPPENDTEXT(); }
+        "\\?"           { YYAPPENDCHAR('\?'); YYAPPENDTEXT(); }
+        "\\a"           { YYAPPENDCHAR('\a'); YYAPPENDTEXT(); }
+        "\\b"           { YYAPPENDCHAR('\b'); YYAPPENDTEXT(); }
+        "\\f"           { YYAPPENDCHAR('\f'); YYAPPENDTEXT(); }
+        "\\n"           { YYAPPENDCHAR('\n'); YYAPPENDTEXT(); }
+        "\\r"           { YYAPPENDCHAR('\r'); YYAPPENDTEXT(); }
+        "\\t"           { YYAPPENDCHAR('\t'); YYAPPENDTEXT(); }
+        "\\v"           { YYAPPENDCHAR('\v'); YYAPPENDTEXT(); }
+        "\\0"           { YYAPPENDCHAR('\0'); YYAPPENDTEXT(); }
+        "\\\\"          { YYAPPENDCHAR('\\'); YYAPPENDTEXT(); }
+        [^\\\"\n]+      { token_append_sval_string(yytoken, yytext);
                           YYAPPENDTEXT();
                         }
-	\n              { lexerror("Unexpected newline in string literal"); }
-	.               { lexerror("Unrecognized token in string literal"); }
-	<<EOF>>         { lexerror("Unterminated string literal"); }
+        \n              { lexerror("Unexpected newline in string literal"); }
+        .               { lexerror("Unrecognized token in string literal"); }
+        <<EOF>>         { lexerror("Unterminated string literal"); }
 }
 
   /* operators */
@@ -265,21 +265,21 @@ int check_identifier(const char *s);
 <*>.                    { lexerror("Unrecognized token"); }
 
 <<EOF>>                 {
-	/* pop the current buffer and filename */
-	yypop_buffer_state();
-	list_pop(filenames);
+        /* pop the current buffer and filename */
+        yypop_buffer_state();
+        list_pop(filenames);
 
-	/* if there's another file to process, chdir to it */
-	char *filename = current_filename();
-	if (filename) {
-		chdir(dirname(filename));
-		free(filename);
-	}
+        /* if there's another file to process, chdir to it */
+        char *filename = current_filename();
+        if (filename) {
+                chdir(dirname(filename));
+                free(filename);
+        }
 
-	yylineno = 1; /* restart line numbering count */
+        yylineno = 1; /* restart line numbering count */
 
-	if (!YY_CURRENT_BUFFER) /* if buffer stack is empty, stop */
-		yyterminate();
+        if (!YY_CURRENT_BUFFER) /* if buffer stack is empty, stop */
+                yyterminate();
 }
 %%
 
@@ -293,9 +293,9 @@ int check_identifier(const char *s);
  */
 void lexerror(const char *s)
 {
-	fprintf(stderr, "Lexical error: file %s, line %d, token %s: %s\n",
-	        (const char *)list_peek(filenames), yylineno, yytext, s);
-	exit(1);
+        fprintf(stderr, "Lexical error: file %s, line %d, token %s: %s\n",
+                (const char *)list_peek(filenames), yylineno, yytext, s);
+        exit(1);
 }
 
 /*
@@ -304,9 +304,9 @@ void lexerror(const char *s)
  */
 void new_token(int category)
 {
-	yytoken = token_create(category, yylineno, yytext,
+        yytoken = token_create(category, yylineno, yytext,
                                        (const char *)list_peek(filenames));
-	yylval.t = tree_init(NULL, yytoken);
+        yylval.t = tree_init(NULL, yytoken);
 }
 
 /*
@@ -318,33 +318,33 @@ void new_token(int category)
  */
 void handle_include(const char *s)
 {
-	/* get the include path */
-	size_t len = strlen(s) - 2; /* size without surrounding quotes */
-	char *include = calloc(len+1, sizeof(char));
-	if (include == NULL)
-		handle_error("handle include buffer");
-	strncpy(include, s+1, len); /* copy substring */
-	include[len] = '\0';
+        /* get the include path */
+        size_t len = strlen(s) - 2; /* size without surrounding quotes */
+        char *include = calloc(len+1, sizeof(char));
+        if (include == NULL)
+                handle_error("handle include buffer");
+        strncpy(include, s+1, len); /* copy substring */
+        include[len] = '\0';
 
-	/* get the real path */
-	char *filename = realpath(include, NULL);
-	if (filename == NULL) {
-		fprintf(stderr, "Could not resolve path to included file: %s, included from %s\n", include, current_filename());
-		exit(EXIT_FAILURE);
-	}
-	free(include);
-	list_push(filenames, filename);
+        /* get the real path */
+        char *filename = realpath(include, NULL);
+        if (filename == NULL) {
+                fprintf(stderr, "Could not resolve path to included file: %s, included from %s\n", include, current_filename());
+                exit(EXIT_FAILURE);
+        }
+        free(include);
+        list_push(filenames, filename);
 
-	/* open file and push buffer */
-	yyin = fopen(filename, "r");
-	if (yyin == NULL) {
-		fprintf(stderr, "Could not open included file: %s, include from %s\n", filename, current_filename());
-		exit(EXIT_FAILURE);
-	}
-	yylineno = 1;
-	yypush_buffer_state(yy_create_buffer(yyin, YY_BUF_SIZE));
+        /* open file and push buffer */
+        yyin = fopen(filename, "r");
+        if (yyin == NULL) {
+                fprintf(stderr, "Could not open included file: %s, include from %s\n", filename, current_filename());
+                exit(EXIT_FAILURE);
+        }
+        yylineno = 1;
+        yypush_buffer_state(yy_create_buffer(yyin, YY_BUF_SIZE));
 
-	return;
+        return;
 }
 
 /*
@@ -352,7 +352,7 @@ void handle_include(const char *s)
  */
 bool typename_compare(const char *s, const struct typename *t)
 {
-	return 0 == strcmp(s, t->name);
+        return 0 == strcmp(s, t->name);
 }
 
 /*
@@ -361,15 +361,15 @@ bool typename_compare(const char *s, const struct typename *t)
  */
 void typenames_insert(char *s, int category)
 {
-	struct list_node *l = list_find(typenames, (void *)s,
-					(bool (*)(void *, void *))&typename_compare);
-	if (!list_end(l)) {
-		lexerror("token previously declared as identifier");
-	}
-	struct typename *type = malloc(sizeof(*type));
-	type->name = strdup(s);
-	type->category = category;
-	list_push(typenames, type);
+        struct list_node *l = list_find(typenames, (void *)s,
+                                        (bool (*)(void *, void *))&typename_compare);
+        if (!list_end(l)) {
+                lexerror("token previously declared as identifier");
+        }
+        struct typename *type = malloc(sizeof(*type));
+        type->name = strdup(s);
+        type->category = category;
+        list_push(typenames, type);
 }
 
 /*
@@ -378,7 +378,7 @@ void typenames_insert(char *s, int category)
  */
 void typenames_insert_tree(struct tree *t, int category)
 {
-	typenames_insert(((struct token *)t->data)->text, category);
+        typenames_insert(((struct token *)t->data)->text, category);
 }
 
 /*
@@ -387,15 +387,15 @@ void typenames_insert_tree(struct tree *t, int category)
  */
 int check_identifier(const char *s)
 {
-	struct list_node *l = list_find(typenames, (void *)s,
-					(bool (*)(void *, void *))&typename_compare);
-	if (list_end(l)) {
-		new_token(IDENTIFIER);
-		return IDENTIFIER;
-	}
-	else {
-		int category = ((struct typename *)l->data)->category;
-		new_token(category);
-		return category;
-	}
+        struct list_node *l = list_find(typenames, (void *)s,
+                                        (bool (*)(void *, void *))&typename_compare);
+        if (list_end(l)) {
+                new_token(IDENTIFIER);
+                return IDENTIFIER;
+        }
+        else {
+                int category = ((struct typename *)l->data)->category;
+                new_token(category);
+                return category;
+        }
 }
