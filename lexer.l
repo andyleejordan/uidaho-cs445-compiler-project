@@ -59,6 +59,7 @@ bool string   = false;
 bool iomanip  = false;
 
 void lexerror(const char *s);
+void unsupported();
 void new_token(int category);
 void handle_include(const char *s);
 bool typename_compare(const char *s, const struct typename *t);
@@ -144,6 +145,24 @@ int check_identifier(const char *s);
 "unsigned"              { TOKEN(UNSIGNED); }
 "void"                  { TOKEN(VOID); }
 "while"                 { TOKEN(WHILE); }
+
+  /* unsupported keywords */
+"const"                 { /* const qualifier is discarded */ }
+"auto"                  |
+"..."                   |
+"enum"                  |
+"extern"                |
+"friend"                |
+"goto"                  |
+"namespace"             |
+"register"              |
+"static"                |
+"this"                  |
+"typedef"               |
+"union"                 |
+"using"                 |
+"virtual"               |
+"volatile"              { unsupported(); }
 
   /* integer and floating constants */
 {D}+{IS}?               { TOKEN(INTEGER); }
@@ -289,13 +308,23 @@ int check_identifier(const char *s);
 
 /*
  * Prints relevant information for lexical errors and exits returning 1
- * per assignment requirements;
+ * per assignment requirements.
  */
 void lexerror(const char *s)
 {
         fprintf(stderr, "Lexical error: file %s, line %d, token %s: %s\n",
                 (const char *)list_peek(filenames), yylineno, yytext, s);
         exit(1);
+}
+
+/*
+ * Prints error message and exits per assignment requirements.
+ */
+void unsupported()
+{
+	fprintf(stderr, "C++ operation unsupported in 120++: file %s, line %d, token: %s\n",
+	        (const char *)list_peek(filenames), yylineno, yytext);
+	exit(3);
 }
 
 /*
