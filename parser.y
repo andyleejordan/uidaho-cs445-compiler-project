@@ -60,11 +60,12 @@ void typenames_insert_tree(struct tree *t, int category);
 
 %}
 
+%require "3.0.2"
+%defines
+
 %union {
         struct tree *t;
 }
-
-%defines
 
 %token <t> IDENTIFIER INTEGER FLOATING CHARACTER STRING CLASS_NAME
 %token <t> COLONCOLON DOTSTAR ADDEQ SUBEQ MULEQ DIVEQ MODEQ XOREQ
