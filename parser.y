@@ -531,7 +531,7 @@ parameter_declaration_list:
         ;
 
 parameter_declaration:
-        decl_specifier_seq declarator                                          { $$ = $1; }
+        decl_specifier_seq declarator                                          { $$ = P(param-delc2, 2, $1, $2); }
         | decl_specifier_seq declarator '=' assignment_expression              { $$ = P(param-decl2, 4, $1, $2, $3, $4); }
         | decl_specifier_seq abstract_declarator_opt                           { $$ = P(param-decl3, 2, $1, $2); }
         | decl_specifier_seq abstract_declarator_opt '=' assignment_expression { $$ = P(param-decl4, 4, $1, $2, $3, $4); }
