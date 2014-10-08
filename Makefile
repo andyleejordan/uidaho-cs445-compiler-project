@@ -22,7 +22,7 @@ test: $(TESTS)
 test-lex: $(BIN)
 	./$(BIN) $(LEX_TESTS)
 
-tar:
+dist:
 	git archive --format=tar --prefix=$(PREFIX)/ $(GITREF) > $(PREFIX).tar
 
 TEMP_OBJECTS=lexer.h lex.yy.c parser.tab.h parser.tab.c parser.output
