@@ -62,6 +62,8 @@ void lexerror(const char *s);
 void unsupported();
 void new_token(int category);
 void handle_include(const char *s);
+void handle_fstream();
+void handle_string();
 bool typename_compare(const char *s, const struct typename *t);
 void typenames_insert(char *s, int category);
 void typenames_insert_tree(struct tree *t, int category);
@@ -92,9 +94,15 @@ int check_identifier(const char *s);
         "<cmath>"       { cmath    = true; BEGIN(INITIAL); }
         "<ctime>"       { ctime    = true; BEGIN(INITIAL); }
         "<cstring>"     { cstring  = true; BEGIN(INITIAL); }
-        "<fstream>"     { fstream  = true; BEGIN(INITIAL); }
+        "<fstream>"     { fstream  = true;
+                          if (usingstd)
+                                  handle_fstream();
+                          BEGIN(INITIAL); }
         "<iostream>"    { iostream = true; BEGIN(INITIAL); }
-        "<string>"      { string   = true; BEGIN(INITIAL); }
+        "<string>"      { string   = true;
+                          if (usingstd)
+                                  handle_string();
+                          BEGIN(INITIAL); }
         "<iomanip>"     { iomanip  = true; BEGIN(INITIAL); }
         \"[^\"]+\"      { handle_include(yytext); BEGIN(INITIAL); }
         "<"[^<>]*">"    { lexerror("Unrecognized system library"); }
@@ -104,14 +112,10 @@ int check_identifier(const char *s);
 
   /* only allowed namespace directive */
 "using namespace std;"  { usingstd = true;
-                          /* add necessary std classes */
-                          if (fstream) {
-                                typenames_insert("ifstream", CLASS_NAME);
-                                typenames_insert("ofstream", CLASS_NAME);
-                          }
+                          if (fstream)
+                                  handle_fstream();
                           if (string)
-                                typenames_insert("string", CLASS_NAME);
-                        }
+                                  handle_string(); }
 
   /* keywords */
 "bool"                  { TOKEN(BOOL); }
@@ -374,6 +378,31 @@ void handle_include(const char *s)
         yypush_buffer_state(yy_create_buffer(yyin, YY_BUF_SIZE));
 
         return;
+}
+
+/*
+ * Insert "ifstream" and "ofstream" into typenames list only if they
+ * are not there already (sufficient to look for either).
+ */
+void handle_fstream()
+{
+        struct list_node *l = list_find(typenames, "ifstream",
+                                        (bool (*)(void *, void *))&typename_compare);
+        if (list_end(l)) {
+                typenames_insert("ifstream", CLASS_NAME);
+                typenames_insert("ofstream", CLASS_NAME);
+        }
+}
+
+/*
+ * Insert "string" into typenames list only if not already there.
+ */
+void handle_string()
+{
+        struct list_node *l = list_find(typenames, "string",
+                                        (bool (*)(void *, void *))&typename_compare);
+        if (list_end(l))
+                typenames_insert("string", CLASS_NAME);
 }
 
 /*
