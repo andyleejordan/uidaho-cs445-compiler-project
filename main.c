@@ -26,7 +26,7 @@ struct list *typenames = NULL;
 char error_buf[256];
 
 void handle_error(char *c);
-char *current_filename();
+void chdirname(char *c);
 void print_tree(struct tree *t, int d);
 void destroy_syntax_tree(void *data, bool leaf);
 
@@ -57,16 +57,18 @@ int main(int argc, char **argv)
 			printf("Reading from argument %d: %s\n", i, argv[i]);
 
 			/* get real path for argument */
-			chdir(cwd);
+			if (chdir(cwd) != 0)
+				handle_error("Could not chdir to start dir");
 			filename = realpath(argv[i], NULL);
 			if (filename == NULL) {
 				sprintf(error_buf, "Could not resolve CLI argument '%s'", argv[i]);
 				handle_error(error_buf);
 			}
-			chdir(dirname(strdup(filename))); /* for relative path lookups */
+			/* for relative path lookups */
+			chdirname(filename);
 
 			/* open file and push buffer for flex */
-			if (!(yyin = fopen(filename, "r"))) {
+			if ((yyin = fopen(filename, "r")) == NULL) {
 				sprintf(error_buf, "Could not open CLI argument '%s'", argv[i]);
 				handle_error(error_buf);
 			}
@@ -105,21 +107,26 @@ void handle_error(char *c)
 }
 
 /*
- * Returns current filename string on top of stack (filenames list),
- * copied and thus safe for potential modification by library
- * functions.
+ * Helper function to safely chdir to dirname of given filename.
  */
-char *current_filename()
+void chdirname(char *c)
 {
-	const char *filename = list_peek(filenames);
+	char *filename = strdup(c);
 	if (filename == NULL)
-		return NULL;
+		handle_error("chdirname");
 
-	char *copy = strdup(filename);
-	if (copy == NULL)
-		handle_error("current_filename()");
+	char *dir = dirname(filename);
+	if (dir == NULL) {
+		sprintf(error_buf, "Could not get dirname of %s", filename);
+		handle_error(error_buf);
+	}
 
-	return copy;
+	if (chdir(dir) != 0) {
+		sprintf(error_buf, "Could not chdir to %s", dir);
+		handle_error(error_buf);
+	}
+
+	free(filename);
 }
 
 /*

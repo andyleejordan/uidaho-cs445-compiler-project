@@ -43,8 +43,10 @@ struct typename {
 
 extern struct list *typenames;
 extern struct list *filenames;
-extern void handle_error(char *c);
-extern char *current_filename();
+extern char* error_buf;
+
+void chdirname(char *c);
+void handle_error(char *c);
 
 struct token *yytoken = NULL;
 
@@ -289,11 +291,9 @@ int check_identifier(const char *s);
                           list_pop(filenames);
 
                           /* if there's another file to process, chdir to it */
-                          char *filename = current_filename();
-                          if (filename) {
-                                  chdir(dirname(filename));
-                                  free(filename);
-                          }
+                          char *filename = list_peek(filenames);
+                          if (filename != NULL)
+                                  chdirname(filename);
 
                           yylineno = 1; /* restart line numbering count */
 
@@ -351,15 +351,16 @@ void handle_include(const char *s)
         size_t len = strlen(s) - 2; /* size without surrounding quotes */
         char *include = calloc(len+1, sizeof(char));
         if (include == NULL)
-                handle_error("handle include buffer");
+                handle_error("handle include");
         strncpy(include, s+1, len); /* copy substring */
         include[len] = '\0';
 
         /* get the real path */
         char *filename = realpath(include, NULL);
         if (filename == NULL) {
-                fprintf(stderr, "Could not resolve path to included file: %s, included from %s\n", include, current_filename());
-                exit(EXIT_FAILURE);
+                sprintf(error_buf, "Could not resolve path to included file: %s, included from %s\n",
+                        include, list_peek(filenames));
+                handle_error(error_buf);
         }
         free(include);
         list_push(filenames, filename);
@@ -367,8 +368,9 @@ void handle_include(const char *s)
         /* open file and push buffer */
         yyin = fopen(filename, "r");
         if (yyin == NULL) {
-                fprintf(stderr, "Could not open included file: %s, include from %s\n", filename, current_filename());
-                exit(EXIT_FAILURE);
+                sprintf(error_buf, "Could not open included file: %s, include from %s\n",
+                        filename, list_peek(filenames));
+                handle_error(error_buf);
         }
         yylineno = 1;
         yypush_buffer_state(yy_create_buffer(yyin, YY_BUF_SIZE));
