@@ -29,8 +29,6 @@ GITREF = $(shell git tag | tail -n 1)
 # files
 SRCS = main.c token.c list.c tree.c lex.yy.c parser.tab.c
 OBJS = $(SRCS:.c=.o)
-TEST_SRCS = test/test.c list.c tree.c
-TEST_OBJS = $(TEST_SRCS:.c=.o)
 TEST_DATA = test/lex/test.c test/lex/test.cpp
 
 # targets
@@ -79,10 +77,10 @@ list.c: list.h
 
 tree.c: tree.h
 
-test/test.c: test/test.h
+test.o: test.h
 
-test-list: test/list.c $(TEST_OBJS)
-	$(CC) $(CFLAGS) $^ -o $@
+test-list: test_list.o list.o test.o
+	$(CC) $(CFLAGS) $(CDEBUG) $^ -o $@
 
-test-tree: test/tree.c $(TEST_OBJS)
-	$(CC) $(CFLAGS) $^ -o $@
+test-tree: test_tree.o tree.o list.o test.o
+	$(CC) $(CFLAGS) $(CDEBUG) $^ -o $@

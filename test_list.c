@@ -12,7 +12,7 @@
 #include <string.h>
 
 #include "test.h"
-#include "../list.h"
+#include "list.h"
 
 void test_sentinel(struct list *list);
 void test_size(struct list *list, size_t size);

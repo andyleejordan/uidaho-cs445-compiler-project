@@ -2,8 +2,8 @@
 #include <string.h>
 
 #include "test.h"
-#include "../tree.h"
-#include "../list.h"
+#include "tree.h"
+#include "list.h"
 
 #define P(name, ...) tree_initv(NULL, #name, __VA_ARGS__)
 
