@@ -71,11 +71,11 @@ lexer.h: lex.yy.c
 lex.yy.c: lexer.l parser.tab.h
 	$(FLEX) $(FLEXFLAGS) $<
 
-token.c: token.h
+token.o: token.h
 
-list.c: list.h
+list.o: list.h
 
-tree.c: tree.h
+tree.o: tree.h list.h
 
 test.o: test.h
 
