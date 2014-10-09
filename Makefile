@@ -1,55 +1,77 @@
-# binaries
-BIN=120++
-TESTS=test-list test-tree
-CC=gcc
-LEX=flex
-YACC=bison
-RM=rm -f
+# Makfile - Creates the 120++ compiler.
+# Copyright (C) 2014 Andrew Schwartzmeyer
+# This file released under the AGPLv3.
 
-# compile options
-CFLAGS=-g -Wall -std=gnu99
-YFLAGS=-Wall --report=all
+SHELL = /bin/sh
 
-# archive options
-GITREF=HEAD
-PREFIX=$(BIN)
+# generated executables
+BIN = 120++
+TESTS = test-list test-tree
+
+# dependencies
+CC = gcc
+FLEX = flex
+BISON = bison
+
+# flags
+CDEBUG = -g
+CFLAGS = -O -Wall -std=gnu99
+LDFLAGS = -g
+FLEXFLAGS =
+BISONFLAGS = -Wall
+
+# git archive option
+GITREF = $(shell git tag | tail -n 1)
+
+# local machine specifics
+-include local.mk
+
+# files
+SRCS = main.c token.c list.c tree.c lex.yy.c parser.tab.c
+OBJS = $(SRCS:.c=.o)
+TEST_SRCS = test/test.c list.c tree.c
+TEST_OBJS = $(TEST_SRCS:.c=.o)
+TEST_DATA = test/lex/test.c test/lex/test.cpp
 
 # targets
-all: $(BIN) $(TESTS)
+.PHONY: all test smoke dist clean distclean
+
+all: $(BIN) test
 
 test: $(TESTS)
+	./test-list
+	./test-tree
 
-test-lex: $(BIN)
-	./$(BIN) $(LEX_TESTS)
+smoke: $(BIN)
+	./$(BIN) $(TEST_DATA)
 
+TAGS: $(SRCS)
+	etags $(SRCS)
 dist:
-	git archive --format=tar --prefix=$(PREFIX)/ $(GITREF) > $(PREFIX).tar
+	git archive --format=tar --prefix=$(GITREF)/ $(GITREF) > $(GITREF).tar
 
-TEMP_OBJECTS=lexer.h lex.yy.c parser.tab.h parser.tab.c parser.output
 clean:
-	$(RM) $(BIN) $(TESTS) $(OBJECTS) $(TEST_OBJECTS) $(TEMP_OBJECTS)
+	rm -f $(BIN) $(TESTS) *.o lexer.h lex.yy.c parser.tab.h parser.tab.c
 
-.PHONY: all test-lex tar clean
+distclean: clean
+	rm -f TAGS *.tar
 
-# source
-SOURCES=main.c token.c list.c tree.c lex.yy.c parser.tab.c
-OBJECTS=$(SOURCES:.c=.o)
-
-$(BIN): $(OBJECTS)
-	$(CC) $^ -o $@
+# sources
+$(BIN): $(OBJS)
+	$(CC) $(LDFLAGS) -o $@ $^
 
 .c.o:
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) $(CDEBUG) -c $< -o $@
 
 main.c: lexer.h parser.tab.h
 
 parser.tab.h parser.tab.c: parser.y
-	$(YACC) $(YFLAGS) $<
+	$(BISON) $(BISONFLAGS) $<
 
 lexer.h: lex.yy.c
 
 lex.yy.c: lexer.l parser.tab.h
-	$(LEX) $<
+	$(FLEX) $(FLEXFLAGS) $<
 
 token.c: token.h
 
@@ -59,16 +81,8 @@ tree.c: tree.h
 
 test/test.c: test/test.h
 
-# tests
-LEX_TESTS=test/lex/test.c test/lex/test.cpp
-
-TEST_SOURCES=test/test.c list.c tree.c
-TEST_OBJECTS=$(TEST_SOURCES:.c=.o)
-
-test-list: test/list.c $(TEST_OBJECTS)
+test-list: test/list.c $(TEST_OBJS)
 	$(CC) $(CFLAGS) $^ -o $@
-	./$@
 
-test-tree: test/tree.c $(TEST_OBJECTS)
+test-tree: test/tree.c $(TEST_OBJS)
 	$(CC) $(CFLAGS) $^ -o $@
-	./$@
