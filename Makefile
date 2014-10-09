@@ -40,7 +40,7 @@ test: $(TESTS)
 	./test-list
 	./test-tree
 
-smoke: $(BIN)
+smoke: all
 	./$(BIN) $(TEST_DATA)
 
 TAGS: $(SRCS)
@@ -59,7 +59,7 @@ $(BIN): $(OBJS)
 	$(CC) $(LDFLAGS) -o $@ $^
 
 .c.o:
-	$(CC) $(CFLAGS) $(CDEBUG) -c $< -o $@
+	$(CC) $(CFLAGS) $(CDEBUG) -o $@ -c $<
 
 main.c: lexer.h parser.tab.h
 
@@ -80,7 +80,7 @@ tree.o: tree.h list.h
 test.o: test.h
 
 test-list: test_list.o list.o test.o
-	$(CC) $(CFLAGS) $(CDEBUG) $^ -o $@
+	$(CC) $(CFLAGS) $(CDEBUG) -o $@ $^
 
 test-tree: test_tree.o tree.o list.o test.o
-	$(CC) $(CFLAGS) $(CDEBUG) $^ -o $@
+	$(CC) $(CFLAGS) $(CDEBUG) -o $@ $^
