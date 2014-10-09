@@ -62,6 +62,7 @@ void typenames_insert_tree(struct tree *t, int category);
 
 %require "3.0.2"
 %defines
+%expect 21
 
 %union {
         struct tree *t;

@@ -15,10 +15,10 @@ BISON = bison
 
 # flags
 CDEBUG = -g
-CFLAGS = -O -Wall -std=gnu99
+CFLAGS = -O -Wall -Werror -std=gnu99
 LDFLAGS = -g
 FLEXFLAGS =
-BISONFLAGS = -Wall
+BISONFLAGS = -Wall -Werror
 
 # git archive option
 GITREF = $(shell git tag | tail -n 1)
