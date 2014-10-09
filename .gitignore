@@ -1,9 +1,8 @@
 /.dir-locals.el
+/local.mk
 /120++
 /test-list
 /test-tree
-/test-list.dSYM/
-/test-tree.dSYM/
 /lexer.h
 /lex.yy.c
 /parser.output
