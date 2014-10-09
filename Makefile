@@ -29,7 +29,7 @@ GITREF = $(shell git tag | tail -n 1)
 # files
 SRCS = main.c token.c list.c tree.c lex.yy.c parser.tab.c
 OBJS = $(SRCS:.c=.o)
-TEST_DATA = test/lex/test.c test/lex/test.cpp
+TEST_DATA = test/pass/test.c test/pass/test.cpp
 
 # targets
 .PHONY: all test smoke dist clean distclean
