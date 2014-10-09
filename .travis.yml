@@ -1,4 +1,9 @@
 language: c
-before_install: sudo apt-get update -qq
-install: sudo apt-get install -y flex
-script: make && make test && make test-lex > /dev/null
+before_install:
+  - sudo apt-get update -qq
+  - wget http://ftp.gnu.org/gnu/bison/bison-3.0.2.tar.xz
+  - tar xf bison-3.0.2.tar.xz
+install: 
+  - sudo apt-get install -y flex
+  - cd bison-3.0.2 && ./configure && make && sudo make install && cd ..
+script: make smoke
