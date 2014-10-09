@@ -60,7 +60,7 @@ void typenames_insert_tree(struct tree *t, int category);
 
 %}
 
-%require "3.0.2"
+%require "3.0"
 %defines
 %expect 21
 
