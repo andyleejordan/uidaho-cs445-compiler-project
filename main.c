@@ -1,5 +1,5 @@
 /*
- * main.c - Accepts files for the 120++ lexical analyzer.
+ * main.c - Accepts files for the 120++ compiler.
  *
  * Copyright (C) 2014 Andrew Schwartzmeyer
  *
