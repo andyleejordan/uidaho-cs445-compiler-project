@@ -359,7 +359,7 @@ void handle_include(const char *s)
         char *filename = realpath(include, NULL);
         if (filename == NULL) {
                 sprintf(error_buf, "Could not resolve path to included file: %s, included from %s\n",
-                        include, list_peek(filenames));
+                        include, (char *)list_peek(filenames));
                 handle_error(error_buf);
         }
         free(include);
@@ -369,7 +369,7 @@ void handle_include(const char *s)
         yyin = fopen(filename, "r");
         if (yyin == NULL) {
                 sprintf(error_buf, "Could not open included file: %s, include from %s\n",
-                        filename, list_peek(filenames));
+                        filename, (char *)list_peek(filenames));
                 handle_error(error_buf);
         }
         yylineno = 1;
