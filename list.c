@@ -186,6 +186,19 @@ struct list_node *list_push_front(struct list *self, void *data)
 	return n;
 }
 
+void *list_node_unlink(struct list_node *n)
+{
+	void *d = n->data;
+
+	struct list_node *next = n->next;
+	struct list_node *prev = n->prev;
+
+	next->prev = prev;
+	prev->next = next;
+
+	return d;
+}
+
 void *list_pop(struct list *self)
 {
 	if (self == NULL) {
@@ -198,13 +211,8 @@ void *list_pop(struct list *self)
 		return NULL;
 	}
 
-	void *d = n->data;
-
-	self->sentinel->prev = n->prev;
-	n->prev->next = self->sentinel;
-
+	void *d = list_node_unlink(n);
 	free(n);
-
 	--self->size;
 
 	return d;
@@ -221,13 +229,8 @@ void *list_pop_front(struct list *self)
 	if (list_end(n))
 		return NULL;
 
-	void *d = n->data;
-
-	self->sentinel->next = n->next;
-	n->next->prev = self->sentinel;
-
+	void *d = list_node_unlink(n);
 	free(n);
-
 	--self->size;
 
 	return d;
