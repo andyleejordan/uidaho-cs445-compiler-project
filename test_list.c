@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
 	running("list");
 
 	testing("initialization");
-	struct list *list = list_init();
+	struct list *list = list_new();
 	assert(list != NULL);
 	test_sentinel(list);
 	test_empty(list);
@@ -81,7 +81,7 @@ int main(int argc, char *argv[])
 	test_iter_backward(list);
 	printf("\n");
 
-	list_destroy(list, &free);
+	list_free(list, &free);
 
 	return status;
 }

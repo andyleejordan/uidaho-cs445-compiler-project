@@ -36,13 +36,13 @@ int main(int argc, char **argv)
 	if (cwd == NULL)
 		handle_error("getcwd");
 
-	filenames = list_init();
+	filenames = list_new();
 	if (filenames == NULL)
 		handle_error("main filenames");
 
 	/* setup lexer and parse each argument (or stdin) as a new 'program' */
 	for (int i = 1; i <= argc; ++i) {
-		typenames = list_init();
+		typenames = list_new();
 		if (typenames == NULL)
 			handle_error("main typenames");
 
@@ -86,12 +86,12 @@ int main(int argc, char **argv)
 			return 2;
 
 		/* clean up */
-		tree_destroy(yyprogram, &destroy_syntax_tree);
+		tree_free(yyprogram, &destroy_syntax_tree);
 		yylex_destroy();
-		list_destroy(typenames, NULL);
+		list_free(typenames, NULL);
 	}
 
-	list_destroy(filenames, NULL);
+	list_free(filenames, NULL);
 
 	return EXIT_SUCCESS;
 }
@@ -156,5 +156,5 @@ void print_tree(struct tree *t, int d)
 void destroy_syntax_tree(void *data, bool leaf)
 {
 	if (leaf)
-		token_destroy(data);
+		token_free(data);
 }

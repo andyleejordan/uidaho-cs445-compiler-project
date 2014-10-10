@@ -19,15 +19,15 @@
  * Initializes tree with reference to parent and data, and an empty
  * (but initialized) list of children.
  */
-struct tree *tree_init(struct tree *parent, void *data)
+struct tree *tree_new(struct tree *parent, void *data)
 {
 	struct tree *t = malloc(sizeof(*t));
 	if (t == NULL) {
-		perror("tree_init()");
+		perror("tree_new()");
 		return NULL;
 	}
 
-	struct list *l = list_init();
+	struct list *l = list_new();
 	if (l == NULL) {
 		free(t);
 		return NULL;
@@ -45,12 +45,12 @@ struct tree *tree_init(struct tree *parent, void *data)
  * count number of following struct tree * as children. If given child
  * is NULL it is not added.
  */
-struct tree *tree_initv(struct tree *parent, void *data, int count, ...)
+struct tree *tree_new_group(struct tree *parent, void *data, int count, ...)
 {
 	va_list ap;
 	va_start(ap, count);
 
-	struct tree *t = tree_init(parent, data);
+	struct tree *t = tree_new(parent, data);
 
 	for (int i = 0; i < count; ++i) {
 		struct tree *c = va_arg(ap, void *);
@@ -74,7 +74,7 @@ size_t tree_size(struct tree *self)
 
 	size_t size = 1;
 
-	const struct list_node *iter = list_head(self->children);
+	struct list_node *iter = list_head(self->children);
 	while (!list_end(iter)) {
 		size += tree_size(iter->data);
 		iter = iter->next;
@@ -87,16 +87,16 @@ size_t tree_size(struct tree *self)
  * Pre-order traversal of tree. Takes a function and applies it to
  * each subtree.
  */
-void tree_preorder(struct tree *self, int depth, void (*f)(struct tree *t, int d))
+void tree_preorder(struct tree *self, int d, void (*f)(struct tree *t, int d))
 {
 	if (self == NULL)
 		return;
 
-	f(self, depth);
+	f(self, d);
 
-	const struct list_node *iter = list_head(self->children);
+	struct list_node *iter = list_head(self->children);
 	while (!list_end(iter)) {
-		tree_preorder(iter->data, depth+1, f);
+		tree_preorder(iter->data, d+1, f);
 		iter = iter->next;
 	}
 }
@@ -108,7 +108,10 @@ void tree_preorder(struct tree *self, int depth, void (*f)(struct tree *t, int d
  */
 struct tree *tree_push(struct tree *self, void *data)
 {
-	struct tree *child = tree_init(self, data);
+	if (self == NULL)
+		return NULL;
+
+	struct tree *child = tree_new(self, data);
 	if (child == NULL) {
 		perror("tree_push()");
 		return NULL;

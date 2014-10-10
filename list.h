@@ -27,20 +27,20 @@ struct list
 	size_t size;
 };
 
-struct list *list_init();
-void list_destroy(struct list *self, void (*destroy)(void *data));
-size_t list_size(const struct list *self);
-bool list_empty(const struct list *self);
-bool list_end(const struct list_node *n);
-struct list_node *list_head(const struct list *self);
-struct list_node *list_tail(const struct list *self);
-struct list_node *list_find(const struct list *self, void *data,
+struct list *list_new();
+void list_free(struct list *self, void (*f)(void *data));
+size_t list_size(struct list *self);
+bool list_empty(struct list *self);
+bool list_end(struct list_node *n);
+struct list_node *list_head(struct list *self);
+struct list_node *list_tail(struct list *self);
+struct list_node *list_find(struct list *self, void *data,
                             bool (*compare)(void *a, void *b));
 struct list *list_push(struct list *self, void *data);
 struct list *list_push_front(struct list *self, void *data);
 void *list_pop(struct list *self);
 void *list_pop_front(struct list *self);
-void *list_peek(const struct list *self);
-void *list_peek_front(const struct list *self);
+void *list_peek(struct list *self);
+void *list_peek_front(struct list *self);
 
 #endif /* LIST_H */

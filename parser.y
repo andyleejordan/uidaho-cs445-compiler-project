@@ -55,7 +55,7 @@ extern struct list *filenames;
 void yyerror(const char *s);
 void typenames_insert_tree(struct tree *t, int category);
 
-#define P(name, ...) tree_initv(NULL, #name, __VA_ARGS__)
+#define P(name, ...) tree_new_group(NULL, #name, __VA_ARGS__)
 #define E() NULL
 
 %}

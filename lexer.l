@@ -33,8 +33,8 @@ IS       (u|U|l|L)*
 #include "parser.tab.h"
 
 #define TOKEN(name) do { new_token(name); return name; } while(0)
-#define YYAPPENDTEXT() token_append_text(yytoken, yytext)
-#define YYAPPENDCHAR(character) token_append_sval_char(yytoken, character)
+#define YYAPPENDTEXT() token_push_text(yytoken, yytext)
+#define YYAPPENDCHAR(character) token_push_sval_char(yytoken, character)
 
 struct typename {
         char *name;
@@ -225,7 +225,7 @@ int check_identifier(const char *s);
         "\\v"           { YYAPPENDCHAR('\v'); YYAPPENDTEXT(); }
         "\\0"           { YYAPPENDCHAR('\0'); YYAPPENDTEXT(); }
         "\\\\"          { YYAPPENDCHAR('\\'); YYAPPENDTEXT(); }
-        [^\\\"\n]+      { token_append_sval_string(yytoken, yytext);
+        [^\\\"\n]+      { token_push_sval_string(yytoken, yytext);
                           YYAPPENDTEXT(); }
         \n              { lexerror("Unexpected newline in string literal"); }
         .               { lexerror("Unrecognized token in string literal"); }
@@ -333,9 +333,9 @@ void unsupported()
  */
 void new_token(int category)
 {
-        yytoken = token_create(category, yylineno, yytext,
-                                       (const char *)list_peek(filenames));
-        yylval.t = tree_init(NULL, yytoken);
+        yytoken = token_new(category, yylineno, yytext,
+                            (const char *)list_peek(filenames));
+        yylval.t = tree_new(NULL, yytoken);
 }
 
 /*
@@ -359,7 +359,7 @@ void handle_include(const char *s)
         char *filename = realpath(include, NULL);
         if (filename == NULL) {
                 sprintf(error_buf, "Could not resolve path to included file: %s, included from %s\n",
-                        include, (char *)list_peek(filenames));
+                        include, (const char *)list_peek(filenames));
                 handle_error(error_buf);
         }
         free(include);
@@ -369,7 +369,7 @@ void handle_include(const char *s)
         yyin = fopen(filename, "r");
         if (yyin == NULL) {
                 sprintf(error_buf, "Could not open included file: %s, include from %s\n",
-                        filename, (char *)list_peek(filenames));
+                        filename, (const char *)list_peek(filenames));
                 handle_error(error_buf);
         }
         yylineno = 1;

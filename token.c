@@ -21,7 +21,7 @@ extern void handle_error(char *c);
 size_t token_sval_size = 0;
 
 /* malloc token and assign values */
-struct token *token_create(int category, int lineno,
+struct token *token_new(int category, int lineno,
                            const char *text, const char* filename)
 {
 	struct token *t = malloc(sizeof(*t));
@@ -51,7 +51,7 @@ struct token *token_create(int category, int lineno,
 }
 
 /* free internal values */
-void token_destroy(struct token *t)
+void token_free(struct token *t)
 {
 	free(t->text);
 	free(t->filename);
@@ -83,7 +83,7 @@ void token_realloc_sval(struct token *t)
 /*
  * append a single char to sval (used for processing escape codes)
  */
-void token_append_sval_char(struct token *t, char c)
+void token_push_sval_char(struct token *t, char c)
 {
 	++t->ssize;
 	token_realloc_sval(t);
@@ -97,7 +97,7 @@ void token_append_sval_char(struct token *t, char c)
  * guaranteed to be a null-terminated string, and may very well have
  * embedded null characters
  */
-void token_append_sval_string(struct token *t, const char *s)
+void token_push_sval_string(struct token *t, const char *s)
 {
 	size_t end = t->ssize;
 	t->ssize += strlen(s);
@@ -117,7 +117,7 @@ void token_finish_sval(struct token *t)
 {
 	token_sval_size = 0;
 	++t->ssize;
-	token_append_sval_char(t, '\0');
+	token_push_sval_char(t, '\0');
 	t->sval = realloc(t->sval, t->ssize);
 	if (t->sval == NULL)
 		handle_error("finish sval");
@@ -138,7 +138,7 @@ void token_realloc_text(struct token *t, const char *s)
  * append string to text field (these are actual null terminated
  * strings, so the issues with sval do not apply)
  */
-void token_append_text(struct token *t, const char* s)
+void token_push_text(struct token *t, const char* s)
 {
 	token_realloc_text(t, s);
 	strcat(t->text, s);

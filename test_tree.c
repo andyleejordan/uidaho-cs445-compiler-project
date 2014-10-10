@@ -5,14 +5,14 @@
 #include "tree.h"
 #include "list.h"
 
-#define P(name, ...) tree_initv(NULL, #name, __VA_ARGS__)
+#define P(name, ...) tree_new_group(NULL, #name, __VA_ARGS__)
 
 void print_tree(struct tree *t, int d);
 void destroy_tree(void *data, bool leaf);
 
 void test_size(struct tree *tree, size_t size);
-void test_init(struct tree *tree, struct tree *parent, void *data);
-void test_initv(struct tree *t);
+void test_new(struct tree *tree, struct tree *parent, void *data);
+void test_new_group(struct tree *t);
 
 int main(int argc, char *argv[])
 {
@@ -20,27 +20,27 @@ int main(int argc, char *argv[])
 
 	testing("initialization");
 	char *a = strdup("+");
-	struct tree *root = tree_init(NULL, a);
-	test_init(root, NULL, a);
+	struct tree *root = tree_new(NULL, a);
+	test_new(root, NULL, a);
 	test_size(root, 1);
 
 	testing("push depth 1");
 	char *b = strdup("1");
 	struct tree *child1 = tree_push(root, b);
-	test_init(child1, root, b);
+	test_new(child1, root, b);
 	test_size(root, 2);
 	char *c = strdup("*");
 	struct tree *child2 = tree_push(root, c);
-	test_init(child2, root, c);
+	test_new(child2, root, c);
 	test_size(root, 3);
 
 	testing("push depth 2");
 	char *d = strdup("2");
 	struct tree *child3 = tree_push(child2, d);
-	test_init(child3, child2, d);
+	test_new(child3, child2, d);
 	char *e = strdup("3");
 	struct tree *child4 = tree_push(child2, e);
-	test_init(child4, child2, e);
+	test_new(child4, child2, e);
 	test_size(child2, 3);
 	test_size(root, 5);
 
@@ -48,15 +48,15 @@ int main(int argc, char *argv[])
 	tree_preorder(root, 0, &print_tree);
 	printf("\n");
 
-	tree_destroy(root, &destroy_tree);
+	tree_free(root, &destroy_tree);
 
 	testing("variadic push 2 args");
-	struct tree *v = tree_initv(NULL, "root", 2, tree_init(NULL, "foo"), tree_init(NULL, "bar"));
-	test_initv(v);
+	struct tree *v = tree_new_group(NULL, "root", 2, tree_new(NULL, "foo"), tree_new(NULL, "bar"));
+	test_new_group(v);
 
 	testing("macro p push 2 args");
-	struct tree *p = P(root, 2, tree_init(NULL, "foo"), tree_init(NULL, "bar"));
-	test_initv(p);
+	struct tree *p = P(root, 2, tree_new(NULL, "foo"), tree_new(NULL, "bar"));
+	test_new_group(p);
 
 	return status;
 }
@@ -69,7 +69,7 @@ void test_size(struct tree *tree, size_t size)
 	}
 }
 
-void test_init(struct tree *tree, struct tree *parent, void *data)
+void test_new(struct tree *tree, struct tree *parent, void *data)
 {
 	test_size(tree, 1);
 
@@ -83,7 +83,7 @@ void test_init(struct tree *tree, struct tree *parent, void *data)
 		failure("new children list wasn't empty");
 }
 
-void test_initv(struct tree *t)
+void test_new_group(struct tree *t)
 {
 	test_size(t, 3);
 

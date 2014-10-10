@@ -21,11 +21,11 @@ struct tree {
 	struct list *children;
 };
 
-struct tree *tree_init(struct tree *parent, void *data);
-struct tree *tree_initv(struct tree *parent, void *data, int count, ...);
-void tree_destroy(struct tree *self, void (*destroy)(void *data, bool leaf));
+struct tree *tree_new(struct tree *parent, void *data);
+struct tree *tree_new_group(struct tree *parent, void *data, int count, ...);
+void tree_free(struct tree *self, void (*f)(void *data, bool leaf));
 size_t tree_size(struct tree *self);
-void tree_preorder(struct tree *self, int depth, void (*f)(struct tree *t, int d));
 struct tree *tree_push(struct tree *self, void *data);
+void tree_preorder(struct tree *self, int d, void (*f)(struct tree *t, int d));
 
 #endif /* TREE_H */
