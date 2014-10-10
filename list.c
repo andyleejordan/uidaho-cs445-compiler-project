@@ -145,8 +145,9 @@ struct list_node *list_find(struct list *self, void *data,
 /*
  * given (a c), links b leaving (a b c)
  */
-void list_node_link(struct list_node *a, struct list_node *b)
+void list_node_link(struct list *self, struct list_node *a, struct list_node *b)
 {
+	++self->size;
 	struct list_node *c = a->next;
 
 	a->next = b;
@@ -178,8 +179,7 @@ struct list_node *list_insert(struct list *self, int pos, void *data)
 			iter = iter->prev;
 	}
 
-	list_node_link(iter, n);
-	++self->size;
+	list_node_link(self, iter, n);
 
 	return n;
 }
@@ -205,8 +205,9 @@ struct list_node *list_push_front(struct list *self, void *data)
 /*
  * given (a b c), unlinks b leaving (a c)
  */
-void *list_node_unlink(struct list_node *b)
+void *list_node_unlink(struct list *self, struct list_node *b)
 {
+	--self->size;
 	void *data = b->data;
 
 	struct list_node *a = b->prev;
@@ -230,9 +231,8 @@ void *list_pop(struct list *self)
 		return NULL;
 	}
 
-	void *d = list_node_unlink(n);
+	void *d = list_node_unlink(self, n);
 	free(n);
-	--self->size;
 
 	return d;
 }
@@ -248,9 +248,8 @@ void *list_pop_front(struct list *self)
 	if (list_end(n))
 		return NULL;
 
-	void *d = list_node_unlink(n);
+	void *d = list_node_unlink(self, n);
 	free(n);
-	--self->size;
 
 	return d;
 }
@@ -265,7 +264,7 @@ void *list_peek(struct list *self)
 	if (list_empty(self))
 		return NULL;
 
-	return self->sentinel->prev->data;
+	return list_tail(self)->data;
 }
 
 void *list_peek_front(struct list *self)
@@ -278,5 +277,5 @@ void *list_peek_front(struct list *self)
 	if (list_empty(self))
 		return NULL;
 
-	return self->sentinel->next->data;
+	return list_head(self)->data;
 }
