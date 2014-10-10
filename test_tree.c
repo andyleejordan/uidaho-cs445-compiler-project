@@ -14,11 +14,11 @@ void test_size(struct tree *tree, size_t size);
 void test_new(struct tree *tree, struct tree *parent, void *data);
 void test_new_group(struct tree *t);
 
-int main(int argc, char *argv[])
+int main()
 {
 	running("tree");
 
-	testing("initialization");
+	testing("new");
 	char *a = strdup("+");
 	struct tree *root = tree_new(NULL, a);
 	test_new(root, NULL, a);

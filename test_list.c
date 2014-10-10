@@ -14,6 +14,7 @@
 #include "test.h"
 #include "list.h"
 
+void test_new(struct list *list);
 void test_sentinel(struct list *list);
 void test_size(struct list *list, size_t size);
 void test_empty(struct list *list);
@@ -27,13 +28,13 @@ void test_not_find_data(struct list *list, char* data);
 void test_iter_forward(struct list *list);
 void test_iter_backward(struct list *list);
 
-int main(int argc, char *argv[])
+int main()
 {
 	running("list");
 
-	testing("initialization");
+	testing("new");
 	struct list *list = list_new();
-	assert(list != NULL);
+	test_new(list);
 	test_sentinel(list);
 	test_empty(list);
 	test_empty_sentinel(list);
@@ -91,6 +92,12 @@ int main(int argc, char *argv[])
 	list_free(list, &free);
 
 	return status;
+}
+
+void test_new(struct list *list)
+{
+	if (list == NULL)
+		failure("list should not have been null");
 }
 
 void test_sentinel(struct list *list)
