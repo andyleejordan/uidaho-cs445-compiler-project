@@ -7,7 +7,6 @@
 - =struct list *list_concat=
 - =list_split=
 - =list_sort=
-- =list_contains=
 ** TODO Expand tree library
 - =tree_push_subtree=
 ** TODO Add hash table library (using TDD)

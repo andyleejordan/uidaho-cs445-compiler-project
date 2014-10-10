@@ -114,21 +114,6 @@ struct list_node *list_tail(struct list *self)
 }
 
 /*
- * Use compare function to return found node, else returns sentinel.
- */
-struct list_node *list_find(struct list *self, void *data,
-                            bool (*compare)(void *a, void *b)) {
-	struct list_node *iter = list_head(self);
-	while (!list_end(iter)) {
-		if (compare(data, iter->data))
-			return iter;
-		iter = iter->next;
-	}
-
-	return iter;
-}
-
-/*
  * Returns node at pos in O(n).
  *
  * Implemented like deque and iterates from the closest end.
@@ -155,6 +140,28 @@ struct list_node *list_index(struct list *self, int pos)
 
 	return iter;
 }
+
+/*
+ * Use compare function to return found node, else returns sentinel.
+ */
+struct list_node *list_find(struct list *self, void *data,
+                            bool (*compare)(void *a, void *b)) {
+	struct list_node *iter = list_head(self);
+	while (!list_end(iter)) {
+		if (compare(data, iter->data))
+			return iter;
+		iter = iter->next;
+	}
+
+	return iter;
+}
+
+bool list_contains(struct list *self, void *data,
+                   bool (*compare)(void *a, void*b))
+{
+	return !list_end(list_find(self, data, compare));
+}
+
 /*
  * given (a _ c), links b (new) leaving (a b c)
  */

@@ -427,9 +427,8 @@ bool typename_compare(const char *s, const struct typename *t)
  */
 void typenames_insert(char *s, int category)
 {
-        struct list_node *l = list_find(typenames, (void *)s,
-                                        (bool (*)(void *, void *))&typename_compare);
-        if (!list_end(l)) {
+        if (list_contains(typenames, (void *)s,
+                          (bool (*)(void *, void *))&typename_compare)) {
                 lexerror("token previously declared as identifier");
         }
         struct typename *type = malloc(sizeof(*type));
@@ -458,8 +457,7 @@ int check_identifier(const char *s)
         if (list_end(l)) {
                 prepare_token(IDENTIFIER);
                 return IDENTIFIER;
-        }
-        else {
+        } else {
                 int category = ((struct typename *)l->data)->category;
                 prepare_token(category);
                 return category;
