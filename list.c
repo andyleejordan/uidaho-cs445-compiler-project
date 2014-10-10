@@ -142,6 +142,19 @@ struct list_node *list_find(struct list *self, void *data,
 	return iter;
 }
 
+/*
+ * (cons a b) such that a -> b (-> c)
+ */
+void list_node_link(struct list_node *a, struct list_node *b)
+{
+	struct list_node *c = a->next;
+
+	a->next = b;
+	b->prev = a;
+	b->next = c;
+	c->prev = b;
+}
+
 struct list_node *list_push(struct list *self, void *data)
 {
 	if (self == NULL) {
@@ -153,12 +166,7 @@ struct list_node *list_push(struct list *self, void *data)
 	if (n == NULL)
 		return NULL;
 
-	n->prev = self->sentinel->prev;
-	n->prev->next = n;
-
-	n->next = self->sentinel;
-	self->sentinel->prev = n;
-
+	list_node_link(list_tail(self), n);
 	++self->size;
 
 	return n;
@@ -175,12 +183,7 @@ struct list_node *list_push_front(struct list *self, void *data)
 	if (n == NULL)
 		return NULL;
 
-	n->next = self->sentinel->next;
-	n->next->prev = n;
-
-	n->prev = self->sentinel;
-	self->sentinel->next = n;
-
+	list_node_link(self->sentinel, n);
 	++self->size;
 
 	return n;
