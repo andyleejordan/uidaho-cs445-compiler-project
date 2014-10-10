@@ -38,6 +38,7 @@ struct list_node *list_head(struct list *self);
 struct list_node *list_tail(struct list *self);
 struct list_node *list_find(struct list *self, void *data,
                             bool (*compare)(void *a, void *b));
+struct list_node *list_index(struct list *self, int pos);
 
 void list_node_link(struct list *self, struct list_node *a, struct list_node *b);
 struct list_node *list_insert(struct list *self, int pos, void *data);

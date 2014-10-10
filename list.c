@@ -139,9 +139,27 @@ struct list_node *list_find(struct list *self, void *data,
 			return iter;
 		iter = iter->next;
 	}
+
 	return iter;
 }
 
+/*
+ * Returns node at pos in O(n).
+ */
+struct list_node *list_index(struct list *self, int pos)
+{
+	struct list_node *iter = self->sentinel;
+
+	if (pos > 0) {
+		for (int i = 0; i < pos; ++i)
+			iter = iter->next;
+	} else if (pos < 0) {
+		for (int i = 0; i > pos; --i)
+			iter = iter->prev;
+	}
+
+	return iter;
+}
 /*
  * given (a c), links b leaving (a b c)
  */
@@ -168,20 +186,12 @@ struct list_node *list_insert(struct list *self, int pos, void *data)
 		return NULL;
 	}
 
-	struct list_node *n = list_node_new(data);
+	struct list_node *a = list_index(self, pos);
+	struct list_node *b = list_node_new(data);
 
-	struct list_node *iter = self->sentinel;
-	if (pos > 0) {
-		for (int i = 0; i < pos; ++i)
-			iter = iter->next;
-	} else if (pos < 0) {
-		for (int i = 0; i > pos; --i)
-			iter = iter->prev;
-	}
+	list_node_link(self, a, b);
 
-	list_node_link(self, iter, n);
-
-	return n;
+	return b;
 }
 
 /*
