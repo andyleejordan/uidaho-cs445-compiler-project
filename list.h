@@ -36,8 +36,8 @@ struct list_node *list_head(struct list *self);
 struct list_node *list_tail(struct list *self);
 struct list_node *list_find(struct list *self, void *data,
                             bool (*compare)(void *a, void *b));
-struct list *list_push(struct list *self, void *data);
-struct list *list_push_front(struct list *self, void *data);
+struct list_node *list_push(struct list *self, void *data);
+struct list_node *list_push_front(struct list *self, void *data);
 void *list_pop(struct list *self);
 void *list_pop_front(struct list *self);
 void *list_peek(struct list *self);

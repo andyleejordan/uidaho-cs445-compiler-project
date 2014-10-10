@@ -142,7 +142,7 @@ struct list_node *list_find(struct list *self, void *data,
 	return iter;
 }
 
-struct list *list_push(struct list *self, void *data)
+struct list_node *list_push(struct list *self, void *data)
 {
 	if (self == NULL) {
 		fprintf(stderr, "list_push(): self was null\n");
@@ -163,10 +163,10 @@ struct list *list_push(struct list *self, void *data)
 
 	++self->size;
 
-	return self;
+	return n;
 }
 
-struct list *list_push_front(struct list *self, void *data)
+struct list_node *list_push_front(struct list *self, void *data)
 {
 	if (self == NULL) {
 		fprintf(stderr, "list_push_front(): self was null\n");
@@ -187,7 +187,7 @@ struct list *list_push_front(struct list *self, void *data)
 
 	++self->size;
 
-	return self;
+	return n;
 }
 
 void *list_pop(struct list *self)
