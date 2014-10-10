@@ -143,7 +143,7 @@ struct list_node *list_find(struct list *self, void *data,
 }
 
 /*
- * (cons a b) such that a -> b (-> c)
+ * given (a c), links b leaving (a b c)
  */
 void list_node_link(struct list_node *a, struct list_node *b)
 {
@@ -189,17 +189,20 @@ struct list_node *list_push_front(struct list *self, void *data)
 	return n;
 }
 
-void *list_node_unlink(struct list_node *n)
+/*
+ * given (a b c), unlinks b leaving (a c)
+ */
+void *list_node_unlink(struct list_node *b)
 {
-	void *d = n->data;
+	void *data = b->data;
 
-	struct list_node *next = n->next;
-	struct list_node *prev = n->prev;
+	struct list_node *a = b->prev;
+	struct list_node *c = b->next;
 
-	next->prev = prev;
-	prev->next = next;
+	a->next = c;
+	c->prev = a;
 
-	return d;
+	return data;
 }
 
 void *list_pop(struct list *self)
