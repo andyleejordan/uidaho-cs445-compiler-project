@@ -155,37 +155,50 @@ void list_node_link(struct list_node *a, struct list_node *b)
 	c->prev = b;
 }
 
-struct list_node *list_push(struct list *self, void *data)
+/*
+ * Inserts data it at pos in O(n).
+ *
+ * Position 0 inserts at the front; n or -1 inserts at the end.
+ */
+struct list_node *list_insert(struct list *self, int pos, void *data)
 {
 	if (self == NULL) {
-		fprintf(stderr, "list_push(): self was null\n");
+		fprintf(stderr, "list_insert(): self was null\n");
 		return NULL;
 	}
 
 	struct list_node *n = list_node_new(data);
-	if (n == NULL)
-		return NULL;
 
-	list_node_link(list_tail(self), n);
+	struct list_node *iter = self->sentinel;
+	if (pos > 0) {
+		for (int i = 0; i < pos; ++i)
+			iter = iter->next;
+	} else if (pos < 0) {
+		for (int i = 0; i > pos; --i)
+			iter = iter->prev;
+	}
+
+	list_node_link(iter, n);
 	++self->size;
 
 	return n;
 }
 
+/*
+ * Pushes data to end of list in O(1).
+ */
+struct list_node *list_push(struct list *self, void *data)
+{
+	struct list_node *n = list_insert(self, -1, data);
+	return n;
+}
+
+/*
+ * Pushes data to front of list in O(1);
+ */
 struct list_node *list_push_front(struct list *self, void *data)
 {
-	if (self == NULL) {
-		fprintf(stderr, "list_push_front(): self was null\n");
-		return NULL;
-	}
-
-	struct list_node *n = list_node_new(data);
-	if (n == NULL)
-		return NULL;
-
-	list_node_link(self->sentinel, n);
-	++self->size;
-
+	struct list_node *n = list_insert(self, 0, data);
 	return n;
 }
 
