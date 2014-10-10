@@ -10,7 +10,7 @@
 #ifndef TOKEN_H
 #define TOKEN_H
 
-#include <stdlib.h>
+#include <stddef.h>
 
 /* interface from Dr. Jeffery */
 struct token
@@ -26,7 +26,7 @@ struct token
 };
 
 struct token *token_new(int category, int lineno,
-                           const char *text, const char* filename);
+                        const char *text, const char* filename);
 void token_free(struct token *t);
 void token_push_sval_char(struct token *t, char c);
 void token_push_sval_string(struct token *t, const char *s);

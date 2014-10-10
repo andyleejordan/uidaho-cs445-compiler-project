@@ -10,7 +10,7 @@
 #ifndef LIST_H
 #define LIST_H
 
-#include <stdlib.h>
+#include <stddef.h>
 #include <stdbool.h>
 
 struct list_node
