@@ -39,14 +39,21 @@ int main(int argc, char *argv[])
 	test_empty_sentinel(list);
 	test_empty_ends(list);
 
-	testing("push");
+	testing("push A");
 	char *a = strdup("A");
 	list_push(list, a);
+
+	testing("head and tail");
 	test_head_data(list, a);
 	test_tail_data(list, a);
+
+	testing("find A");
 	test_find_data(list, "A");
+
+	testing("not find B");
 	test_not_find_data(list, "B");
 
+	testing("push B");
 	char *b = strdup("B");
 	list_push(list, b);
 	test_tail_data(list, b);

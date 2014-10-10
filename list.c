@@ -68,6 +68,7 @@ void list_free(struct list *self, void (*f)(void *data))
 		if (f != NULL)
 			f(d);
 	}
+
 	free(self->sentinel);
 	free(self);
 }
