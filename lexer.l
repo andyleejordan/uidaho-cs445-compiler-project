@@ -32,24 +32,23 @@ IS       (u|U|l|L)*
 #include "token.h"
 #include "parser.tab.h"
 
-#define TOKEN(name) do { new_token(name); return name; } while(0)
+/* syntactic action helpers */
+#define TOKEN(name) do { prepare_token(name); return name; } while(0)
 #define YYAPPENDTEXT() token_push_text(yytoken, yytext)
 #define YYAPPENDCHAR(character) token_push_sval_char(yytoken, character)
 
-struct typename {
-        char *name;
-        int category;
-};
-
-extern struct list *typenames;
+/* from main */
 extern struct list *filenames;
 extern char* error_buf;
 
 void chdirname(char *c);
 void handle_error(char *c);
 
+/* creation of tokens */
 struct token *yytoken = NULL;
+void prepare_token(int category);
 
+/* handle #include libraries */
 bool usingstd = false;
 bool cstdlib  = false;
 bool cmath    = false;
@@ -60,16 +59,27 @@ bool iostream = false;
 bool string   = false;
 bool iomanip  = false;
 
-void lexerror(const char *s);
-void unsupported();
-void new_token(int category);
-void handle_include(const char *s);
 void handle_fstream();
 void handle_string();
+
+/* handle #include files */
+void handle_include(const char *s);
+
+/* typenames data */
+struct typename {
+        char *name;
+        int category;
+};
+
+struct list *typenames;
 bool typename_compare(const char *s, const struct typename *t);
 void typenames_insert(char *s, int category);
 void typenames_insert_tree(struct tree *t, int category);
 int check_identifier(const char *s);
+
+/* error helpers */
+void lexerror(const char *s);
+void unsupported();
 
 %}
 
@@ -177,7 +187,7 @@ int check_identifier(const char *s);
 {D}+"."{D}*{FS}?        { TOKEN(FLOATING); }
 
   /* character literal */
-\'                      { new_token(CHARACTER); BEGIN(CHR); }
+\'                      { prepare_token(CHARACTER); BEGIN(CHR); }
 
 <CHR>{
         \'              { lexerror("Empty char literal"); }
@@ -206,7 +216,7 @@ int check_identifier(const char *s);
 }
 
   /* string literal */
-\"                      { new_token(STRING); BEGIN(STR); }
+\"                      { prepare_token(STRING); BEGIN(STR); }
 
 <STR>{
         \"              { token_finish_sval(yytoken);
@@ -331,7 +341,7 @@ void unsupported()
  * Creates a token with the necessary information, then allocates a
  * tree node as a leaf for the token, saving it into yylval for Bison.
  */
-void new_token(int category)
+void prepare_token(int category)
 {
         yytoken = token_new(category, yylineno, yytext,
                             (const char *)list_peek(filenames));
@@ -446,12 +456,12 @@ int check_identifier(const char *s)
         struct list_node *l = list_find(typenames, (void *)s,
                                         (bool (*)(void *, void *))&typename_compare);
         if (list_end(l)) {
-                new_token(IDENTIFIER);
+                prepare_token(IDENTIFIER);
                 return IDENTIFIER;
         }
         else {
                 int category = ((struct typename *)l->data)->category;
-                new_token(category);
+                prepare_token(category);
                 return category;
         }
 }

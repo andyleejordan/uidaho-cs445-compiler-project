@@ -20,13 +20,21 @@
 #include "lexer.h"
 #include "parser.tab.h"
 
-struct tree *yyprogram;
+/* from lexer */
+extern struct list *typenames;
+
+/* shared with lexer and parser */
+struct tree *yyprogram = NULL;
 struct list *filenames = NULL;
-struct list *typenames = NULL;
+
+/* error helpers */
+void handle_error(char *c);
 char error_buf[256];
 
-void handle_error(char *c);
+/* chdir to dirname of given filename safely */
 void chdirname(char *c);
+
+/* syntax tree utilities */
 void print_tree(struct tree *t, int d);
 void destroy_syntax_tree(void *data, bool leaf);
 

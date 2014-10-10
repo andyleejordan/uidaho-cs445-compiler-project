@@ -49,14 +49,17 @@
 #include "tree.h"
 #include "lexer.h"
 
+/* semantic action helpers */
+#define P(name, ...) tree_new_group(NULL, #name, __VA_ARGS__)
+#define E() NULL
+
+/* from main */
 extern struct tree *yyprogram;
 extern struct list *filenames;
 
+/* from lexer */
 void yyerror(const char *s);
 void typenames_insert_tree(struct tree *t, int category);
-
-#define P(name, ...) tree_new_group(NULL, #name, __VA_ARGS__)
-#define E() NULL
 
 %}
 
