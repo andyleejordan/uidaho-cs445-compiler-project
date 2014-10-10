@@ -46,6 +46,7 @@ struct list_node *list_push(struct list *self, void *data);
 struct list_node *list_push_front(struct list *self, void *data);
 
 void *list_node_unlink(struct list *self, struct list_node *b);
+void *list_remove(struct list *self, int pos);
 void *list_pop(struct list *self);
 void *list_pop_front(struct list *self);
 

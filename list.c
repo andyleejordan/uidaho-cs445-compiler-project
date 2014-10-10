@@ -58,11 +58,6 @@ struct list *list_new()
  */
 void list_free(struct list *self, void (*f)(void *data))
 {
-	if (self == NULL) {
-		fprintf(stderr, "list_free(): self was null\n");
-		return;
-	}
-
 	while (!list_empty(self)) {
 		void *d = list_pop(self);
 		if (f != NULL)
@@ -85,12 +80,7 @@ size_t list_size(struct list *self)
 
 bool list_empty(struct list *self)
 {
-	if (self == NULL) {
-		fprintf(stderr, "list_empty(): self was null\n");
-		return false;
-	}
-
-	return (self->size == 0);
+	return (list_size(self) == 0);
 }
 
 bool list_end(struct list_node *n)
@@ -106,7 +96,7 @@ bool list_end(struct list_node *n)
 struct list_node *list_head(struct list *self)
 {
 	if (self == NULL) {
-		fprintf(stderr, "list_tail(): self was null\n");
+		fprintf(stderr, "list_head(): self was null\n");
 		return NULL;
 	}
 
@@ -128,11 +118,6 @@ struct list_node *list_tail(struct list *self)
  */
 struct list_node *list_find(struct list *self, void *data,
                             bool (*compare)(void *a, void *b)) {
-	if (self == NULL) {
-		fprintf(stderr, "list_find(): self was null\n");
-		return NULL;
-	}
-
 	struct list_node *iter = list_head(self);
 	while (!list_end(iter)) {
 		if (compare(data, iter->data))
@@ -145,28 +130,43 @@ struct list_node *list_find(struct list *self, void *data,
 
 /*
  * Returns node at pos in O(n).
+ *
+ * Implemented like deque and iterates from the closest end.
  */
 struct list_node *list_index(struct list *self, int pos)
 {
-	struct list_node *iter = self->sentinel;
+	int n = list_size(self);
 
-	if (pos > 0) {
+	/* handle negative positions */
+	if (pos < 0)
+		pos += n;
+
+	struct list_node *iter = NULL;
+
+	if (pos >= n/2) {
+		iter = list_head(self);
 		for (int i = 0; i < pos; ++i)
 			iter = iter->next;
-	} else if (pos < 0) {
-		for (int i = 0; i > pos; --i)
+	} else {
+		iter = list_tail(self);
+		for (int i = n - 1; i > pos; --i)
 			iter = iter->prev;
 	}
 
 	return iter;
 }
 /*
- * given (a c), links b leaving (a b c)
+ * given (a _ c), links b (new) leaving (a b c)
  */
-void list_node_link(struct list *self, struct list_node *a, struct list_node *b)
+void list_node_link(struct list *self, struct list_node *b, struct list_node *c)
 {
+	if (self == NULL) {
+		fprintf(stderr, "list_node_link(): self was null\n");
+		return;
+	}
+
 	++self->size;
-	struct list_node *c = a->next;
+	struct list_node *a = c->prev;
 
 	a->next = b;
 	b->prev = a;
@@ -181,15 +181,10 @@ void list_node_link(struct list *self, struct list_node *a, struct list_node *b)
  */
 struct list_node *list_insert(struct list *self, int pos, void *data)
 {
-	if (self == NULL) {
-		fprintf(stderr, "list_insert(): self was null\n");
-		return NULL;
-	}
-
-	struct list_node *a = list_index(self, pos);
 	struct list_node *b = list_node_new(data);
+	struct list_node *c = list_index(self, pos);
 
-	list_node_link(self, a, b);
+	list_node_link(self, b, c);
 
 	return b;
 }
@@ -199,24 +194,30 @@ struct list_node *list_insert(struct list *self, int pos, void *data)
  */
 struct list_node *list_push(struct list *self, void *data)
 {
-	struct list_node *n = list_insert(self, -1, data);
-	return n;
+	return list_insert(self, list_size(self), data);
 }
 
 /*
- * Pushes data to front of list in O(1);
+ * Pushes data to front of list in O(1).
  */
 struct list_node *list_push_front(struct list *self, void *data)
 {
-	struct list_node *n = list_insert(self, 0, data);
-	return n;
+	return list_insert(self, 0, data);
 }
 
 /*
- * given (a b c), unlinks b leaving (a c)
+ * given (a b c), unlinks b leaving (a _ c)
  */
 void *list_node_unlink(struct list *self, struct list_node *b)
 {
+	if (self == NULL) {
+		fprintf(stderr, "list_node_unlink(): self was null\n");
+		return NULL;
+	}
+
+	if (list_end(b))
+		return NULL;
+
 	--self->size;
 	void *data = b->data;
 
@@ -226,66 +227,32 @@ void *list_node_unlink(struct list *self, struct list_node *b)
 	a->next = c;
 	c->prev = a;
 
+	free(b);
+
 	return data;
+}
+
+void *list_remove(struct list *self, int pos)
+{
+	return list_node_unlink(self, list_index(self, pos));
 }
 
 void *list_pop(struct list *self)
 {
-	if (self == NULL) {
-		fprintf(stderr, "list_pop(): self was null\n");
-		return NULL;
-	}
-
-	struct list_node *n = self->sentinel->prev;
-	if (list_end(n)) {
-		return NULL;
-	}
-
-	void *d = list_node_unlink(self, n);
-	free(n);
-
-	return d;
+	return list_remove(self, -1);
 }
 
 void *list_pop_front(struct list *self)
 {
-	if (self == NULL) {
-		fprintf(stderr, "list_pop_front(): self was null\n");
-		return NULL;
-	}
-
-	struct list_node *n = self->sentinel->next;
-	if (list_end(n))
-		return NULL;
-
-	void *d = list_node_unlink(self, n);
-	free(n);
-
-	return d;
+	return list_remove(self, 0);
 }
 
 void *list_peek(struct list *self)
 {
-	if (self == NULL) {
-		fprintf(stderr, "list_peek(): self was null\n");
-		return NULL;
-	}
-
-	if (list_empty(self))
-		return NULL;
-
 	return list_tail(self)->data;
 }
 
 void *list_peek_front(struct list *self)
 {
-	if (self == NULL) {
-		fprintf(stderr, "list_peek_front(): self was null\n");
-		return NULL;
-	}
-
-	if (list_empty(self))
-		return NULL;
-
 	return list_head(self)->data;
 }

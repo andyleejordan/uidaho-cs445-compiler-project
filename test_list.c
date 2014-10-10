@@ -170,7 +170,7 @@ void test_head_data(struct list *list, char *data)
 void test_tail_data(struct list *list, char *data)
 {
 	if (!compare(list_peek(list), data)) {
-		sprintf(buffer, "head should have been '%s'", data);
+		sprintf(buffer, "tail should have been '%s'", data);
 		failure(buffer);
 	}
 }
