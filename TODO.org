@@ -3,11 +3,11 @@
 ** TODO Respect include guards (?)
 ** TODO Add libraries to their own struct (?)
 ** TODO Expand list library
-- =list_copy=
-- =list_concat=
-- =list_insert=
+- =struct list *list_copy=
+- =struct list *list_concat=
 - =list_split=
 - =list_sort=
+- =list_contains=
 ** TODO Expand tree library
 - =tree_push_subtree=
 ** TODO Add hash table library (using TDD)
