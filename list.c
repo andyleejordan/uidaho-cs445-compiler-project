@@ -12,7 +12,7 @@
 
 #include "list.h"
 
-struct list_node *list_node_new()
+struct list_node *list_node_new(void *data)
 {
 	struct list_node *n = malloc(sizeof(*n));
 	if (n == NULL) {
@@ -23,7 +23,7 @@ struct list_node *list_node_new()
 	n->sentinel = false;
 	n->next = NULL;
 	n->prev = NULL;
-	n->data = NULL;
+	n->data = data;
 
 	return n;
 }
@@ -36,7 +36,7 @@ struct list *list_new()
 		return NULL;
 	}
 
-	struct list_node *sentinel = list_node_new();
+	struct list_node *sentinel = list_node_new(NULL);
 	if (sentinel == NULL) {
 		free(self);
 		return NULL;
@@ -149,11 +149,9 @@ struct list_node *list_push(struct list *self, void *data)
 		return NULL;
 	}
 
-	struct list_node *n = list_node_new();
+	struct list_node *n = list_node_new(data);
 	if (n == NULL)
 		return NULL;
-
-	n->data = data;
 
 	n->prev = self->sentinel->prev;
 	n->prev->next = n;
@@ -173,11 +171,9 @@ struct list_node *list_push_front(struct list *self, void *data)
 		return NULL;
 	}
 
-	struct list_node *n = list_node_new();
+	struct list_node *n = list_node_new(data);
 	if (n == NULL)
 		return NULL;
-
-	n->data = data;
 
 	n->next = self->sentinel->next;
 	n->next->prev = n;
