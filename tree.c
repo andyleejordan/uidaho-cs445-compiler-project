@@ -52,13 +52,8 @@ struct tree *tree_new_group(struct tree *parent, void *data, int count, ...)
 
 	struct tree *t = tree_new(parent, data);
 
-	for (int i = 0; i < count; ++i) {
-		struct tree *c = va_arg(ap, void *);
-		if (c != NULL) {
-			c->parent = t;
-			list_push(t->children, c);
-		}
-	}
+	for (int i = 0; i < count; ++i)
+		tree_push_child(t, va_arg(ap, void *));
 
 	va_end(ap);
 	return t;
@@ -123,17 +118,36 @@ struct tree *tree_push(struct tree *self, void *data)
 }
 
 /*
- * Recursively deallocates a tree, and optionally frees data if given
- * a non-NULL function pointer.
+ * Given an initialized child, pushes it to the children list of self.
  */
-void tree_destroy(struct tree *self, void (*destroy)(void *data, bool leaf))
+struct tree *tree_push_child(struct tree *self, struct tree *child)
 {
-	if (destroy != NULL)
-		destroy(self->data, list_empty(self->children));
+	if (self == NULL || child == NULL)
+		return NULL;
+
+	child->parent = self;
+	list_push(self->children, child);
+
+	return child;
+}
+
+/*
+ * Recursively deallocates a tree, and optionally frees data if given
+ * a non-NULL function pointer, which accepts a pointer to data and a
+ * boolean that indicates whether or not the data came from a leaf
+ * node.
+ */
+void tree_free(struct tree *self, void (*f)(void *data, bool leaf))
+{
+	if (self == NULL)
+		return;
+
+	if (f != NULL)
+		f(self->data, list_empty(self->children));
 
 	while (!list_empty(self->children)) {
 		void *d = list_pop(self->children);
-		tree_destroy(d, destroy);
+		tree_free(d, f);
 	}
 
 	free(self->children->sentinel);
