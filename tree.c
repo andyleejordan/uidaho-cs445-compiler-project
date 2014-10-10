@@ -63,8 +63,10 @@ struct tree *tree_new_group(struct tree *parent, void *data, int count, ...)
  */
 size_t tree_size(struct tree *self)
 {
-	if (self == NULL)
+	if (self == NULL) {
+		fprintf(stderr, "tree_size(): sef was null\n");
 		return 0;
+	}
 
 	size_t size = 1;
 
@@ -83,10 +85,13 @@ size_t tree_size(struct tree *self)
  */
 void tree_preorder(struct tree *self, int d, void (*f)(struct tree *t, int d))
 {
-	if (self == NULL)
+	if (self == NULL) {
+		fprintf(stderr, "tree_preorder(): self was null\n");
 		return;
+	}
 
-	f(self, d);
+	if (f != NULL)
+		f(self, d);
 
 	struct list_node *iter = list_head(self->children);
 	while (!list_end(iter)) {
@@ -102,8 +107,10 @@ void tree_preorder(struct tree *self, int d, void (*f)(struct tree *t, int d))
  */
 struct tree *tree_push(struct tree *self, void *data)
 {
-	if (self == NULL)
+	if (self == NULL) {
+		fprintf(stderr, "tree_push(): self was null\n");
 		return NULL;
+	}
 
 	struct tree *child = tree_new(self, data);
 	if (child == NULL) {
@@ -121,7 +128,12 @@ struct tree *tree_push(struct tree *self, void *data)
  */
 struct tree *tree_push_child(struct tree *self, struct tree *child)
 {
-	if (self == NULL || child == NULL)
+	if (self == NULL) {
+		fprintf(stderr, "tree_push_child(): self was null\n");
+		return NULL;
+	}
+
+	if (child == NULL) /* not an error */
 		return NULL;
 
 	child->parent = self;
@@ -138,8 +150,10 @@ struct tree *tree_push_child(struct tree *self, struct tree *child)
  */
 void tree_free(struct tree *self, void (*f)(void *data, bool leaf))
 {
-	if (self == NULL)
+	if (self == NULL) {
+		fprintf(stderr, "tree_free(): self was null\n");
 		return;
+	}
 
 	if (f != NULL)
 		f(self->data, list_empty(self->children));
