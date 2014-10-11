@@ -394,7 +394,7 @@ void handle_include(const char *s)
  */
 void handle_fstream()
 {
-        struct list_node *l = list_find(typenames, "ifstream",
+        struct list_node *l = list_search(typenames, "ifstream",
                                         (bool (*)(void *, void *))&typename_compare);
         if (list_end(l)) {
                 typenames_insert("ifstream", CLASS_NAME);
@@ -407,7 +407,7 @@ void handle_fstream()
  */
 void handle_string()
 {
-        struct list_node *l = list_find(typenames, "string",
+        struct list_node *l = list_search(typenames, "string",
                                         (bool (*)(void *, void *))&typename_compare);
         if (list_end(l))
                 typenames_insert("string", CLASS_NAME);
@@ -452,7 +452,7 @@ void typenames_insert_tree(struct tree *t, int category)
  */
 int check_identifier(const char *s)
 {
-        struct list_node *l = list_find(typenames, (void *)s,
+        struct list_node *l = list_search(typenames, (void *)s,
                                         (bool (*)(void *, void *))&typename_compare);
         if (list_end(l)) {
                 prepare_token(IDENTIFIER);

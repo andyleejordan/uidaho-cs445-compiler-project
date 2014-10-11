@@ -23,8 +23,8 @@ void test_empty_ends(struct list *list);
 void test_non_empty(struct list *list);
 void test_head_data(struct list *list, char *data);
 void test_tail_data(struct list *list, char *data);
-void test_find_data(struct list *list, char* data);
-void test_not_find_data(struct list *list, char* data);
+void test_search_data(struct list *list, char* data);
+void test_not_search_data(struct list *list, char* data);
 void test_iter_forward(struct list *list);
 void test_iter_backward(struct list *list);
 
@@ -48,11 +48,11 @@ int main()
 	test_head_data(list, a);
 	test_tail_data(list, a);
 
-	testing("find A");
-	test_find_data(list, "A");
+	testing("search A");
+	test_search_data(list, "A");
 
-	testing("not find B");
-	test_not_find_data(list, "B");
+	testing("not search B");
+	test_not_search_data(list, "B");
 
 	testing("push back B");
 	char *b = strdup("B");
@@ -175,17 +175,17 @@ void test_tail_data(struct list *list, char *data)
 	}
 }
 
-void test_find_data(struct list *list, char* data)
+void test_search_data(struct list *list, char* data)
 {
-	if (list_end(list_find(list, data, (bool (*)(void *, void *))&compare))) {
+	if (list_end(list_search(list, data, (bool (*)(void *, void *))&compare))) {
 		sprintf(buffer, "list should have had '%s'", data);
 		failure(buffer);
 	}
 }
 
-void test_not_find_data(struct list *list, char* data)
+void test_not_search_data(struct list *list, char* data)
 {
-	if (!list_end(list_find(list, data, (bool (*)(void *, void *))&compare))) {
+	if (!list_end(list_search(list, data, (bool (*)(void *, void *))&compare))) {
 		sprintf(buffer, "list should not have had '%s'", data);
 		failure(buffer);
 	}
