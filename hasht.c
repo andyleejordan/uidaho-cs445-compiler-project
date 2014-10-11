@@ -17,17 +17,17 @@ size_t hasht_hash(struct hasht *self, void *key, int perm);
 
 bool hasht_default_compare(void *a, void *b);
 size_t hasht_default_hash(char *key, int perm);
-void hasht_default_free(struct hash_node *n);
+void hasht_default_delete(struct hash_node *n);
 
 /*
  * Dynamically allocate n array of null hash_node pointers.
  *
- * If given null for hash, compare, or free functions, uses default.
+ * If given null for hash, compare, or delete functions, uses default.
  */
 struct hasht *hasht_new(size_t size,
                         size_t (*hash)(void *key, int perm),
                         bool (*compare)(void *a, void *b),
-                        void (*free)(struct hash_node *n))
+                        void (*delete)(struct hash_node *n))
 {
 	struct hasht *t = malloc(sizeof(*t));
 
@@ -43,9 +43,9 @@ struct hasht *hasht_new(size_t size,
 		? &hasht_default_compare
 		: compare;
 
-	t->free = (free == NULL)
-		? &hasht_default_free
-		: free;
+	t->delete = (delete == NULL)
+		? &hasht_default_delete
+		: delete;
 
 	return t;
 }
@@ -136,7 +136,7 @@ void hasht_free(struct hasht *self)
 	for (size_t i = 0; i < hasht_size(self); ++i) {
 		struct hash_node *slot = self->table[i];
 		if (slot != NULL && !hash_node_deleted(slot))
-			self->free(slot);
+			self->delete(slot);
 	}
 	free(self->table);
 	free(self);
@@ -169,7 +169,7 @@ bool hasht_default_compare(void *a, void *b)
 /*
  * Default function for freeing a node.
  */
-void hasht_default_free(struct hash_node *n)
+void hasht_default_delete(struct hash_node *n)
 {
 	free(n->key);
 	free(n->value);

@@ -5,10 +5,10 @@
 #include "tree.h"
 #include "list.h"
 
-#define P(name, ...) tree_new_group(NULL, #name, __VA_ARGS__)
+#define P(name, ...) tree_new_group(NULL, #name, &delete_tree, __VA_ARGS__)
 
 void print_tree(struct tree *t, int d);
-void destroy_tree(void *data, bool leaf);
+void delete_tree(void *data, bool leaf);
 
 void test_size(struct tree *tree, size_t size);
 void test_new(struct tree *tree, struct tree *parent, void *data);
@@ -20,7 +20,7 @@ int main()
 
 	testing("new");
 	char *a = strdup("+");
-	struct tree *root = tree_new(NULL, a);
+	struct tree *root = tree_new(NULL, a, &delete_tree);
 	test_new(root, NULL, a);
 	test_size(root, 1);
 
@@ -48,14 +48,18 @@ int main()
 	tree_preorder(root, 0, &print_tree);
 	printf("\n");
 
-	tree_free(root, &destroy_tree);
+	tree_free(root);
 
 	testing("variadic push back 2 args");
-	struct tree *v = tree_new_group(NULL, "root", 2, tree_new(NULL, "foo"), tree_new(NULL, "bar"));
+	struct tree *v = tree_new_group(NULL, "root", &delete_tree, 2,
+	                                tree_new(NULL, "foo", &delete_tree),
+	                                tree_new(NULL, "bar", &delete_tree));
 	test_new_group(v);
 
 	testing("macro P push back 2 args");
-	struct tree *p = P(root, 2, tree_new(NULL, "foo"), tree_new(NULL, "bar"));
+	struct tree *p = P(root, 2,
+	                   tree_new(NULL, "foo", &delete_tree),
+	                   tree_new(NULL, "bar", &delete_tree));
 	test_new_group(p);
 
 	return status;
@@ -107,7 +111,7 @@ void print_tree(struct tree *t, int d)
 	printf("%*s\n", d*2, (char *)t->data);
 }
 
-void destroy_tree(void *data, bool leaf)
+void delete_tree(void *data, bool leaf)
 {
 	free(data);
 }

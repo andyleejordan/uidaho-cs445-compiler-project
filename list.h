@@ -25,13 +25,15 @@ struct list
 {
 	struct list_node *sentinel;
 	size_t size;
+	bool (*compare)(void *a, void *b);
+	void (*delete)(void *data);
 };
 
-struct list *list_new();
+struct list *list_new(bool (*compare)(void *a, void *b),
+                      void (*delete)(void *data));
 
 struct list_node *list_insert(struct list *self, int pos, void *data);
-struct list_node *list_search(struct list *self, void *data,
-                              bool (*compare)(void *a, void *b));
+struct list_node *list_search(struct list *self, void *data);
 void *list_delete(struct list *self, int pos);
 
 struct list_node *list_push_back(struct list *self, void *data);
@@ -47,14 +49,12 @@ struct list_node *list_head(struct list *self);
 struct list_node *list_tail(struct list *self);
 
 struct list_node *list_index(struct list *self, int pos);
-bool list_contains(struct list *self, void *data,
-                   bool (*compare)(void *a, void*b));
 
 size_t list_size(struct list *self);
 bool list_empty(struct list *self);
 bool list_end(struct list_node *n);
 
-void list_free(struct list *self, void (*f)(void *data));
+void list_free(struct list *self);
 
 struct list_node *list_node_new(void *data);
 void list_node_link(struct list *self, struct list_node *a, struct list_node *b);

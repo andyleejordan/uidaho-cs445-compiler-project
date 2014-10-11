@@ -18,7 +18,8 @@
  * Initializes tree with reference to parent and data, and an empty
  * (but initialized) list of children.
  */
-struct tree *tree_new(struct tree *parent, void *data)
+struct tree *tree_new(struct tree *parent, void *data,
+                      void (*delete)(void *data, bool leaf))
 {
 	struct tree *t = malloc(sizeof(*t));
 	if (t == NULL) {
@@ -26,7 +27,7 @@ struct tree *tree_new(struct tree *parent, void *data)
 		return NULL;
 	}
 
-	struct list *l = list_new();
+	struct list *l = list_new(NULL, NULL);
 	if (l == NULL) {
 		free(t);
 		return NULL;
@@ -35,6 +36,7 @@ struct tree *tree_new(struct tree *parent, void *data)
 	t->parent = parent;
 	t->data = data;
 	t->children = l;
+	t->delete = delete;
 
 	return t;
 }
@@ -44,12 +46,14 @@ struct tree *tree_new(struct tree *parent, void *data)
  * count number of following struct tree * as children. If given child
  * is NULL it is not added.
  */
-struct tree *tree_new_group(struct tree *parent, void *data, int count, ...)
+struct tree *tree_new_group(struct tree *parent, void *data,
+                            void (*delete)(void *data, bool leaf),
+                            int count, ...)
 {
 	va_list ap;
 	va_start(ap, count);
 
-	struct tree *t = tree_new(parent, data);
+	struct tree *t = tree_new(parent, data, delete);
 
 	for (int i = 0; i < count; ++i)
 		tree_push_child(t, va_arg(ap, void *));
@@ -112,7 +116,7 @@ struct tree *tree_push_back(struct tree *self, void *data)
 		return NULL;
 	}
 
-	struct tree *child = tree_new(self, data);
+	struct tree *child = tree_new(self, data, self->delete);
 	if (child == NULL) {
 		perror("tree_push_back()");
 		return NULL;
@@ -148,19 +152,19 @@ struct tree *tree_push_child(struct tree *self, struct tree *child)
  * boolean that indicates whether or not the data came from a leaf
  * node.
  */
-void tree_free(struct tree *self, void (*f)(void *data, bool leaf))
+void tree_free(struct tree *self)
 {
 	if (self == NULL) {
 		fprintf(stderr, "tree_free(): self was null\n");
 		return;
 	}
 
-	if (f != NULL)
-		f(self->data, list_empty(self->children));
+	if (self->delete)
+		self->delete(self->data, list_empty(self->children));
 
 	while (!list_empty(self->children)) {
 		void *d = list_pop_back(self->children);
-		tree_free(d, f);
+		tree_free(d);
 	}
 
 	free(self->children->sentinel);

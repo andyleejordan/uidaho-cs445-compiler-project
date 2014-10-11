@@ -33,7 +33,7 @@ int main()
 	running("list");
 
 	testing("new");
-	struct list *list = list_new();
+	struct list *list = list_new(NULL, &free);
 	test_new(list);
 	test_sentinel(list);
 	test_empty(list);
@@ -89,7 +89,7 @@ int main()
 	test_iter_backward(list);
 	printf("\n");
 
-	list_free(list, &free);
+	list_free(list);
 
 	return status;
 }
@@ -177,7 +177,7 @@ void test_tail_data(struct list *list, char *data)
 
 void test_search_data(struct list *list, char* data)
 {
-	if (list_end(list_search(list, data, (bool (*)(void *, void *))&compare))) {
+	if (!list_search(list, data)) {
 		sprintf(buffer, "list should have had '%s'", data);
 		failure(buffer);
 	}
@@ -185,7 +185,7 @@ void test_search_data(struct list *list, char* data)
 
 void test_not_search_data(struct list *list, char* data)
 {
-	if (!list_end(list_search(list, data, (bool (*)(void *, void *))&compare))) {
+	if (list_search(list, data)) {
 		sprintf(buffer, "list should not have had '%s'", data);
 		failure(buffer);
 	}

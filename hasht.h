@@ -26,7 +26,7 @@ struct hasht {
 	size_t used;
 	size_t (*hash)(void *key, int perm);
 	bool (*compare)(void *a, void *b);
-	void (*free)(struct hash_node *n);
+	void (*delete)(struct hash_node *n);
 };
 
 struct hasht *hasht_new(size_t size,

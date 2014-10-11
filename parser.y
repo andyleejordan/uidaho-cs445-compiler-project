@@ -45,12 +45,13 @@
 
 %{
 
+#include "token.h"
 #include "list.h"
 #include "tree.h"
 #include "lexer.h"
 
 /* semantic action helpers */
-#define P(name, ...) tree_new_group(NULL, #name, __VA_ARGS__)
+#define P(name, ...) tree_new_group(NULL, #name, &delete_tree, __VA_ARGS__)
 #define E() NULL
 
 /* from main */
@@ -60,6 +61,10 @@ extern struct list *filenames;
 /* from lexer */
 void yyerror(const char *s);
 void typenames_insert_tree(struct tree *t, int category);
+
+/* syntax tree utilities */
+void print_tree(struct tree *t, int d);
+void delete_tree(void *data, bool leaf);
 
 %}
 
@@ -743,4 +748,34 @@ void yyerror(const char *s)
         fprintf(stderr, "Syntax error: file %s, line %d, token %s: %s\n",
                 (const char *)list_back(filenames), yylineno, yytext, s);
         exit(2);
+}
+
+/*
+ * Helper function passed to tree_preorder().
+ *
+ * Given a terminal tree node, prints its contained token's value.
+ * Given a non-terminal tree node, prints its contained production
+ * rule name.
+ */
+void print_tree(struct tree *t, int d)
+{
+	if (tree_size(t) == 1) /* holds a token */
+		printf("%*s %s (%d)\n", d*2, " ",
+		       (char *)((struct token *)t->data)->text,
+		       (int)((struct token *)t->data)->category);
+	else /* holds a production rule name */
+		printf("%*s %s: %zu\n", d*2, " ",
+		       (char *)t->data,
+		       list_size(t->children));
+}
+
+/*
+ * Destroys tokens contained in leaves of syntax tree. Internal nodes
+ * contain statically allocated string literals and are thus ignored
+ * here.
+ */
+void delete_tree(void *data, bool leaf)
+{
+	if (leaf)
+		token_free(data);
 }

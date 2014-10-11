@@ -9,34 +9,44 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "list.h"
+
+bool list_default_compare(void *a, void *b);
 
 /*
  * Returns allocated list with uncounted sentinel element.
  */
-struct list *list_new()
+struct list *list_new(bool (*compare)(void *a, void *b),
+                      void (*delete)(void *data))
 {
-	struct list *self = malloc(sizeof(*self));
-	if (self == NULL) {
+	struct list *l = malloc(sizeof(*l));
+	if (l == NULL) {
 		perror("list_new()");
 		return NULL;
 	}
 
 	struct list_node *sentinel = list_node_new(NULL);
 	if (sentinel == NULL) {
-		free(self);
+		free(l);
 		return NULL;
 	}
 
-	self->sentinel = sentinel;
-	self->size = 0;
+	l->sentinel = sentinel;
+	l->size = 0;
 
 	sentinel->sentinel = true;
 	sentinel->next = sentinel;
 	sentinel->prev = sentinel;
 
-	return self;
+	l->compare = (compare == NULL)
+		? &list_default_compare
+		: compare;
+
+	l->delete = delete;
+
+	return l;
 }
 
 /*
@@ -57,16 +67,14 @@ struct list_node *list_insert(struct list *self, int pos, void *data)
 /*
  * Use compare function to return found node, else returns sentinel.
  */
-struct list_node *list_search(struct list *self, void *data,
-                            bool (*compare)(void *a, void *b)) {
+struct list_node *list_search(struct list *self, void *data) {
 	struct list_node *iter = list_head(self);
 	while (!list_end(iter)) {
-		if (compare(data, iter->data))
+		if (self->compare(data, iter->data))
 			return iter;
 		iter = iter->next;
 	}
-
-	return iter;
+	return NULL;
 }
 
 /*
@@ -182,15 +190,6 @@ struct list_node *list_index(struct list *self, int pos)
 }
 
 /*
- * Helper to traverse the list and return true if the data was in it.
- */
-bool list_contains(struct list *self, void *data,
-                   bool (*compare)(void *a, void*b))
-{
-	return !list_end(list_search(self, data, compare));
-}
-
-/*
  * Returns the number of nodes in list. Does not count the sentinel.
  */
 size_t list_size(struct list *self)
@@ -231,17 +230,25 @@ bool list_end(struct list_node *n)
  * Use function to free data of each node, then free said node,
  * finally free the sentinel and the list.
  */
-void list_free(struct list *self, void (*f)(void *data))
+void list_free(struct list *self)
 {
 	while (!list_empty(self)) {
 		void *d = list_pop_back(self);
-		if (f != NULL)
-			f(d);
+		if (self->delete)
+			self->delete(d);
 	}
 
 	free(self->sentinel);
 	free(self);
 }
+
+/*
+ * Default comparison for list of strings.
+ */
+bool list_default_compare(void *a, void *b)
+{
+	return (strcmp((char *)a, (char *)b) == 0);
+}	
 
 /*
  * Allocates new list_node with data.

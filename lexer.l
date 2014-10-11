@@ -44,6 +44,9 @@ extern char* error_buf;
 void chdirname(char *c);
 void handle_error(char *c);
 
+/* from parser */
+void delete_tree(void *data, bool leaf);
+
 /* creation of tokens */
 struct token *yytoken = NULL;
 void prepare_token(int category);
@@ -75,6 +78,7 @@ struct list *typenames;
 bool typename_compare(const char *s, const struct typename *t);
 void typenames_insert(char *s, int category);
 void typenames_insert_tree(struct tree *t, int category);
+void typenames_free(struct typename *t);
 int check_identifier(const char *s);
 
 /* error helpers */
@@ -345,7 +349,8 @@ void prepare_token(int category)
 {
         yytoken = token_new(category, yylineno, yytext,
                             (const char *)list_back(filenames));
-        yylval.t = tree_new(NULL, yytoken);
+        yylval.t = tree_new(NULL, yytoken,
+                            (void (*)(void *, bool))&delete_tree);
 }
 
 /*
@@ -394,9 +399,7 @@ void handle_include(const char *s)
  */
 void handle_fstream()
 {
-        struct list_node *l = list_search(typenames, "ifstream",
-                                        (bool (*)(void *, void *))&typename_compare);
-        if (list_end(l)) {
+        if (!list_search(typenames, "ifstream")) {
                 typenames_insert("ifstream", CLASS_NAME);
                 typenames_insert("ofstream", CLASS_NAME);
         }
@@ -407,9 +410,7 @@ void handle_fstream()
  */
 void handle_string()
 {
-        struct list_node *l = list_search(typenames, "string",
-                                        (bool (*)(void *, void *))&typename_compare);
-        if (list_end(l))
+        if (!list_search(typenames, "string"))
                 typenames_insert("string", CLASS_NAME);
 }
 
@@ -427,8 +428,7 @@ bool typename_compare(const char *s, const struct typename *t)
  */
 void typenames_insert(char *s, int category)
 {
-        if (list_contains(typenames, (void *)s,
-                          (bool (*)(void *, void *))&typename_compare)) {
+        if (list_search(typenames, (void *)s)) {
                 lexerror("token previously declared as identifier");
         }
         struct typename *type = malloc(sizeof(*type));
@@ -447,19 +447,27 @@ void typenames_insert_tree(struct tree *t, int category)
 }
 
 /*
+ * Frees typename's name, then self.
+ */
+void typenames_free(struct typename *t)
+{
+	free(t->name);
+	free(t);
+}
+
+/*
  * Returns corresponding integer category for given identifier name
  * and creates the necessary token.
  */
 int check_identifier(const char *s)
 {
-        struct list_node *l = list_search(typenames, (void *)s,
-                                        (bool (*)(void *, void *))&typename_compare);
-        if (list_end(l)) {
-                prepare_token(IDENTIFIER);
-                return IDENTIFIER;
-        } else {
+        struct list_node *l = list_search(typenames, (void *)s);
+        if (l) {
                 int category = ((struct typename *)l->data)->category;
                 prepare_token(category);
                 return category;
+        } else {
+                prepare_token(IDENTIFIER);
+                return IDENTIFIER;
         }
 }

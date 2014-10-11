@@ -21,7 +21,13 @@
 #include "parser.tab.h"
 
 /* from lexer */
+struct typename;
 extern struct list *typenames;
+bool typename_compare(char *s, struct typename *t);
+void typenames_free(struct typename *t);
+
+/* from parser */
+void print_tree(struct tree *t, int d);
 
 /* shared with lexer and parser */
 struct tree *yyprogram = NULL;
@@ -34,23 +40,20 @@ char error_buf[256];
 /* chdir to dirname of given filename safely */
 void chdirname(char *c);
 
-/* syntax tree utilities */
-void print_tree(struct tree *t, int d);
-void destroy_syntax_tree(void *data, bool leaf);
-
 int main(int argc, char **argv)
 {
 	char *cwd = getcwd(NULL, 0);
 	if (cwd == NULL)
 		handle_error("getcwd");
 
-	filenames = list_new();
+	filenames = list_new(NULL, &free);
 	if (filenames == NULL)
 		handle_error("main filenames");
 
 	/* setup lexer and parse each argument (or stdin) as a new 'program' */
 	for (int i = 1; i <= argc; ++i) {
-		typenames = list_new();
+		typenames = list_new((bool (*)(void *, void *))&typename_compare,
+		                     (void (*)(void *))&typenames_free);
 		if (typenames == NULL)
 			handle_error("main typenames");
 
@@ -94,12 +97,12 @@ int main(int argc, char **argv)
 			return 2;
 
 		/* clean up */
-		tree_free(yyprogram, &destroy_syntax_tree);
+		tree_free(yyprogram);
 		yylex_destroy();
-		list_free(typenames, NULL);
+		list_free(typenames);
 	}
 
-	list_free(filenames, NULL);
+	list_free(filenames);
 
 	return EXIT_SUCCESS;
 }
@@ -135,34 +138,4 @@ void chdirname(char *c)
 	}
 
 	free(filename);
-}
-
-/*
- * Helper function passed to tree_preorder().
- *
- * Given a terminal tree node, prints its contained token's value.
- * Given a non-terminal tree node, prints its contained production
- * rule name.
- */
-void print_tree(struct tree *t, int d)
-{
-	if (tree_size(t) == 1) /* holds a token */
-		printf("%*s %s (%d)\n", d*2, " ",
-		       (char *)((struct token *)t->data)->text,
-		       (int)((struct token *)t->data)->category);
-	else /* holds a production rule name */
-		printf("%*s %s: %zu\n", d*2, " ",
-		       (char *)t->data,
-		       list_size(t->children));
-}
-
-/*
- * Destroys tokens contained in leaves of syntax tree. Internal nodes
- * contain statically allocated string literals and are thus ignored
- * here.
- */
-void destroy_syntax_tree(void *data, bool leaf)
-{
-	if (leaf)
-		token_free(data);
 }

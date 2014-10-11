@@ -19,14 +19,21 @@ struct tree {
 	void *data;
 	struct tree *parent;
 	struct list *children;
+	void (*delete)(void *data, bool leaf);
 };
 
-struct tree *tree_new(struct tree *parent, void *data);
-struct tree *tree_new_group(struct tree *parent, void *data, int count, ...);
-void tree_free(struct tree *self, void (*f)(void *data, bool leaf));
-size_t tree_size(struct tree *self);
+struct tree *tree_new(struct tree *parent, void *data,
+                      void (*delete)(void *data, bool leaf));
+struct tree *tree_new_group(struct tree *parent, void *data,
+                            void (*delete)(void *data, bool leaf),
+                            int count, ...);
+
 struct tree *tree_push_back(struct tree *self, void *data);
 struct tree *tree_push_child(struct tree *self, struct tree *child);
+
 void tree_preorder(struct tree *self, int d, void (*f)(struct tree *t, int d));
+
+size_t tree_size(struct tree *self);
+void tree_free(struct tree *self);
 
 #endif /* TREE_H */
