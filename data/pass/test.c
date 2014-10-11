@@ -9,6 +9,12 @@ struct test
 
 int main(int argc, char *argv[])
 {
+	test mytest;
+	mytest.data = 42;
+
+	test *mytestptr = malloc(sizeof(*mytestptr));
+	mytestptr->data = 42;
+
 	do {
 		/* skip first argument */
 		--argc;
