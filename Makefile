@@ -6,7 +6,7 @@ SHELL = /bin/sh
 
 # generated executables
 BIN = 120++
-TESTS = test-list test-tree
+TESTS = test-list test-tree test-hasht
 
 # dependencies
 CC = gcc
@@ -39,6 +39,7 @@ all: $(BIN) test
 test: $(TESTS)
 	./test-list
 	./test-tree
+	./test-hasht
 
 smoke: all
 	./$(BIN) $(TEST_DATA)
@@ -79,8 +80,14 @@ tree.o: tree.h list.h
 
 test.o: test.h
 
+hasht.o: hasht.h list.h
+
+BUILD_TEST = $(CC) $(CFLAGS) $(CDEBUG) -o $@ $^
 test-list: test_list.o list.o test.o
-	$(CC) $(CFLAGS) $(CDEBUG) -o $@ $^
+	$(BUILD_TEST)
 
 test-tree: test_tree.o tree.o list.o test.o
-	$(CC) $(CFLAGS) $(CDEBUG) -o $@ $^
+	$(BUILD_TEST)
+
+test-hasht: test_hasht.o hasht.o list.o test.o
+	$(BUILD_TEST)
