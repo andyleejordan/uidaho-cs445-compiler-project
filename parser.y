@@ -60,7 +60,7 @@ extern struct list *filenames;
 
 /* from lexer */
 void yyerror(const char *s);
-void typenames_insert_tree(struct tree *t, int category);
+void insert_typename_tree(struct tree *t, int category);
 
 /* syntax tree utilities */
 void print_tree(struct tree *t, int d);
@@ -581,8 +581,8 @@ class_specifier:
         ;
 
 class_head:
-        class_key IDENTIFIER                         { $$ = P(class-head1, 2, $1, $2); typenames_insert_tree($2, CLASS_NAME); }
-        | class_key nested_name_specifier IDENTIFIER { $$ = P(class-head2, 3, $1, $2, $3); typenames_insert_tree($3, CLASS_NAME); }
+        class_key IDENTIFIER                         { $$ = P(class-head1, 2, $1, $2); insert_typename_tree($2, CLASS_NAME); }
+        | class_key nested_name_specifier IDENTIFIER { $$ = P(class-head2, 3, $1, $2, $3); insert_typename_tree($3, CLASS_NAME); }
         ;
 
 class_key:

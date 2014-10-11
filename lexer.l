@@ -29,6 +29,7 @@ IS       (u|U|l|L)*
 
 #include "list.h"
 #include "tree.h"
+#include "hasht.h"
 #include "token.h"
 #include "parser.tab.h"
 
@@ -69,16 +70,9 @@ void handle_string();
 void handle_include(const char *s);
 
 /* typenames data */
-struct typename {
-        char *name;
-        int category;
-};
-
-struct list *typenames;
-bool typename_compare(const char *s, const struct typename *t);
-void typenames_insert(char *s, int category);
-void typenames_insert_tree(struct tree *t, int category);
-void typenames_free(struct typename *t);
+struct hasht *typenames;
+void insert_typename(char *k, int c);
+void insert_typename_tree(struct tree *t, int category);
 int check_identifier(const char *s);
 
 /* error helpers */
@@ -316,10 +310,6 @@ void unsupported();
                                   yyterminate(); }
 %%
 
-#undef TOKEN
-#undef YYAPPENDTEXT
-#undef YYAPPENDCHAR
-
 /*
  * Prints relevant information for lexical errors and exits returning 1
  * per assignment requirements.
@@ -394,65 +384,56 @@ void handle_include(const char *s)
 }
 
 /*
- * Insert "ifstream" and "ofstream" into typenames list only if they
- * are not there already (sufficient to look for either).
+ * Insert "ifstream" and "ofstream" into typenames hash table.
  */
 void handle_fstream()
 {
-        if (!list_search(typenames, "ifstream")) {
-                typenames_insert("ifstream", CLASS_NAME);
-                typenames_insert("ofstream", CLASS_NAME);
-        }
+	insert_typename("ifstream", CLASS_NAME);
+	insert_typename("ofstream", CLASS_NAME);
 }
 
 /*
- * Insert "string" into typenames list only if not already there.
+ * Insert "string" into typenames hash table.
  */
 void handle_string()
 {
-        if (!list_search(typenames, "string"))
-                typenames_insert("string", CLASS_NAME);
+	insert_typename("string", CLASS_NAME);
 }
 
 /*
- * Returns true if given name string matches the typename's name.
+ * Inserts typename into typenames hash table.
+ *
+ * Copies both the typename string (key) and integer category (value)
+ * so that a) the table can be freed later b) the table is not
+ * dependent on the source of the typename and c) the table wants
+ * void*, not a plain int.
  */
-bool typename_compare(const char *s, const struct typename *t)
+void insert_typename(char *k, int c)
 {
-        return 0 == strcmp(s, t->name);
-}
+	char *key = strdup(k);
+	int *i = malloc(sizeof(*i));
+	*i = c;
 
-/*
- * Given name string and integer category, inserts a new typename into
- * typenames list.
- */
-void typenames_insert(char *s, int category)
-{
-        if (list_search(typenames, (void *)s)) {
+	if (hasht_search(typenames, key))
                 lexerror("token previously declared as identifier");
-        }
-        struct typename *type = malloc(sizeof(*type));
-        type->name = strdup(s);
-        type->category = category;
-        list_push_back(typenames, type);
+
+	hasht_insert(typenames, key, i);
 }
 
 /*
- * Unwraps a tree leaf and passes token text as name to insert
- * function.
+ * Unwraps a tree leaf and inserts token's text as key with category
+ * as value into typenames hash table.
  */
-void typenames_insert_tree(struct tree *t, int category)
+void insert_typename_tree(struct tree *t, int category)
 {
-        typenames_insert(((struct token *)t->data)->text, category);
+	char *key = ((struct token *)t->data)->text;
+	insert_typename(key, category);
 }
 
-/*
- * Frees typename's name, then self.
- */
-void typenames_free(struct typename *t)
+void free_typename(struct hash_node *t)
 {
-	free(t->name);
-	free(t);
+	free(t->key);
+	free(t->value);
 }
 
 /*
@@ -461,13 +442,13 @@ void typenames_free(struct typename *t)
  */
 int check_identifier(const char *s)
 {
-        struct list_node *l = list_search(typenames, (void *)s);
-        if (l) {
-                int category = ((struct typename *)l->data)->category;
-                prepare_token(category);
-                return category;
-        } else {
-                prepare_token(IDENTIFIER);
-                return IDENTIFIER;
-        }
+        int *c = hasht_search(typenames, (void *)s);
+        if (c)
+	        TOKEN(*c);
+        else
+	        TOKEN(IDENTIFIER);
 }
+
+#undef TOKEN
+#undef YYAPPENDTEXT
+#undef YYAPPENDCHAR

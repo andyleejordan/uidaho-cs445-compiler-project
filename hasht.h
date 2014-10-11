@@ -32,7 +32,7 @@ struct hasht {
 struct hasht *hasht_new(size_t size,
                         size_t (*hash)(void *key, int perm),
                         bool (*compare)(void *a, void *b),
-                        void (*free)(struct hash_node *n));
+                        void (*delete)(struct hash_node *n));
 
 void *hasht_insert(struct hasht *self, void *key, void *value);
 void *hasht_search(struct hasht *self, void *key);

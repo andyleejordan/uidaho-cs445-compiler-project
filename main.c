@@ -16,15 +16,14 @@
 
 #include "token.h"
 #include "list.h"
+#include "hasht.h"
 #include "tree.h"
 #include "lexer.h"
 #include "parser.tab.h"
 
 /* from lexer */
-struct typename;
-extern struct list *typenames;
-bool typename_compare(char *s, struct typename *t);
-void typenames_free(struct typename *t);
+extern struct hasht *typenames;
+void free_typename(struct hash_node *t);
 
 /* from parser */
 void print_tree(struct tree *t, int d);
@@ -52,8 +51,7 @@ int main(int argc, char **argv)
 
 	/* setup lexer and parse each argument (or stdin) as a new 'program' */
 	for (int i = 1; i <= argc; ++i) {
-		typenames = list_new((bool (*)(void *, void *))&typename_compare,
-		                     (void (*)(void *))&typenames_free);
+		typenames = hasht_new(64, NULL, NULL, &free_typename);
 		if (typenames == NULL)
 			handle_error("main typenames");
 
@@ -99,7 +97,7 @@ int main(int argc, char **argv)
 		/* clean up */
 		tree_free(yyprogram);
 		yylex_destroy();
-		list_free(typenames);
+		hasht_free(typenames);
 	}
 
 	list_free(filenames);
