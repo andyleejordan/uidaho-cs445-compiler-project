@@ -7,7 +7,4 @@
 - =struct list *list_concat=
 - =list_split=
 - =list_sort=
-** TODO Expand tree library
-- =tree_push_subtree=
-** TODO Add hash table library (using TDD)
-** TODO Use hash table for identifier lookups
+** TODO Improve default hash function
