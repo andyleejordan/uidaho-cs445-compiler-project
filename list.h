@@ -45,15 +45,15 @@ bool list_contains(struct list *self, void *data,
 
 void list_node_link(struct list *self, struct list_node *a, struct list_node *b);
 struct list_node *list_insert(struct list *self, int pos, void *data);
-struct list_node *list_push(struct list *self, void *data);
+struct list_node *list_push_back(struct list *self, void *data);
 struct list_node *list_push_front(struct list *self, void *data);
 
 void *list_node_unlink(struct list *self, struct list_node *b);
 void *list_remove(struct list *self, int pos);
-void *list_pop(struct list *self);
+void *list_pop_back(struct list *self);
 void *list_pop_front(struct list *self);
 
-void *list_peek(struct list *self);
-void *list_peek_front(struct list *self);
+void *list_back(struct list *self);
+void *list_front(struct list *self);
 
 #endif /* LIST_H */

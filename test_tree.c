@@ -24,22 +24,22 @@ int main()
 	test_new(root, NULL, a);
 	test_size(root, 1);
 
-	testing("push depth 1");
+	testing("push back depth 1");
 	char *b = strdup("1");
-	struct tree *child1 = tree_push(root, b);
+	struct tree *child1 = tree_push_back(root, b);
 	test_new(child1, root, b);
 	test_size(root, 2);
 	char *c = strdup("*");
-	struct tree *child2 = tree_push(root, c);
+	struct tree *child2 = tree_push_back(root, c);
 	test_new(child2, root, c);
 	test_size(root, 3);
 
-	testing("push depth 2");
+	testing("push back depth 2");
 	char *d = strdup("2");
-	struct tree *child3 = tree_push(child2, d);
+	struct tree *child3 = tree_push_back(child2, d);
 	test_new(child3, child2, d);
 	char *e = strdup("3");
-	struct tree *child4 = tree_push(child2, e);
+	struct tree *child4 = tree_push_back(child2, e);
 	test_new(child4, child2, e);
 	test_size(child2, 3);
 	test_size(root, 5);
@@ -50,11 +50,11 @@ int main()
 
 	tree_free(root, &destroy_tree);
 
-	testing("variadic push 2 args");
+	testing("variadic push back 2 args");
 	struct tree *v = tree_new_group(NULL, "root", 2, tree_new(NULL, "foo"), tree_new(NULL, "bar"));
 	test_new_group(v);
 
-	testing("macro p push 2 args");
+	testing("macro P push back 2 args");
 	struct tree *p = P(root, 2, tree_new(NULL, "foo"), tree_new(NULL, "bar"));
 	test_new_group(p);
 
@@ -93,11 +93,11 @@ void test_new_group(struct tree *t)
 	if (!compare(t->data, "root"))
 		failure("data wasn't 'root'");
 
-	struct tree *c1 = list_pop(t->children);
+	struct tree *c1 = list_pop_back(t->children);
 	if (!compare(c1->data, "bar"))
 		failure("last child wasn't 'bar'");
 
-	struct tree *c2 = list_pop(t->children);
+	struct tree *c2 = list_pop_back(t->children);
 	if (!compare(c2->data, "foo"))
 		failure("first child wasn't 'foo'");
 }

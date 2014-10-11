@@ -741,6 +741,6 @@ SEMICOLON_opt:
 void yyerror(const char *s)
 {
         fprintf(stderr, "Syntax error: file %s, line %d, token %s: %s\n",
-                (const char *)list_peek(filenames), yylineno, yytext, s);
+                (const char *)list_back(filenames), yylineno, yytext, s);
         exit(2);
 }

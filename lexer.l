@@ -298,10 +298,10 @@ void unsupported();
 
 <<EOF>>                 { /* pop the current buffer and filename */
                           yypop_buffer_state();
-                          list_pop(filenames);
+                          list_pop_back(filenames);
 
                           /* if there's another file to process, chdir to it */
-                          char *filename = list_peek(filenames);
+                          char *filename = list_back(filenames);
                           if (filename != NULL)
                                   chdirname(filename);
 
@@ -323,7 +323,7 @@ void unsupported();
 void lexerror(const char *s)
 {
         fprintf(stderr, "Lexical error: file %s, line %d, token %s: %s\n",
-                (const char *)list_peek(filenames), yylineno, yytext, s);
+                (const char *)list_back(filenames), yylineno, yytext, s);
         exit(1);
 }
 
@@ -333,7 +333,7 @@ void lexerror(const char *s)
 void unsupported()
 {
         fprintf(stderr, "C++ operation unsupported in 120++: file %s, line %d, token: %s\n",
-                (const char *)list_peek(filenames), yylineno, yytext);
+                (const char *)list_back(filenames), yylineno, yytext);
         exit(3);
 }
 
@@ -344,7 +344,7 @@ void unsupported()
 void prepare_token(int category)
 {
         yytoken = token_new(category, yylineno, yytext,
-                            (const char *)list_peek(filenames));
+                            (const char *)list_back(filenames));
         yylval.t = tree_new(NULL, yytoken);
 }
 
@@ -369,17 +369,17 @@ void handle_include(const char *s)
         char *filename = realpath(include, NULL);
         if (filename == NULL) {
                 sprintf(error_buf, "Could not resolve path to included file: %s, included from %s\n",
-                        include, (const char *)list_peek(filenames));
+                        include, (const char *)list_back(filenames));
                 handle_error(error_buf);
         }
         free(include);
-        list_push(filenames, filename);
+        list_push_back(filenames, filename);
 
         /* open file and push buffer */
         yyin = fopen(filename, "r");
         if (yyin == NULL) {
                 sprintf(error_buf, "Could not open included file: %s, include from %s\n",
-                        filename, (const char *)list_peek(filenames));
+                        filename, (const char *)list_back(filenames));
                 handle_error(error_buf);
         }
         yylineno = 1;
@@ -434,7 +434,7 @@ void typenames_insert(char *s, int category)
         struct typename *type = malloc(sizeof(*type));
         type->name = strdup(s);
         type->category = category;
-        list_push(typenames, type);
+        list_push_back(typenames, type);
 }
 
 /*

@@ -59,7 +59,7 @@ struct list *list_new()
 void list_free(struct list *self, void (*f)(void *data))
 {
 	while (!list_empty(self)) {
-		void *d = list_pop(self);
+		void *d = list_pop_back(self);
 		if (f != NULL)
 			f(d);
 	}
@@ -199,7 +199,7 @@ struct list_node *list_insert(struct list *self, int pos, void *data)
 /*
  * Pushes data to end of list in O(1).
  */
-struct list_node *list_push(struct list *self, void *data)
+struct list_node *list_push_back(struct list *self, void *data)
 {
 	return list_insert(self, list_size(self), data);
 }
@@ -244,7 +244,7 @@ void *list_remove(struct list *self, int pos)
 	return list_node_unlink(self, list_index(self, pos));
 }
 
-void *list_pop(struct list *self)
+void *list_pop_back(struct list *self)
 {
 	return list_remove(self, -1);
 }
@@ -254,12 +254,12 @@ void *list_pop_front(struct list *self)
 	return list_remove(self, 0);
 }
 
-void *list_peek(struct list *self)
+void *list_back(struct list *self)
 {
 	return list_tail(self)->data;
 }
 
-void *list_peek_front(struct list *self)
+void *list_front(struct list *self)
 {
 	return list_head(self)->data;
 }

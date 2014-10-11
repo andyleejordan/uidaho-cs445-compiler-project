@@ -40,9 +40,9 @@ int main()
 	test_empty_sentinel(list);
 	test_empty_ends(list);
 
-	testing("push A");
+	testing("push back A");
 	char *a = strdup("A");
-	list_push(list, a);
+	list_push_back(list, a);
 
 	testing("head and tail");
 	test_head_data(list, a);
@@ -54,12 +54,12 @@ int main()
 	testing("not find B");
 	test_not_find_data(list, "B");
 
-	testing("push B");
+	testing("push back B");
 	char *b = strdup("B");
-	list_push(list, b);
+	list_push_back(list, b);
 	test_tail_data(list, b);
 
-	testing("push front");
+	testing("push front B");
 	list_push_front(list, b);
 	test_head_data(list, b);
 
@@ -67,8 +67,8 @@ int main()
 	test_non_empty(list);
 	test_size(list, 3);
 
-	testing("pop");
-	list_pop(list);
+	testing("pop back");
+	list_pop_back(list);
 	test_tail_data(list, a);
 
 	testing("pop front");
@@ -76,12 +76,12 @@ int main()
 	test_head_data(list, a);
 
 	testing("emptied");
-	list_pop(list);
+	list_pop_back(list);
 	test_empty(list);
 
 	testing("forward iteration:");
-	list_push(list, a);
-	list_push(list, b);
+	list_push_back(list, a);
+	list_push_back(list, b);
 	test_iter_forward(list);
 	printf("\n");
 
@@ -161,7 +161,7 @@ void test_non_empty(struct list *list)
 
 void test_head_data(struct list *list, char *data)
 {
-	if (!compare(list_peek_front(list), data)) {
+	if (!compare(list_front(list), data)) {
 		sprintf(buffer, "head should have been '%s'", data);
 		failure(buffer);
 	}
@@ -169,7 +169,7 @@ void test_head_data(struct list *list, char *data)
 
 void test_tail_data(struct list *list, char *data)
 {
-	if (!compare(list_peek(list), data)) {
+	if (!compare(list_back(list), data)) {
 		sprintf(buffer, "tail should have been '%s'", data);
 		failure(buffer);
 	}
