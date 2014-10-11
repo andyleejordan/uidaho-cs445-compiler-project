@@ -3,6 +3,7 @@
 /120++
 /test-list
 /test-tree
+/test-hasht
 /lexer.h
 /lex.yy.c
 /parser.output
