@@ -21,18 +21,29 @@ struct hash_node {
 };
 
 struct hasht {
-	struct list **table;
+	struct hash_node **table;
 	size_t size;
 	size_t used;
+	size_t (*hash)(void *key, int perm);
+	bool (*compare)(void *a, void *b);
+	void (*free)(struct hash_node *n);
 };
 
-struct hasht *hasht_new(size_t size);
+struct hasht *hasht_new(size_t size,
+                        size_t (*hash)(void *key, int perm),
+                        bool (*compare)(void *a, void *b),
+                        void (*free)(struct hash_node *n));
 
-struct hash_node *hasht_insert(struct hasht *self, char *key, void *value);
-void *hasht_search(struct hasht *self, char *key);
-void *hasht_delete(struct hasht *self, char *key);
+void *hasht_insert(struct hasht *self, void *key, void *value);
+void *hasht_search(struct hasht *self, void *key);
+void *hasht_delete(struct hasht *self, void *key);
 
-bool hasht_contains(struct hasht *self, char *key);
-size_t table_size(struct hasht *self);
+size_t hasht_size(struct hasht *self);
+size_t hasht_used(struct hasht *self);
+
+void hasht_free(struct hasht *self);
+
+struct hash_node *hash_node_new(struct hash_node *n, void *key, void *value);
+bool hash_node_deleted(struct hash_node *n);
 
 #endif /* HASHT_H */
