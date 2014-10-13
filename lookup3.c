@@ -1,3 +1,5 @@
+#pragma GCC diagnostic ignored "-Wunused-variable"
+#pragma GCC diagnostic ignored "-Wformat"
 /*
 -------------------------------------------------------------------------------
 lookup3.c, by Bob Jenkins, May 2006, Public Domain.
@@ -33,7 +35,6 @@ mixing with 12*3 instructions on 3 integers than you can with 3 instructions
 on 1 byte), but shoehorning those bytes into integers efficiently is messy.
 -------------------------------------------------------------------------------
 */
-#define SELF_TEST 1
 
 #include <stdio.h>      /* defines printf for tests */
 #include <time.h>       /* defines time_t for timings in the test */

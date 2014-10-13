@@ -27,7 +27,7 @@ GITREF = $(shell git tag | tail -n 1)
 -include local.mk
 
 # files
-SRCS = main.c token.c list.c tree.c hasht.c lex.yy.c parser.tab.c
+SRCS = main.c token.c list.c tree.c hasht.c lex.yy.c parser.tab.c lookup3.c
 OBJS = $(SRCS:.c=.o)
 TEST_DATA = data/pass/test.c data/pass/test.cpp
 
@@ -84,7 +84,7 @@ tree.o: tree.h list.h
 
 test.o: test.h
 
-hasht.o: hasht.h list.h
+hasht.o: hasht.h list.h lookup3.o
 
 BUILD_TEST = $(CC) $(CFLAGS) $(CDEBUG) -o $@ $^
 test-list: test_list.o list.o test.o
@@ -93,5 +93,5 @@ test-list: test_list.o list.o test.o
 test-tree: test_tree.o tree.o list.o test.o
 	$(BUILD_TEST)
 
-test-hasht: test_hasht.o hasht.o list.o test.o
+test-hasht: test_hasht.o hasht.o list.o test.o lookup3.o
 	$(BUILD_TEST)
