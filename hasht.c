@@ -35,7 +35,7 @@ struct hasht *hasht_new(size_t size,
 {
 	/* ensure size is a power of 2 if using default hash */
 	if (size != 0 && hash == NULL && (size & (size - 1))) {
-		fprintf(stderr, "default hash requires size to be power of 2\n");
+		fprintf(stderr, "hasht_new(): default hash requires size to be power of 2\n");
 		return NULL;
 	}
 

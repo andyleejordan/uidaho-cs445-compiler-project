@@ -45,10 +45,12 @@
 
 %{
 
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "token.h"
 #include "list.h"
 #include "tree.h"
-#include "lexer.h"
 
 /* semantic action helpers */
 #define P(name, ...) tree_new_group(NULL, #name, &delete_tree, __VA_ARGS__)
@@ -59,6 +61,9 @@ extern struct tree *yyprogram;
 extern struct list *filenames;
 
 /* from lexer */
+extern int yylineno;
+extern char *yytext;
+int yylex();
 void yyerror(const char *s);
 void insert_typename_tree(struct tree *t, int category);
 
@@ -746,7 +751,7 @@ SEMICOLON_opt:
 void yyerror(const char *s)
 {
         fprintf(stderr, "Syntax error: file %s, line %d, token %s: %s\n",
-                (const char *)list_back(filenames), yylineno, yytext, s);
+                (const char*)list_back(filenames), yylineno, yytext, s);
         exit(2);
 }
 

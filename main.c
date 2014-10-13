@@ -14,19 +14,18 @@
 #include <libgen.h>
 #include <unistd.h>
 
-#include "token.h"
 #include "list.h"
-#include "hasht.h"
 #include "tree.h"
+#include "hasht.h"
 
 #include "lexer.h"
-#include "parser.tab.h"
 
 /* from lexer */
 extern struct hasht *typenames;
 void free_typename(struct hash_node *t);
 
 /* from parser */
+int yyparse();
 void print_tree(struct tree *t, int d);
 
 /* shared with lexer and parser */
