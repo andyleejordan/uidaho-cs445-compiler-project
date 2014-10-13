@@ -14,10 +14,12 @@
 
 #include "hasht.h"
 
-size_t hasht_hash(struct hasht *self, void *key, int perm);
+/* from lookup3.c */
+void hashlittle2(const void *key, size_t length, uint32_t *pc, uint32_t *pb);
 
+size_t hasht_hash(struct hasht *self, void *key, int perm);
+uint32_t hasht_default_hash(char *key, int perm);
 bool hasht_default_compare(void *a, void *b);
-size_t hasht_default_hash(char *key, int perm);
 void hasht_default_delete(struct hash_node *n);
 
 /*
@@ -31,6 +33,12 @@ struct hasht *hasht_new(size_t size,
                         bool (*compare)(void *a, void *b),
                         void (*delete)(struct hash_node *n))
 {
+	/* ensure size is a power of 2 if using default hash */
+	if (size != 0 && hash == NULL && (size & (size - 1))) {
+		fprintf(stderr, "default hash requires size to be power of 2\n");
+		return NULL;
+	}
+
 	struct hasht *t = malloc(sizeof(*t));
 	if (t == NULL) {
 		perror("hasht_new()");
@@ -222,11 +230,22 @@ size_t hasht_hash(struct hasht *self, void *key, int perm)
 }
 
 /*
- * Default hash. Work in progress.
+ * Default hash. Uses double hashing for open addressing.
+ *
+ * Gets h1 and h2 from Jenkins' hashlittle2().
  */
-size_t hasht_default_hash(char *key, int perm)
+uint32_t hasht_default_hash(char *key, int perm)
 {
-	return strlen(key) + perm;
+	uint32_t h1 = 0;
+	uint32_t h2 = 0;
+	hashlittle2(key, strlen(key), &h1, &h2);
+
+	/* given table size m as a power of 2, this ensures h2 will always be
+	   relatively prime to m, per CLRS */
+	if (h2 % 2 == 0)
+		--h2;
+
+	return (h1 + perm * h2);
 }
 
 /*
