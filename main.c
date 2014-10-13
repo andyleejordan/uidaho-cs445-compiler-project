@@ -18,6 +18,7 @@
 #include "list.h"
 #include "hasht.h"
 #include "tree.h"
+
 #include "lexer.h"
 #include "parser.tab.h"
 
@@ -51,7 +52,7 @@ int main(int argc, char **argv)
 
 	/* setup lexer and parse each argument (or stdin) as a new 'program' */
 	for (int i = 1; i <= argc; ++i) {
-		typenames = hasht_new(64, NULL, NULL, &free_typename);
+		typenames = hasht_new(2, true, NULL, NULL, &free_typename);
 		if (typenames == NULL)
 			handle_error("main typenames");
 

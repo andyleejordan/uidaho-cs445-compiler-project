@@ -26,6 +26,7 @@ void hasht_default_delete(struct hash_node *n);
  * If given null for hash, compare, or delete functions, uses default.
  */
 struct hasht *hasht_new(size_t size,
+                        bool grow,
                         size_t (*hash)(void *key, int perm),
                         bool (*compare)(void *a, void *b),
                         void (*delete)(struct hash_node *n))
@@ -47,6 +48,8 @@ struct hasht *hasht_new(size_t size,
 		: size;
 
 	t->used = 0;
+
+	t->grow = grow;
 
 	t->hash = (hash == NULL)
 		? (size_t (*)(void *, int perm))&hasht_default_hash
@@ -76,6 +79,9 @@ void *hasht_insert(struct hasht *self, void *key, void *value)
 		fprintf(stderr, "hasht_insert(): self was null\n");
 		return NULL;
 	}
+
+	if (self->grow && (self->used > self->size / 2))
+		hasht_resize(self, self->size * 2);
 
 	for(size_t i = 0; i < hasht_size(self); ++i) {
 		size_t index = hasht_hash(self, key, i);
@@ -154,6 +160,39 @@ size_t hasht_used(struct hasht *self)
 		return 0;
 	}
 	return self->used;
+}
+
+/*
+ * Resize hash table by reinsertion.
+ *
+ * Creates a new array of given size for self. Iterates through old
+ * table, deleting nodes marked "deleted", and otherwise inserting
+ * existing key/value pairs into the new table. Frees old table array.
+ */
+void hasht_resize(struct hasht *self, size_t size)
+{
+	size_t old_size = self->size;
+	struct hash_node **old_table = self->table;
+	struct hash_node **new_table = calloc(size, sizeof(*new_table));
+	if (new_table == NULL) {
+		perror("hasht_resize()");
+		return;
+	}
+
+	self->table = new_table;
+	self->size = size;
+	self->used = 0; /* reset used count since insert increments it */
+
+	for (size_t i = 0; i < old_size; ++i) {
+		struct hash_node *slot = old_table[i];
+		if (slot) {
+			if (hash_node_deleted(slot))
+				self->delete(slot);
+			else
+				hasht_insert(self, slot->key, slot->value);
+		}
+	}
+	free(old_table);
 }
 
 /*
