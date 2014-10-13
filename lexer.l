@@ -417,7 +417,8 @@ void insert_typename(char *k, int c)
 	if (hasht_search(typenames, key))
                 lexerror("token previously declared as identifier");
 
-	hasht_insert(typenames, key, i);
+	if (hasht_insert(typenames, key, i) == NULL)
+		handle_error("typenames table failed to insert");
 }
 
 /*

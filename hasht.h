@@ -13,10 +13,8 @@
 #include <stddef.h>
 #include <stdbool.h>
 
-struct list;
-
 struct hash_node {
-	char *key;
+	void *key;
 	void *value;
 };
 

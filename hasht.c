@@ -7,9 +7,10 @@
  *
  */
 
-#include "stddef.h"
-#include "stdlib.h"
-#include "string.h"
+#include <stddef.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 
 #include "hasht.h"
 
@@ -30,9 +31,21 @@ struct hasht *hasht_new(size_t size,
                         void (*delete)(struct hash_node *n))
 {
 	struct hasht *t = malloc(sizeof(*t));
+	if (t == NULL) {
+		perror("hasht_new()");
+		return NULL;
+	}
 
-	t->table = calloc(size, sizeof(struct hash_node *));
-	t->size = size;
+	t->table = calloc(size, sizeof(t->table));
+	if (t->table == NULL) {
+		perror("hasht_new()");
+		return NULL;
+	}
+
+	t->size = size == 0
+		? 256
+		: size;
+
 	t->used = 0;
 
 	t->hash = (hash == NULL)
@@ -59,6 +72,11 @@ struct hasht *hasht_new(size_t size,
  */
 void *hasht_insert(struct hasht *self, void *key, void *value)
 {
+	if (self == NULL) {
+		fprintf(stderr, "hasht_insert(): self was null\n");
+		return NULL;
+	}
+
 	for(size_t i = 0; i < hasht_size(self); ++i) {
 		size_t index = hasht_hash(self, key, i);
 		struct hash_node **slot = &self->table[index];
@@ -70,6 +88,8 @@ void *hasht_insert(struct hasht *self, void *key, void *value)
 			return NULL;
 		}
 	}
+
+	fprintf(stderr, "hasht_insert(): failed (table full?)\n");
 	return NULL;
 }
 
@@ -102,14 +122,14 @@ void *hasht_delete(struct hasht *self, void *key)
 	for(size_t i = 0; i < hasht_size(self); ++i) {
 		size_t index = hasht_hash(self, key, i);
 		struct hash_node *slot = self->table[index];
-		if (slot == NULL) {
-			return NULL;
+		if (slot == NULL) { 
+			return NULL; /* key not in table */
 		} else if (self->compare(key, slot->key)) {
-			slot->key = NULL;
+			slot->key = NULL; /* mark deleted */
 			return slot->value;
 		}
 	}
-	return NULL;
+	return NULL; /* table full and key not in table */
 }
 
 /*
@@ -117,6 +137,10 @@ void *hasht_delete(struct hasht *self, void *key)
  */
 size_t hasht_size(struct hasht *self)
 {
+	if (self == NULL) {
+		fprintf(stderr, "hasht_size(): self was null\n");
+		return 0;
+	}
 	return self->size;
 }
 
@@ -125,6 +149,10 @@ size_t hasht_size(struct hasht *self)
  */
 size_t hasht_used(struct hasht *self)
 {
+	if (self == NULL) {
+		fprintf(stderr, "hasht_used(): self was null\n");
+		return 0;
+	}
 	return self->used;
 }
 
@@ -135,7 +163,7 @@ void hasht_free(struct hasht *self)
 {
 	for (size_t i = 0; i < hasht_size(self); ++i) {
 		struct hash_node *slot = self->table[i];
-		if (slot != NULL && !hash_node_deleted(slot))
+		if (slot != NULL)
 			self->delete(slot);
 	}
 	free(self->table);
@@ -143,10 +171,14 @@ void hasht_free(struct hasht *self)
 }
 
 /*
- * Maps hash function to array index.
+ * Maps key to table index.
  */
 size_t hasht_hash(struct hasht *self, void *key, int perm)
 {
+	if (self == NULL) {
+		fprintf(stderr, "hasht_hash(): self was null\n");
+		return perm;
+	}
 	return self->hash(key, perm) % hasht_size(self);
 }
 
@@ -159,7 +191,7 @@ size_t hasht_default_hash(char *key, int perm)
 }
 
 /*
- * Default comparison for keys.
+ * Default comparison for string keys.
  */
 bool hasht_default_compare(void *a, void *b)
 {
@@ -171,8 +203,14 @@ bool hasht_default_compare(void *a, void *b)
  */
 void hasht_default_delete(struct hash_node *n)
 {
-	free(n->key);
-	free(n->value);
+	if (n == NULL) {
+		fprintf(stderr, "hasht_default_delete(): node was null\n");
+		return;
+	}
+	if (n->key) {
+		free(n->key);
+		free(n->value);
+	}
 	free(n);
 }
 
@@ -195,5 +233,9 @@ struct hash_node *hash_node_new(struct hash_node *n, void *key, void *value)
  */
 bool hash_node_deleted(struct hash_node *n)
 {
+	if (n == NULL) {
+		fprintf(stderr, "hasht_node_deleted(): node was null\n");
+		return true;
+	}
 	return (n->key == NULL);
 }
