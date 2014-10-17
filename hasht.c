@@ -137,7 +137,7 @@ void *hasht_delete(struct hasht *self, void *key)
 	for(size_t i = 0; i < hasht_size(self); ++i) {
 		size_t index = hasht_hash(self, key, i);
 		struct hash_node *slot = self->table[index];
-		if (slot == NULL) { 
+		if (slot == NULL) {
 			return NULL; /* key not in table */
 		} else if (self->compare(key, slot->key)) {
 			slot->key = NULL; /* mark deleted */
@@ -180,6 +180,11 @@ size_t hasht_used(struct hasht *self)
  */
 void hasht_resize(struct hasht *self, size_t size)
 {
+	if (self->used > size) {
+		fprintf(stderr, "hasht_resize(): requested size too small\n");
+		return;
+	}
+
 	size_t old_size = self->size;
 	struct hash_node **old_table = self->table;
 	struct hash_node **new_table = calloc(size, sizeof(*new_table));
