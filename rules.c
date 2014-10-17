@@ -1,0 +1,140 @@
+/*
+ * rules.c - Implementation of rules.
+ *
+ * Copyright (C) 2014 Andrew Schwartzmeyer
+ *
+ * This file released under the AGPLv3.
+ *
+ */
+
+#include "rules.h"
+
+/*
+ * For the given rule, create a case which returns the stringified
+ * version of the rule (a static string literal).
+ */
+#define R(rule) case rule: return #rule
+
+char *rule_lookup(int rule)
+{
+	switch (rule) {
+		R(PROGRAM);
+		R(UNQUALID_2);
+		R(QUAL_ID);
+		R(NESTED_NAME1);
+		R(POSTFIX_EXPR2);
+		R(POSTFIX_EXPR3);
+		R(POSTFIX_EXPR4);
+		R(POSTFIX_EXPR5);
+		R(POSTFIX_EXPR6);
+		R(POSTFIX_EXPR7);
+		R(POSTFIX_EXPR8);
+		R(POSTFIX_EXPR9);
+		R(POSTFIX_EXPR10);
+		R(EXPR_LIST2);
+		R(UNARY_EXPR2);
+		R(UNARY_EXPR3);
+		R(UNARY_EXPR4);
+		R(UNARY_EXPR5);
+		R(UNARY_EXPR6);
+		R(UNARY_EXPR7);
+		R(UNARY_EXPR8);
+		R(NEW_EXPR1);
+		R(NEW_EXPR2);
+		R(NEW_TYPE_ID);
+		R(NEW_DECL1);
+		R(DIRECT_NEW_DECL1);
+		R(DIRECT_NEW_DECL2);
+		R(DELETE_EXPR1);
+		R(DELETE_EXPR2);
+		R(DELETE_EXPR3);
+		R(DELETE_EXPR4);
+		R(PM_EXPR2);
+		R(PM_EXPR3);
+		R(MULT_EXPR2);
+		R(MULT_EXPR3);
+		R(MULT_EXPR4);
+		R(ADD_EXPR2);
+		R(ADD_EXPR3);
+		R(SHIFT_EXPR2);
+		R(SHIFT_EXPR3);
+		R(REL_EXPR2);
+		R(REL_EXPR3);
+		R(REL_EXPR4);
+		R(REL_EXPR5);
+		R(EQUAL_EXPR2);
+		R(EQUAL_EXPR3);
+		R(AND_EXPR2);
+		R(XOR_EXPR2);
+		R(OR_EXPR2);
+		R(LOGICAL_AND_EXPR2);
+		R(LOGICAL_OR_EXPR2);
+		R(COND_EXPR2);
+		R(ASSIGN_EXPR2);
+		R(EXPR2);
+		R(LABELED_STATEMENT1);
+		R(LABELED_STATEMENT2);
+		R(STATEMENT_SEQ2);
+		R(SELECT1);
+		R(SELECT2);
+		R(SELECT3);
+		R(CONDITION2);
+		R(ITER1);
+		R(ITER2);
+		R(ITER3);
+		R(JUMP3);
+		R(DECL_SEQ2);
+		R(SIMPLE_DECL1);
+		R(DECL_SPEC_SEQ2);
+		R(SIMPLE_TYPE_SPEC2);
+		R(ELAB_TYPE_SPEC1);
+		R(ELAB_TYPE_SPEC2);
+		R(INIT_DECL_LIST2);
+		R(INIT_DECL);
+		R(DECL2);
+		R(DIRECT_DECL2);
+		R(DIRECT_DECL3);
+		R(DIRECT_DECL4);
+		R(DIRECT_DECL5);
+		R(DIRECT_DECL6);
+		R(PTR3);
+		R(PTR4);
+		R(DECL_D3);
+		R(TYPE_ID);
+		R(TYPE_SPEC_SEQ);
+		R(ABSTRACT_DECL1);
+		R(DIRECT_ABSTRACT_DECL1);
+		R(DIRECT_ABSTRACT_DECL3);
+		R(DIRECT_ABSTRACT_DECL4);
+		R(PARAM_DECL_LIST1);
+		R(PARAM_DECL1);
+		R(PARAM_DECL2);
+		R(PARAM_DECL3);
+		R(PARAM_DECL4);
+		R(FUNCTION_DEF1);
+		R(FUNCTION_DEF2);
+		R(INIT1);
+		R(INIT_CLAUSE2);
+		R(INIT_LIST2);
+		R(CLASS_SPEC);
+		R(CLASS_HEAD1);
+		R(CLASS_HEAD2);
+		R(MEMBER_SPEC1);
+		R(MEMBER_SPEC2);
+		R(MEMBER_DECL1);
+		R(MEMBER_DECL5);
+		R(MEMBER_DECL_LIST2);
+		R(MEMBER_DECLARATOR2);
+		R(MEMBER_DECLARATOR3);
+		R(CONSTANT_INIT);
+		R(CTOR_INIT);
+		R(MEM_INIT_LIST2);
+		R(MEM_INIT);
+		R(MEM_INIT_ID1);
+		R(MEM_INIT_ID3);
+	default:
+		return "Rule not found";
+	}
+}
+
+#undef R

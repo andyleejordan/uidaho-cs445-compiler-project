@@ -51,10 +51,7 @@
 #include "token.h"
 #include "list.h"
 #include "tree.h"
-
-/* semantic action helpers */
-#define P(name, ...) tree_new_group(NULL, #name, &delete_tree, __VA_ARGS__)
-#define E() NULL
+#include "rules.h"
 
 /* from main */
 extern struct tree *yyprogram;
@@ -68,8 +65,13 @@ void yyerror(const char *s);
 void insert_typename_tree(struct tree *t, int category);
 
 /* syntax tree utilities */
+int *copy_int(int i);
 void print_tree(struct tree *t, int d);
 void delete_tree(void *data, bool leaf);
+
+/* semantic action helpers */
+#define P(name, ...) tree_new_group(NULL, (void *)copy_int(name), &delete_tree, __VA_ARGS__)
+#define E() NULL
 
 %}
 
@@ -149,7 +151,7 @@ boolean:
         ;
 
 program:
-        declaration_seq_opt { $$ = P(program, 1, $1); yyprogram = $$; }
+        declaration_seq_opt { $$ = P(PROGRAM, 1, $1); yyprogram = $$; }
         ;
 
 /*----------------------------------------------------------------------
@@ -169,45 +171,45 @@ id_expression:
 
 unqualified_id:
         IDENTIFIER       { $$ = $1; }
-        | '~' CLASS_NAME { $$ = P(unqualid-2, 2, $1, $2); }
+        | '~' CLASS_NAME { $$ = P(UNQUALID_2, 2, $1, $2); }
         ;
 
 qualified_id:
-        nested_name_specifier unqualified_id { $$ = P(qual-id, 2, $1, $2); }
+        nested_name_specifier unqualified_id { $$ = P(QUAL_ID, 2, $1, $2); }
         ;
 
 nested_name_specifier:
-        CLASS_NAME COLONCOLON nested_name_specifier { $$ = P(nested-name1, 2, $1, $3); }
+        CLASS_NAME COLONCOLON nested_name_specifier { $$ = P(NESTED_NAME1, 2, $1, $3); }
         | CLASS_NAME COLONCOLON                     { $$ = $1; }
         ;
 
 postfix_expression:
         primary_expression                                  { $$ = $1; }
-        | postfix_expression '[' expression ']'             { $$ = P(postfix-expr2, 4, $1, $2, $3, $4); }
-        | postfix_expression '(' expression_list_opt ')'    { $$ = P(postfix-expr3, 2, $1, $3); }
-        | simple_type_specifier '(' expression_list_opt ')' { $$ = P(postfix-expr4, 2, $1, $3); }
-        | postfix_expression '.' COLONCOLON id_expression   { $$ = P(postfix-expr5, 3, $1, $2, $4); }
-        | postfix_expression '.' id_expression              { $$ = P(postfix-expr6, 3, $1, $2, $3); }
-        | postfix_expression ARROW COLONCOLON id_expression { $$ = P(postfix-expr7, 3, $1, $2, $4); }
-        | postfix_expression ARROW id_expression            { $$ = P(postfix-expr8, 3, $1, $2, $3); }
-        | postfix_expression PLUSPLUS                       { $$ = P(postfix-expr9, 2, $1, $2); }
-        | postfix_expression MINUSMINUS                     { $$ = P(postfix-expr10, 2, $1, $2); }
+        | postfix_expression '[' expression ']'             { $$ = P(POSTFIX_EXPR2, 4, $1, $2, $3, $4); }
+        | postfix_expression '(' expression_list_opt ')'    { $$ = P(POSTFIX_EXPR3, 2, $1, $3); }
+        | simple_type_specifier '(' expression_list_opt ')' { $$ = P(POSTFIX_EXPR4, 2, $1, $3); }
+        | postfix_expression '.' COLONCOLON id_expression   { $$ = P(POSTFIX_EXPR5, 3, $1, $2, $4); }
+        | postfix_expression '.' id_expression              { $$ = P(POSTFIX_EXPR6, 3, $1, $2, $3); }
+        | postfix_expression ARROW COLONCOLON id_expression { $$ = P(POSTFIX_EXPR7, 3, $1, $2, $4); }
+        | postfix_expression ARROW id_expression            { $$ = P(POSTFIX_EXPR8, 3, $1, $2, $3); }
+        | postfix_expression PLUSPLUS                       { $$ = P(POSTFIX_EXPR9, 2, $1, $2); }
+        | postfix_expression MINUSMINUS                     { $$ = P(POSTFIX_EXPR10, 2, $1, $2); }
         ;
 
 expression_list:
         assignment_expression                       { $$ = $1; }
-        | expression_list ',' assignment_expression { $$ = P(expr-list2, 2, $1, $3); }
+        | expression_list ',' assignment_expression { $$ = P(EXPR_LIST2, 2, $1, $3); }
         ;
 
 unary_expression:
         postfix_expression                { $$ = $1; }
-        | PLUSPLUS unary_expression       { $$ = P(unary-expr2, 2, $1, $2); }
-        | MINUSMINUS unary_expression     { $$ = P(unary-expr3, 2, $1, $2); }
-        | '*' unary_expression            { $$ = P(unary-expr4, 2, $1, $2); }
-        | '&' unary_expression            { $$ = P(unary-expr5, 2, $1, $2); }
-        | unary_operator unary_expression { $$ = P(unary-expr6, 2, $1, $2); }
-        | SIZEOF unary_expression         { $$ = P(unary-expr7, 2, $1, $2); }
-        | SIZEOF '(' type_id ')'          { $$ = P(unary-expr8, 2, $1, $3); }
+        | PLUSPLUS unary_expression       { $$ = P(UNARY_EXPR2, 2, $1, $2); }
+        | MINUSMINUS unary_expression     { $$ = P(UNARY_EXPR3, 2, $1, $2); }
+        | '*' unary_expression            { $$ = P(UNARY_EXPR4, 2, $1, $2); }
+        | '&' unary_expression            { $$ = P(UNARY_EXPR5, 2, $1, $2); }
+        | unary_operator unary_expression { $$ = P(UNARY_EXPR6, 2, $1, $2); }
+        | SIZEOF unary_expression         { $$ = P(UNARY_EXPR7, 2, $1, $2); }
+        | SIZEOF '(' type_id ')'          { $$ = P(UNARY_EXPR8, 2, $1, $3); }
         | new_expression                  { $$ = $1; }
         | delete_expression               { $$ = $1; }
         ;
@@ -220,8 +222,8 @@ unary_operator:
         ;
 
 new_expression:
-        NEW new_placement_opt new_type_id new_initializer_opt              { $$ = P(new-expr1, 4, $1, $2, $3, $4); }
-        | COLONCOLON NEW new_placement_opt new_type_id new_initializer_opt { $$ = P(new-expr2, 4, $2, $3, $4, $5); }
+        NEW new_placement_opt new_type_id new_initializer_opt              { $$ = P(NEW_EXPR1, 4, $1, $2, $3, $4); }
+        | COLONCOLON NEW new_placement_opt new_type_id new_initializer_opt { $$ = P(NEW_EXPR2, 4, $2, $3, $4, $5); }
         ;
 
 new_placement:
@@ -229,17 +231,17 @@ new_placement:
         ;
 
 new_type_id:
-        type_specifier_seq new_declarator_opt { $$ = P(new-type-id, 2, $1, $2); }
+        type_specifier_seq new_declarator_opt { $$ = P(NEW_TYPE_ID, 2, $1, $2); }
         ;
 
 new_declarator:
-        ptr_operator new_declarator_opt { $$ = P(new-decl1, 2, $1, $2); }
+        ptr_operator new_declarator_opt { $$ = P(NEW_DECL1, 2, $1, $2); }
         | direct_new_declarator         { $$ = $1; }
         ;
 
 direct_new_declarator:
-        '[' expression ']'                                  { $$ = P(direct-new-decl1, 3, $1, $2, $3); }
-        | direct_new_declarator '[' constant_expression ']' { $$ = P(direct-new-decl2, 4, $1, $2, $3, $4); }
+        '[' expression ']'                                  { $$ = P(DIRECT_NEW_DECL1, 3, $1, $2, $3); }
+        | direct_new_declarator '[' constant_expression ']' { $$ = P(DIRECT_NEW_DECL2, 4, $1, $2, $3, $4); }
         ;
 
 new_initializer:
@@ -247,84 +249,84 @@ new_initializer:
         ;
 
 delete_expression:
-        DELETE unary_expression                      { $$ = P(delete-expr1, 2, $1, $2); }
-        | COLONCOLON DELETE unary_expression         { $$ = P(delete-expr2, 2, $2, $3); }
-        | DELETE '[' ']' unary_expression            { $$ = P(delete-expr3, 4, $1, $2, $3, $4); }
-        | COLONCOLON DELETE '[' ']' unary_expression { $$ = P(delete-expr4, 4, $2, $3, $4, $5); }
+        DELETE unary_expression                      { $$ = P(DELETE_EXPR1, 2, $1, $2); }
+        | COLONCOLON DELETE unary_expression         { $$ = P(DELETE_EXPR2, 2, $2, $3); }
+        | DELETE '[' ']' unary_expression            { $$ = P(DELETE_EXPR3, 4, $1, $2, $3, $4); }
+        | COLONCOLON DELETE '[' ']' unary_expression { $$ = P(DELETE_EXPR4, 4, $2, $3, $4, $5); }
         ;
 
 pm_expression:
         unary_expression                           { $$ = $1; }
-        | pm_expression DOTSTAR unary_expression   { $$ = P(pm-expr2, 3, $1, $2, $3); }
-        | pm_expression ARROWSTAR unary_expression { $$ = P(pm-expr3, 3, $1, $2, $3); }
+        | pm_expression DOTSTAR unary_expression   { $$ = P(PM_EXPR2, 3, $1, $2, $3); }
+        | pm_expression ARROWSTAR unary_expression { $$ = P(PM_EXPR3, 3, $1, $2, $3); }
         ;
 
 multiplicative_expression:
         pm_expression                                 { $$ = $1; }
-        | multiplicative_expression '*' pm_expression { $$ = P(mult-expr2, 3, $1, $2, $3); }
-        | multiplicative_expression '/' pm_expression { $$ = P(mult-expr3, 3, $1, $2, $3); }
-        | multiplicative_expression '%' pm_expression { $$ = P(mult-expr4, 3, $1, $2, $3); }
+        | multiplicative_expression '*' pm_expression { $$ = P(MULT_EXPR2, 3, $1, $2, $3); }
+        | multiplicative_expression '/' pm_expression { $$ = P(MULT_EXPR3, 3, $1, $2, $3); }
+        | multiplicative_expression '%' pm_expression { $$ = P(MULT_EXPR4, 3, $1, $2, $3); }
         ;
 
 additive_expression:
         multiplicative_expression                           { $$ = $1; }
-        | additive_expression '+' multiplicative_expression { $$ = P(add-expr2, 3, $1, $2, $3); }
-        | additive_expression '-' multiplicative_expression { $$ = P(add-expr3, 3, $1, $2, $3); }
+        | additive_expression '+' multiplicative_expression { $$ = P(ADD_EXPR2, 3, $1, $2, $3); }
+        | additive_expression '-' multiplicative_expression { $$ = P(ADD_EXPR3, 3, $1, $2, $3); }
         ;
 
 shift_expression:
         additive_expression                       { $$ = $1; }
-        | shift_expression SL additive_expression { $$ = P(shift-expr2, 3, $1, $2, $3); }
-        | shift_expression SR additive_expression { $$ = P(shift-expr3, 3, $1, $2, $3); }
+        | shift_expression SL additive_expression { $$ = P(SHIFT_EXPR2, 3, $1, $2, $3); }
+        | shift_expression SR additive_expression { $$ = P(SHIFT_EXPR3, 3, $1, $2, $3); }
         ;
 
 relational_expression:
         shift_expression                              { $$ = $1; }
-        | relational_expression '<' shift_expression  { $$ = P(rel-expr2, 3, $1, $2, $3); }
-        | relational_expression '>' shift_expression  { $$ = P(rel-expr3, 3, $1, $2, $3); }
-        | relational_expression LTEQ shift_expression { $$ = P(rel-expr4, 3, $1, $2, $3); }
-        | relational_expression GTEQ shift_expression { $$ = P(rel-expr5, 3, $1, $2, $3); }
+        | relational_expression '<' shift_expression  { $$ = P(REL_EXPR2, 3, $1, $2, $3); }
+        | relational_expression '>' shift_expression  { $$ = P(REL_EXPR3, 3, $1, $2, $3); }
+        | relational_expression LTEQ shift_expression { $$ = P(REL_EXPR4, 3, $1, $2, $3); }
+        | relational_expression GTEQ shift_expression { $$ = P(REL_EXPR5, 3, $1, $2, $3); }
         ;
 
 equality_expression:
         relational_expression                             { $$ = $1; }
-        | equality_expression EQ relational_expression    { $$ = P(equal-expr2, 3, $1, $2, $3); }
-        | equality_expression NOTEQ relational_expression { $$ = P(equal-expr3, 3, $1, $2, $3); }
+        | equality_expression EQ relational_expression    { $$ = P(EQUAL_EXPR2, 3, $1, $2, $3); }
+        | equality_expression NOTEQ relational_expression { $$ = P(EQUAL_EXPR3, 3, $1, $2, $3); }
         ;
 
 and_expression:
         equality_expression                      { $$ = $1; }
-        | and_expression '&' equality_expression { $$ = P(and-expr2, 3, $1, $2, $3); }
+        | and_expression '&' equality_expression { $$ = P(AND_EXPR2, 3, $1, $2, $3); }
         ;
 
 exclusive_or_expression:
         and_expression                               { $$ = $1; }
-        | exclusive_or_expression '^' and_expression { $$ = P(xor-expr2, 3, $1, $2, $3); }
+        | exclusive_or_expression '^' and_expression { $$ = P(XOR_EXPR2, 3, $1, $2, $3); }
         ;
 
 inclusive_or_expression:
         exclusive_or_expression                               { $$ = $1; }
-        | inclusive_or_expression '|' exclusive_or_expression { $$ = P(or-expr2, 3, $1, $2, $3); }
+        | inclusive_or_expression '|' exclusive_or_expression { $$ = P(OR_EXPR2, 3, $1, $2, $3); }
         ;
 
 logical_and_expression:
         inclusive_or_expression                                 { $$ = $1; }
-        | logical_and_expression ANDAND inclusive_or_expression { $$ = P(logical-and-expr2, 3, $1, $2, $3); }
+        | logical_and_expression ANDAND inclusive_or_expression { $$ = P(LOGICAL_AND_EXPR2, 3, $1, $2, $3); }
         ;
 
 logical_or_expression:
         logical_and_expression                              { $$ = $1; }
-        | logical_or_expression OROR logical_and_expression { $$ = P(logical-or-expr2, 3, $1, $2, $3); }
+        | logical_or_expression OROR logical_and_expression { $$ = P(LOGICAL_OR_EXPR2, 3, $1, $2, $3); }
         ;
 
 conditional_expression:
         logical_or_expression                                            { $$ = $1; }
-        | logical_or_expression '?' expression ':' assignment_expression { $$ = P(cond-expr2, 5, $1, $2, $3, $4, $5); }
+        | logical_or_expression '?' expression ':' assignment_expression { $$ = P(COND_EXPR2, 5, $1, $2, $3, $4, $5); }
         ;
 
 assignment_expression:
         conditional_expression                                            { $$ = $1; }
-        | logical_or_expression assignment_operator assignment_expression { $$ = P(assign-expr2, 3, $1, $2, $3); }
+        | logical_or_expression assignment_operator assignment_expression { $$ = P(ASSIGN_EXPR2, 3, $1, $2, $3); }
         ;
 
 assignment_operator:
@@ -343,7 +345,7 @@ assignment_operator:
 
 expression:
         assignment_expression                  { $$ = $1; }
-        | expression ',' assignment_expression { $$ = P(expr2, 2, $1, $3); }
+        | expression ',' assignment_expression { $$ = P(EXPR2, 2, $1, $3); }
         ;
 
 constant_expression:
@@ -365,8 +367,8 @@ statement:
         ;
 
 labeled_statement:
-        CASE constant_expression ':' statement { $$ = P(labeled-statement1, 4, $1, $2, $3, $4); }
-        | DEFAULT ':' statement                { $$ = P(labeled-statement2, 3, $1, $2, $3); }
+        CASE constant_expression ':' statement { $$ = P(LABELED_STATEMENT1, 4, $1, $2, $3, $4); }
+        | DEFAULT ':' statement                { $$ = P(LABELED_STATEMENT2, 3, $1, $2, $3); }
         ;
 
 expression_statement:
@@ -379,24 +381,24 @@ compound_statement:
 
 statement_seq:
         statement                 { $$ = $1; }
-        | statement_seq statement { $$ = P(statement-seq2, 2, $1, $2); }
+        | statement_seq statement { $$ = P(STATEMENT_SEQ2, 2, $1, $2); }
         ;
 
 selection_statement:
-        IF '(' condition ')' statement                  { $$ = P(select1, 3, $1, $3, $5); }
-        | IF '(' condition ')' statement ELSE statement { $$ = P(select2, 5, $1, $3, $5, $6, $7); }
-        | SWITCH '(' condition ')' statement            { $$ = P(select3, 3, $1, $3, $5); }
+        IF '(' condition ')' statement                  { $$ = P(SELECT1, 3, $1, $3, $5); }
+        | IF '(' condition ')' statement ELSE statement { $$ = P(SELECT2, 5, $1, $3, $5, $6, $7); }
+        | SWITCH '(' condition ')' statement            { $$ = P(SELECT3, 3, $1, $3, $5); }
         ;
 
 condition:
         expression                                                { $$ = $1; }
-        | type_specifier_seq declarator '=' assignment_expression { $$ = P(condition2, 4, $1, $2, $3, $4); }
+        | type_specifier_seq declarator '=' assignment_expression { $$ = P(CONDITION2, 4, $1, $2, $3, $4); }
         ;
 
 iteration_statement:
-        WHILE '(' condition ')' statement                                           { $$ = P(iter1, 3, $1, $3, $5); }
-        | DO statement WHILE '(' expression ')' ';'                                 { $$ = P(iter2, 4, $1, $2, $3, $5); }
-        | FOR '(' for_init_statement condition_opt ';' expression_opt ')' statement { $$ = P(iter3, 5, $1, $3, $4, $6, $8); }
+        WHILE '(' condition ')' statement                                           { $$ = P(ITER1, 3, $1, $3, $5); }
+        | DO statement WHILE '(' expression ')' ';'                                 { $$ = P(ITER2, 4, $1, $2, $3, $5); }
+        | FOR '(' for_init_statement condition_opt ';' expression_opt ')' statement { $$ = P(ITER3, 5, $1, $3, $4, $6, $8); }
         ;
 
 for_init_statement:
@@ -407,7 +409,7 @@ for_init_statement:
 jump_statement:
         BREAK ';'                   { $$ = $1; }
         | CONTINUE ';'              { $$ = $1; }
-        | RETURN expression_opt ';' { $$ = P(jump3, 2, $1, $2); }
+        | RETURN expression_opt ';' { $$ = P(JUMP3, 2, $1, $2); }
         ;
 
 declaration_statement:
@@ -420,7 +422,7 @@ declaration_statement:
 
 declaration_seq:
         declaration                   { $$ = $1; }
-        | declaration_seq declaration { $$ = P(decl-seq2, 2, $1, $2); }
+        | declaration_seq declaration { $$ = P(DECL_SEQ2, 2, $1, $2); }
         ;
 
 declaration:
@@ -433,8 +435,8 @@ block_declaration:
         ;
 
 simple_declaration:
-        decl_specifier_seq init_declarator_list ';' { $$ = P(simple-decl1, 2, $1, $2); }
-        | decl_specifier_seq ';'                    { $$ = $1; }
+        decl_specifier_seq init_declarator_list ';' { $$ = P(SIMPLE_DECL1, 2, $1, $2); }
+        | decl_specifier_seq ';'                    { $$ = $1; } /* likely needs a name */
         ;
 
 decl_specifier:
@@ -443,7 +445,7 @@ decl_specifier:
 
 decl_specifier_seq:
         decl_specifier                      { $$ = $1; }
-        | decl_specifier_seq decl_specifier { $$ = P(decl-spec-seq2, 2, $1, $2); }
+        | decl_specifier_seq decl_specifier { $$ = P(DECL_SPEC_SEQ2, 2, $1, $2); }
         ;
 
 type_specifier:
@@ -454,7 +456,7 @@ type_specifier:
 
 simple_type_specifier:
         CLASS_NAME                                    { $$ = $1; }
-        | nested_name_specifier CLASS_NAME            { $$ = P(simple-type-spec2, 2, $1, $2); }
+        | nested_name_specifier CLASS_NAME            { $$ = P(SIMPLE_TYPE_SPEC2, 2, $1, $2); }
         | CHAR                                        { $$ = $1; }
         | BOOL                                        { $$ = $1; }
         | SHORT                                       { $$ = $1; }
@@ -468,8 +470,8 @@ simple_type_specifier:
         ;
 
 elaborated_type_specifier:
-        class_key COLONCOLON nested_name_specifier IDENTIFIER { $$ = P(elab-type-spec1, 3, $1, $3, $4); }
-        | class_key COLONCOLON IDENTIFIER                     { $$ = P(elab-type-spec2, 2, $1, $3); }
+        class_key COLONCOLON nested_name_specifier IDENTIFIER { $$ = P(ELAB_TYPE_SPEC1, 3, $1, $3, $4); }
+        | class_key COLONCOLON IDENTIFIER                     { $$ = P(ELAB_TYPE_SPEC2, 2, $1, $3); }
         ;
 
 /*----------------------------------------------------------------------
@@ -478,60 +480,60 @@ elaborated_type_specifier:
 
 init_declarator_list:
         init_declarator                            { $$ = $1; }
-        | init_declarator_list ',' init_declarator { $$ = P(init-decl-list2, 2, $1, $3); }
+        | init_declarator_list ',' init_declarator { $$ = P(INIT_DECL_LIST2, 2, $1, $3); }
         ;
 
 init_declarator:
-        declarator initializer_opt { $$ = P(init-decl, 2, $1, $2); }
+        declarator initializer_opt { $$ = P(INIT_DECL, 2, $1, $2); }
         ;
 
 declarator:
         direct_declarator         { $$ = $1; }
-        | ptr_operator declarator { $$ = P(decl2, 2, $1, $2); }
+        | ptr_operator declarator { $$ = P(DECL2, 2, $1, $2); }
         ;
 
 direct_declarator:
         declarator_id                                                              { $$ = $1; }
-        | direct_declarator '(' parameter_declaration_clause ')'                   { $$ = P(direct-decl2, 2, $1, $3); }
-        | CLASS_NAME '(' parameter_declaration_clause ')'                          { $$ = P(direct-decl3, 2, $1, $3); }
-        | CLASS_NAME COLONCOLON declarator_id '(' parameter_declaration_clause ')' { $$ = P(direct-decl4, 3, $1, $3, $5); }
-        | CLASS_NAME COLONCOLON CLASS_NAME '(' parameter_declaration_clause ')'    { $$ = P(direct-decl5, 3, $1, $3, $5); }
-        | direct_declarator '[' constant_expression_opt ']'                        { $$ = P(direct-decl6, 4, $1, $2, $3, $4); }
+        | direct_declarator '(' parameter_declaration_clause ')'                   { $$ = P(DIRECT_DECL2, 2, $1, $3); }
+        | CLASS_NAME '(' parameter_declaration_clause ')'                          { $$ = P(DIRECT_DECL3, 2, $1, $3); }
+        | CLASS_NAME COLONCOLON declarator_id '(' parameter_declaration_clause ')' { $$ = P(DIRECT_DECL4, 3, $1, $3, $5); }
+        | CLASS_NAME COLONCOLON CLASS_NAME '(' parameter_declaration_clause ')'    { $$ = P(DIRECT_DECL5, 3, $1, $3, $5); }
+        | direct_declarator '[' constant_expression_opt ']'                        { $$ = P(DIRECT_DECL6, 4, $1, $2, $3, $4); }
         | '(' declarator ')'                                                       { $$ = $2; }
         ;
 
 ptr_operator:
         '*'                                    { $$ = $1; }
         | '&'                                  { $$ = $1; }
-        | nested_name_specifier '*'            { $$ = P(ptr3, 2, $1, $2); }
-        | COLONCOLON nested_name_specifier '*' { $$ = P(ptr4, 2, $2, $3); }
+        | nested_name_specifier '*'            { $$ = P(PTR3, 2, $1, $2); }
+        | COLONCOLON nested_name_specifier '*' { $$ = P(PTR4, 2, $2, $3); }
         ;
 
 declarator_id:
         id_expression                                 { $$ = $1; }
         | COLONCOLON id_expression                    { $$ = $2; }
-        | COLONCOLON nested_name_specifier CLASS_NAME { $$ = P(decl-d3, 2, $2, $3); }
+        | COLONCOLON nested_name_specifier CLASS_NAME { $$ = P(DECL_D3, 2, $2, $3); }
         | COLONCOLON CLASS_NAME                       { $$ = $2; }
         ;
 
 type_id:
-        type_specifier_seq abstract_declarator_opt { $$ = P(type-id, 2, $1, $2); }
+        type_specifier_seq abstract_declarator_opt { $$ = P(TYPE_ID, 2, $1, $2); }
         ;
 
 type_specifier_seq:
-        type_specifier type_specifier_seq_opt { $$ = P(type-spec-seq, 2, $1, $2); }
+        type_specifier type_specifier_seq_opt { $$ = P(TYPE_SPEC_SEQ, 2, $1, $2); }
         ;
 
 abstract_declarator:
-        ptr_operator abstract_declarator_opt { $$ = P(abstract-decl1, 2, $1, $2); }
+        ptr_operator abstract_declarator_opt { $$ = P(ABSTRACT_DECL1, 2, $1, $2); }
         | direct_abstract_declarator         { $$ = $1; }
         ;
 
 direct_abstract_declarator:
-        direct_abstract_declarator '(' parameter_declaration_clause ')' { $$ = P(direct-abstract-decl1, 2, $1, $3); }
+        direct_abstract_declarator '(' parameter_declaration_clause ')' { $$ = P(DIRECT_ABSTRACT_DECL1, 2, $1, $3); }
         | '(' parameter_declaration_clause ')'                          { $$ = $2; }
-        | direct_abstract_declarator '[' constant_expression_opt ']'    { $$ = P(direct-abstract-decl3, 4, $1, $2, $3, $4); }
-        | '[' constant_expression_opt ']'                               { $$ = P(direct-abstract-decl4, 3, $1, $2, $3); }
+        | direct_abstract_declarator '[' constant_expression_opt ']'    { $$ = P(DIRECT_ABSTRACT_DECL3, 4, $1, $2, $3, $4); }
+        | '[' constant_expression_opt ']'                               { $$ = P(DIRECT_ABSTRACT_DECL4, 3, $1, $2, $3); }
         | '(' abstract_declarator ')'                                   { $$ = $2; }
         ;
 
@@ -542,19 +544,19 @@ parameter_declaration_clause:
 
 parameter_declaration_list:
         parameter_declaration                                  { $$ = $1; }
-        | parameter_declaration_list ',' parameter_declaration { $$ = P(param-decl-list1, 2, $1, $3); }
+        | parameter_declaration_list ',' parameter_declaration { $$ = P(PARAM_DECL_LIST1, 2, $1, $3); }
         ;
 
 parameter_declaration:
-        decl_specifier_seq declarator                                          { $$ = P(param-decl2, 2, $1, $2); }
-        | decl_specifier_seq declarator '=' assignment_expression              { $$ = P(param-decl2, 4, $1, $2, $3, $4); }
-        | decl_specifier_seq abstract_declarator_opt                           { $$ = P(param-decl3, 2, $1, $2); }
-        | decl_specifier_seq abstract_declarator_opt '=' assignment_expression { $$ = P(param-decl4, 4, $1, $2, $3, $4); }
+        decl_specifier_seq declarator                                          { $$ = P(PARAM_DECL1, 2, $1, $2); }
+        | decl_specifier_seq declarator '=' assignment_expression              { $$ = P(PARAM_DECL2, 4, $1, $2, $3, $4); }
+        | decl_specifier_seq abstract_declarator_opt                           { $$ = P(PARAM_DECL3, 2, $1, $2); }
+        | decl_specifier_seq abstract_declarator_opt '=' assignment_expression { $$ = P(PARAM_DECL4, 4, $1, $2, $3, $4); }
         ;
 
 function_definition:
-        declarator ctor_initializer_opt function_body                      { $$ = P(function-def1, 3, $1, $2, $3); }
-        | decl_specifier_seq declarator ctor_initializer_opt function_body { $$ = P(function-def2, 4, $1, $2, $3, $4); }
+        declarator ctor_initializer_opt function_body                      { $$ = P(FUNCTION_DEF1, 3, $1, $2, $3); }
+        | decl_specifier_seq declarator ctor_initializer_opt function_body { $$ = P(FUNCTION_DEF2, 4, $1, $2, $3, $4); }
         ;
 
 function_body:
@@ -562,19 +564,19 @@ function_body:
         ;
 
 initializer:
-        '=' initializer_clause    { $$ = P(init1, 2, $1, $2); }
+        '=' initializer_clause    { $$ = P(INIT1, 2, $1, $2); }
         | '(' expression_list ')' { $$ = $2; }
         ;
 
 initializer_clause:
         assignment_expression                { $$ = $1; }
-        | '{' initializer_list COMMA_opt '}' { $$ = P(init-clause2, 2, $2, $3); }
+        | '{' initializer_list COMMA_opt '}' { $$ = P(INIT_CLAUSE2, 2, $2, $3); }
         | '{' '}'                            { $$ = E(); }
         ;
 
 initializer_list:
         initializer_clause                        { $$ = $1; }
-        | initializer_list ',' initializer_clause { $$ = P(init-list2, 2, $1, $3); }
+        | initializer_list ',' initializer_clause { $$ = P(INIT_LIST2, 2, $1, $3); }
         ;
 
 /*----------------------------------------------------------------------
@@ -582,12 +584,12 @@ initializer_list:
  *----------------------------------------------------------------------*/
 
 class_specifier:
-        class_head '{' member_specification_opt '}' { $$ = P(class-spec, 2, $1, $3); }
+        class_head '{' member_specification_opt '}' { $$ = P(CLASS_SPEC, 2, $1, $3); }
         ;
 
 class_head:
-        class_key IDENTIFIER                         { $$ = P(class-head1, 2, $1, $2); insert_typename_tree($2, CLASS_NAME); }
-        | class_key nested_name_specifier IDENTIFIER { $$ = P(class-head2, 3, $1, $2, $3); insert_typename_tree($3, CLASS_NAME); }
+        class_key IDENTIFIER                         { $$ = P(CLASS_HEAD1, 2, $1, $2); insert_typename_tree($2, CLASS_NAME); }
+        | class_key nested_name_specifier IDENTIFIER { $$ = P(CLASS_HEAD2, 3, $1, $2, $3); insert_typename_tree($3, CLASS_NAME); }
         ;
 
 class_key:
@@ -596,32 +598,32 @@ class_key:
         ;
 
 member_specification:
-        member_declaration member_specification_opt     { $$ = P(member-spec1, 2, $1, $2); }
-        | access_specifier ':' member_specification_opt { $$ = P(member-spec2, 3, $1, $2, $3); }
+        member_declaration member_specification_opt     { $$ = P(MEMBER_SPEC1, 2, $1, $2); }
+        | access_specifier ':' member_specification_opt { $$ = P(MEMBER_SPEC2, 3, $1, $2, $3); }
         ;
 
 member_declaration:
-        decl_specifier_seq member_declarator_list ';' { $$ = P(member-decl1, 2, $1, $2); }
+        decl_specifier_seq member_declarator_list ';' { $$ = P(MEMBER_DECL1, 2, $1, $2); }
         | decl_specifier_seq ';'                      { $$ = $1; }
         | member_declarator_list ';'                  { $$ = $1; }
         | ';'                                         { $$ = E(); }
-        | function_definition SEMICOLON_opt           { $$ = P(member-decl5, 2, $1, $2); }
+        | function_definition SEMICOLON_opt           { $$ = P(MEMBER_DECL5, 2, $1, $2); }
         | qualified_id ';'                            { $$ = $1; }
         ;
 
 member_declarator_list:
         member_declarator                              { $$ = $1; }
-        | member_declarator_list ',' member_declarator { $$ = P(member-decl-list2, 2, $1, $3); }
+        | member_declarator_list ',' member_declarator { $$ = P(MEMBER_DECL_LIST2, 2, $1, $3); }
         ;
 
 member_declarator:
         declarator                           { $$ = $1; }
-        | declarator constant_initializer    { $$ = P(member-declarator2, 2, $1, $2); }
-        | IDENTIFIER ':' constant_expression { $$ = P(member-declarator3, 3, $1, $2, $3); }
+        | declarator constant_initializer    { $$ = P(MEMBER_DECLARATOR2, 2, $1, $2); }
+        | IDENTIFIER ':' constant_expression { $$ = P(MEMBER_DECLARATOR3, 3, $1, $2, $3); }
         ;
 
 constant_initializer:
-        '=' constant_expression { $$ = P(constant-init, 2, $1, $2); }
+        '=' constant_expression { $$ = P(CONSTANT_INIT, 2, $1, $2); }
         ;
 
 access_specifier:
@@ -635,22 +637,22 @@ access_specifier:
  *----------------------------------------------------------------------*/
 
 ctor_initializer:
-        ':' mem_initializer_list { $$ = P(ctor-init, 2, $1, $2); }
+        ':' mem_initializer_list { $$ = P(CTOR_INIT, 2, $1, $2); }
         ;
 
 mem_initializer_list:
         mem_initializer                            { $$ = $1; }
-        | mem_initializer ',' mem_initializer_list { $$ = P(mem-init-list2, 2, $1, $3); }
+        | mem_initializer ',' mem_initializer_list { $$ = P(MEM_INIT_LIST2, 2, $1, $3); }
         ;
 
 mem_initializer:
-        mem_initializer_id '(' expression_list_opt ')' { $$ = P(mem-init, 2, $1, $3); }
+        mem_initializer_id '(' expression_list_opt ')' { $$ = P(MEM_INIT, 2, $1, $3); }
         ;
 
 mem_initializer_id:
-        COLONCOLON nested_name_specifier CLASS_NAME { $$ = P(mem-init-id1, 2, $2, $3); }
+        COLONCOLON nested_name_specifier CLASS_NAME { $$ = P(MEM_INIT_ID1, 2, $2, $3); }
         | COLONCOLON CLASS_NAME                     { $$ = $2; }
-        | nested_name_specifier CLASS_NAME          { $$ = P(mem-init-id3, 2, $1, $2); }
+        | nested_name_specifier CLASS_NAME          { $$ = P(MEM_INIT_ID3, 2, $1, $2); }
         | CLASS_NAME                                { $$ = $1; }
         | IDENTIFIER                                { $$ = $1; }
         ;
@@ -770,17 +772,30 @@ void print_tree(struct tree *t, int d)
 		       (int)((struct token *)t->data)->category);
 	else /* holds a production rule name */
 		printf("%*s %s: %zu\n", d*2, " ",
-		       (char *)t->data,
+		       rule_lookup(*(int *)t->data),
 		       list_size(t->children));
 }
 
 /*
- * Destroys tokens contained in leaves of syntax tree. Internal nodes
- * contain statically allocated string literals and are thus ignored
- * here.
+ * Destroys tokens contained in leaves of syntax tree.
  */
 void delete_tree(void *data, bool leaf)
 {
 	if (leaf)
 		token_free(data);
+	else
+		free(data);
+}
+
+/*
+ * Returns pointer to allocated space with copy of integer.
+ *
+ * Necessary because data structures take void *, but integers need to
+ * be copied for this to work properly.
+ */
+int *copy_int(int i)
+{
+	int *p = malloc(sizeof(*p));
+	*p = i;
+	return p;
 }
