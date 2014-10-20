@@ -27,7 +27,7 @@ GITREF = $(shell git tag | tail -n 1)
 -include local.mk
 
 # files
-SRCS = main.c token.c list.c tree.c hasht.c lex.yy.c parser.tab.c rules.c lookup3.c
+SRCS = main.c token.c symbol.c list.c tree.c hasht.c lex.yy.c parser.tab.c rules.c lookup3.c
 OBJS = $(SRCS:.c=.o)
 TEST_DATA = data/pass/test.c data/pass/test.cpp
 
@@ -62,7 +62,7 @@ $(BIN): $(OBJS)
 .c.o:
 	$(CC) $(CFLAGS) $(CDEBUG) -o $@ -c $<
 
-main.c: token.h list.h tree.h hasht.h lexer.h
+main.c: token.h symbol.h list.h tree.h hasht.h lexer.h
 
 parser.tab.h parser.tab.c: parser.y
 	$(BISON) $(BISONFLAGS) $<
@@ -77,6 +77,8 @@ lex.yy.c: lexer.l
 lexer.l: token.h list.h tree.h hasht.h parser.tab.h
 
 token.o: token.h
+
+symbol.o: symbol.h
 
 list.o: list.h
 

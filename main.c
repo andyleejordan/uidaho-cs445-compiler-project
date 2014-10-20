@@ -17,20 +17,28 @@
 #include "list.h"
 #include "tree.h"
 #include "hasht.h"
+#include "symbol.h"
 
 #include "lexer.h"
 
 /* from lexer */
 extern struct hasht *typenames;
 void free_typename(struct hash_node *t);
+extern bool usingstd;
+extern bool fstream;
+extern bool iostream;
+extern bool string;
 
 /* from parser */
 int yyparse();
 void print_tree(struct tree *t, int d);
 
 /* shared with lexer and parser */
+struct tree *yysymbols = NULL;
 struct tree *yyprogram = NULL;
 struct list *filenames = NULL;
+
+void free_symbols(struct scope *s, bool leaf);
 
 /* error helpers */
 void handle_error(char *c);
@@ -89,10 +97,31 @@ int main(int argc, char **argv)
 
 		/* call Bison */
 		int result = yyparse();
-		if (result == 0)
-			tree_preorder(yyprogram, 0, &print_tree);
-		else
+		if (result != 0)
 			return 2;
+
+		tree_preorder(yyprogram, 0, &print_tree);
+
+		/* begin annotation by building symbol tables */
+		struct scope *global = scope_new("global");
+		yysymbols = tree_new(NULL, global, (void (*)(void *, bool))&free_symbols);
+
+		if (usingstd) {
+			if (fstream) {
+				hasht_insert(global->symbols, "ifstream", typeinfo_new(CLASS, 2, "fstream", NULL));
+				hasht_insert(global->symbols, "ofstream", typeinfo_new(CLASS, 2, "fstream", NULL));
+			}
+			if (iostream) {
+				hasht_insert(global->symbols, "cin", typeinfo_new(CLASS, 2, "istream", NULL));
+				hasht_insert(global->symbols, "cout", typeinfo_new(CLASS, 2, "istream", NULL));
+				hasht_insert(global->symbols, "endl", typeinfo_new(CLASS, 2, "istream", NULL));
+			}
+			if (string) {
+				hasht_insert(global->symbols, "string", typeinfo_new(CLASS, 2, "string", NULL));
+			}
+		}
+
+		/* next traverse the tree, adding scopes and symbols with types */
 
 		/* clean up */
 		tree_free(yyprogram);
@@ -136,4 +165,10 @@ void chdirname(char *c)
 	}
 
 	free(filename);
+}
+
+void free_symbols(struct scope *s, bool leaf)
+{
+	free(s->name);
+	hasht_free(s->symbols);
 }
