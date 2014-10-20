@@ -5,7 +5,7 @@
 SHELL = /bin/sh
 
 # generated executables
-BIN = 120++
+BIN = 120
 TESTS = test-list test-tree test-hasht
 
 # dependencies
