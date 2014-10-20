@@ -10,15 +10,19 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
+#include <string.h>
 
 #include "tree.h"
 #include "list.h"
+
+bool tree_default_compare(void *a, void *b);
 
 /*
  * Initializes tree with reference to parent and data, and an empty
  * (but initialized) list of children.
  */
 struct tree *tree_new(struct tree *parent, void *data,
+                      bool (*compare)(void *a, void *b),
                       void (*delete)(void *data, bool leaf))
 {
 	struct tree *t = malloc(sizeof(*t));
@@ -27,7 +31,7 @@ struct tree *tree_new(struct tree *parent, void *data,
 		return NULL;
 	}
 
-	struct list *l = list_new(NULL, NULL);
+	struct list *l = list_new(compare, NULL);
 	if (l == NULL) {
 		free(t);
 		return NULL;
@@ -36,6 +40,9 @@ struct tree *tree_new(struct tree *parent, void *data,
 	t->parent = parent;
 	t->data = data;
 	t->children = l;
+	t->compare = (compare == NULL)
+		? &tree_default_compare
+		: compare;
 	t->delete = delete;
 
 	return t;
@@ -47,13 +54,14 @@ struct tree *tree_new(struct tree *parent, void *data,
  * is NULL it is not added.
  */
 struct tree *tree_new_group(struct tree *parent, void *data,
+                            bool (*compare)(void *a, void *b),
                             void (*delete)(void *data, bool leaf),
                             int count, ...)
 {
 	va_list ap;
 	va_start(ap, count);
 
-	struct tree *t = tree_new(parent, data, delete);
+	struct tree *t = tree_new(parent, data, compare, delete);
 
 	for (int i = 0; i < count; ++i)
 		tree_push_child(t, va_arg(ap, void *));
@@ -116,7 +124,7 @@ struct tree *tree_push_back(struct tree *self, void *data)
 		return NULL;
 	}
 
-	struct tree *child = tree_new(self, data, self->delete);
+	struct tree *child = tree_new(self, data, self->compare, self->delete);
 	if (child == NULL) {
 		perror("tree_push_back()");
 		return NULL;
@@ -169,4 +177,12 @@ void tree_free(struct tree *self)
 
 	free(self->children->sentinel);
 	free(self->children);
+}
+
+/*
+ * Default comparison for string keys.
+ */
+bool tree_default_compare(void *a, void *b)
+{
+	return (strcmp((char *)a, (char *)b) == 0);
 }

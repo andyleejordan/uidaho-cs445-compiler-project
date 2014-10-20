@@ -339,7 +339,7 @@ void prepare_token(int category)
 {
         yytoken = token_new(category, yylineno, yytext,
                             (const char *)list_back(filenames));
-        yylval.t = tree_new(NULL, yytoken,
+        yylval.t = tree_new(NULL, yytoken, NULL,
                             (void (*)(void *, bool))&delete_tree);
 }
 

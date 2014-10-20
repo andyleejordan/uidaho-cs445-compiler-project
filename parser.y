@@ -70,7 +70,7 @@ void print_tree(struct tree *t, int d);
 void delete_tree(void *data, bool leaf);
 
 /* semantic action helpers */
-#define P(name, ...) tree_new_group(NULL, (void *)copy_int(name), &delete_tree, __VA_ARGS__)
+#define P(name, ...) tree_new_group(NULL, (void *)copy_int(name), NULL, &delete_tree, __VA_ARGS__)
 #define E() NULL
 
 %}

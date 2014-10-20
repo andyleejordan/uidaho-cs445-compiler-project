@@ -19,12 +19,15 @@ struct tree {
 	void *data;
 	struct tree *parent;
 	struct list *children;
+	bool (*compare)(void *a, void *b);
 	void (*delete)(void *data, bool leaf);
 };
 
 struct tree *tree_new(struct tree *parent, void *data,
+                      bool (*compare)(void *a, void *b),
                       void (*delete)(void *data, bool leaf));
 struct tree *tree_new_group(struct tree *parent, void *data,
+                            bool (*compare)(void *a, void *b),
                             void (*delete)(void *data, bool leaf),
                             int count, ...);
 
