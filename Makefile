@@ -47,7 +47,7 @@ smoke: all
 TAGS: $(SRCS)
 	etags $(SRCS)
 dist:
-	git archive --format=tar --prefix=$(GITREF)/ $(GITREF) > $(GITREF).tar
+	git archive --format=tar $(GITREF) > $(GITREF).tar
 
 clean:
 	rm -f $(BIN) $(TESTS) *.o lexer.h lex.yy.c parser.tab.h parser.tab.c
