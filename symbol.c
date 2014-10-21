@@ -108,13 +108,14 @@ struct hasht *get_scope(struct hasht *s, char *k)
  * function: count 3, typeinfo, parameters list, scope
  * class: count 2, name, scope
  */
-struct typeinfo *typeinfo_new(enum type base, int count, ...)
+struct typeinfo *typeinfo_new(enum type base, bool pointer, int count, ...)
 {
 	va_list ap;
 	va_start(ap, count);
 
 	struct typeinfo *t = malloc(sizeof(*t));
 	t->base = base;
+	t->pointer = pointer;
 
 	switch (t->base) {
 	case ARRAY_T: {
@@ -165,21 +166,21 @@ struct hasht *build_symbols(struct tree *syntax)
 	if (usingstd) {
 		if (fstream) {
 			hasht_insert(global, "ifstream",
-			             typeinfo_new(CLASS_T, 2, hasht_search(typenames, "ifstream"), NULL));
+			             typeinfo_new(CLASS_T, 2, false, hasht_search(typenames, "ifstream"), NULL));
 			hasht_insert(global, "ofstream",
-			             typeinfo_new(CLASS_T, 2, hasht_search(typenames, "ifstream"), NULL));
+			             typeinfo_new(CLASS_T, 2, false, hasht_search(typenames, "ifstream"), NULL));
 		}
 		if (iostream) {
 			hasht_insert(global, "cin",
-			             typeinfo_new(CLASS_T, 2, "istream", NULL));
+			             typeinfo_new(CLASS_T, 2, false, "istream", NULL));
 			hasht_insert(global, "cout",
-			             typeinfo_new(CLASS_T, 2, "istream", NULL));
+			             typeinfo_new(CLASS_T, 2, false, "istream", NULL));
 			hasht_insert(global, "endl",
-			             typeinfo_new(CLASS_T, 2, "istream", NULL));
+			             typeinfo_new(CLASS_T, 2, false, "istream", NULL));
 		}
 		if (string) {
 			hasht_insert(global, "string",
-			             typeinfo_new(CLASS_T, 2, hasht_search(typenames, "string"), NULL));
+			             typeinfo_new(CLASS_T, 2, false, hasht_search(typenames, "string"), NULL));
 		}
 	}
 
@@ -200,18 +201,22 @@ struct hasht *build_symbols(struct tree *syntax)
 
 			struct tree *init_decl = tree_index(n, 1);
 			switch (tree_size(init_decl)) {
-			case 2: {
+			case 2: { /* simple variable */
 				k = get_token(init_decl, 0)->text;
-				v = typeinfo_new(t, 0);
+				v = typeinfo_new(t, false, 0);
 				break;
 			}
-			case 3: {
+			case 3: { /* simple variable with initalizer in child 1 */
 				k = get_token(init_decl, 0)->text;
-				v = typeinfo_new(t, 0);
-				/* inital value is in child 1 */
+				v = typeinfo_new(t, false, 0);
 				break;
 			}
-			case 6: {
+			case 4: { /* simple pointer variable */
+				k = get_token(tree_index(init_decl, 0), 1)->text;
+				v = typeinfo_new(t, true, 0);
+				break;
+			}
+			case 6: { /* simple array with size */
 				k = get_token(tree_index(init_decl, 0), 0)->text;
 				size_t size = get_token(tree_index(init_decl, 0), 2)->ival;
 				v = typeinfo_new(ARRAY_T, 2, size, t);

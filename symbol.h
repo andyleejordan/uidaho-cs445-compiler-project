@@ -32,6 +32,7 @@ enum type {
 
 struct typeinfo {
 	enum type base;
+	bool pointer;
 	union {
 		struct arrayinfo {
 			size_t size;
@@ -49,7 +50,7 @@ struct typeinfo {
 	};
 };
 
-struct typeinfo *typeinfo_new(enum type base, int count, ...);
+struct typeinfo *typeinfo_new(enum type base, bool pointer, int count, ...);
 void typeinfo_delete(struct typeinfo *n);
 void free_symbols(struct hash_node *n);
 
