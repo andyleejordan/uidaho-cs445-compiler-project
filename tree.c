@@ -155,6 +155,17 @@ struct tree *tree_push_child(struct tree *self, struct tree *child)
 }
 
 /*
+ * Return the subtree at pos in the children list of self.
+ */
+struct tree *tree_index(struct tree *self, int pos)
+{
+	struct list_node *n = list_index(self->children, pos);
+	if (!list_end(n))
+		return n->data;
+	return NULL;
+}	
+
+/*
  * Recursively deallocates a tree, and optionally frees data if given
  * a non-NULL function pointer, which accepts a pointer to data and a
  * boolean that indicates whether or not the data came from a leaf
