@@ -17,28 +17,23 @@
 #include "list.h"
 #include "tree.h"
 #include "hasht.h"
-#include "symbol.h"
 
 #include "lexer.h"
 
 /* from lexer */
 extern struct hasht *typenames;
 void free_typename(struct hash_node *t);
-extern bool usingstd;
-extern bool fstream;
-extern bool iostream;
-extern bool string;
 
 /* from parser */
 int yyparse();
 void print_tree(struct tree *t, int d);
 
+/* from symbol */
+struct hasht *build_symbols(struct tree *syntax);
+
 /* shared with lexer and parser */
-struct tree *yysymbols = NULL;
 struct tree *yyprogram = NULL;
 struct list *filenames = NULL;
-
-void free_symbols(struct scope *s, bool leaf);
 
 /* error helpers */
 void handle_error(char *c);
@@ -100,28 +95,12 @@ int main(int argc, char **argv)
 		if (result != 0)
 			return 2;
 
+		/* print syntax tree */
 		tree_preorder(yyprogram, 0, &print_tree);
 
-		/* begin annotation by building symbol tables */
-		struct scope *global = scope_new("global");
-		yysymbols = tree_new(NULL, global, (void (*)(void *, bool))&free_symbols);
-
-		if (usingstd) {
-			if (fstream) {
-				hasht_insert(global->symbols, "ifstream", typeinfo_new(CLASS, 2, "fstream", NULL));
-				hasht_insert(global->symbols, "ofstream", typeinfo_new(CLASS, 2, "fstream", NULL));
-			}
-			if (iostream) {
-				hasht_insert(global->symbols, "cin", typeinfo_new(CLASS, 2, "istream", NULL));
-				hasht_insert(global->symbols, "cout", typeinfo_new(CLASS, 2, "istream", NULL));
-				hasht_insert(global->symbols, "endl", typeinfo_new(CLASS, 2, "istream", NULL));
-			}
-			if (string) {
-				hasht_insert(global->symbols, "string", typeinfo_new(CLASS, 2, "string", NULL));
-			}
-		}
-
-		/* next traverse the tree, adding scopes and symbols with types */
+		/* build the symbol tables */
+		struct hasht *global = build_symbols(yyprogram);
+		printf("global symbol table had %zu entries\n", hasht_used(global));
 
 		/* clean up */
 		tree_free(yyprogram);
@@ -165,10 +144,4 @@ void chdirname(char *c)
 	}
 
 	free(filename);
-}
-
-void free_symbols(struct scope *s, bool leaf)
-{
-	free(s->name);
-	hasht_free(s->symbols);
 }
