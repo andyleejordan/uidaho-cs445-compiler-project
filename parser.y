@@ -564,13 +564,13 @@ function_body:
         ;
 
 initializer:
-        '=' initializer_clause    { $$ = P(INIT1, 2, $1, $2); }
+        '=' initializer_clause    { $$ = $2; }
         | '(' expression_list ')' { $$ = $2; }
         ;
 
 initializer_clause:
         assignment_expression                { $$ = $1; }
-        | '{' initializer_list COMMA_opt '}' { $$ = P(INIT_CLAUSE2, 2, $2, $3); }
+        | '{' initializer_list COMMA_opt '}' { $$ = $2; }
         | '{' '}'                            { $$ = E(); }
         ;
 
@@ -753,7 +753,7 @@ SEMICOLON_opt:
 void yyerror(const char *s)
 {
         fprintf(stderr, "Syntax error: file %s, line %d, token %s: %s\n",
-                (const char*)list_back(filenames), yylineno, yytext, s);
+                (const char *)list_back(filenames), yylineno, yytext, s);
         exit(2);
 }
 
