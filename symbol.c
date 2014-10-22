@@ -144,15 +144,18 @@ struct typeinfo *typeinfo_new(enum type base, bool pointer, int count, ...)
 	case ARRAY_T: {
 		t->array.size = va_arg(ap, size_t);
 		t->array.type = va_arg(ap, struct typeinfo *);
+		break;
 	}
 	case FUNCTION_T: {
 		t->function.type = va_arg(ap, struct typeinfo *);
 		t->function.parameters = va_arg(ap, struct list *);
 		t->function.symbols = va_arg(ap, struct hasht *);
+		break;
 	}
 	case CLASS_T: {
 		t->class.type = va_arg(ap, char *);
 		t->class.symbols = va_arg(ap, struct hasht *);
+		break;
 	}
 	default:
 		break;
