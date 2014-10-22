@@ -37,6 +37,25 @@ extern bool fstream;
 extern bool iostream;
 extern bool string;
 
+#define R(rule) case rule: return #rule
+
+char *print_type(enum type t)
+{
+	switch (t) {
+		R(INT_T);
+		R(DOUBLE_T);
+		R(CHAR_T);
+		R(BOOL_T);
+		R(ARRAY_T);
+		R(FUNCTION_T);
+		R(CLASS_T);
+		R(VOID_T);
+		R(UNKNOWN_T);
+	}
+}
+
+#undef R
+
 void semantic_error(char *s, struct tree *n)
 {
 	while (tree_size(n) > 1)

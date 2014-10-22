@@ -128,6 +128,6 @@ enum rule {
 	MEM_INIT_ID3
 };
 
-char *rule_lookup(int rule);
+char *print_rule(int rule);
 
 #endif /* RULES_H */

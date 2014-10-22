@@ -15,7 +15,7 @@
  */
 #define R(rule) case rule: return #rule
 
-char *rule_lookup(int rule)
+char *print_rule(int rule)
 {
 	switch (rule) {
 		R(PROGRAM);

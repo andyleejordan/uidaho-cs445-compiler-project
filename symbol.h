@@ -31,6 +31,8 @@ enum type {
 	UNKNOWN_T
 };
 
+char *print_type(enum type t);
+
 struct typeinfo {
 	enum type base;
 	bool pointer;
