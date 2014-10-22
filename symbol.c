@@ -339,27 +339,36 @@ bool handle_node(struct tree *n, int d)
 		struct typeinfo *v = NULL;
 
 		struct tree *init_decl = tree_index(n, 1);
-		switch (tree_size(init_decl)) {
-		case 2: { /* simple variable */
-			k = get_token(init_decl, 0)->text;
-			v = typeinfo_new(t, false, 0);
-			break;
-		}
-		case 3: { /* simple variable with initalizer in child 1 */
-			k = get_token(init_decl, 0)->text;
-			v = typeinfo_new(t, false, 0);
-			break;
-		}
-		case 4: { /* simple pointer variable */
-			k = get_token(tree_index(init_decl, 0), 1)->text;
+		struct tree *direct_decl = tree_index(init_decl, 0);
+
+		switch (get_rule(direct_decl)) {
+		case DECL2: { /* simple pointer variable */
+			k = get_token(direct_decl, 1)->text;
 			v = typeinfo_new(t, true, 0);
 			break;
 		}
-		case 6: { /* simple array with size */
-			k = get_token(tree_index(init_decl, 0), 0)->text;
-			size_t size = get_token(tree_index(init_decl, 0), 2)->ival;
-			v = typeinfo_new(ARRAY_T, 2, size, t);
+		case DIRECT_DECL6: { /* simple array with size */
+			k = get_token(direct_decl, 0)->text;
+			size_t size = get_token(direct_decl, 2)->ival;
+			v = typeinfo_new(ARRAY_T, false, 2, size, t);
 			break;
+		}
+		case DIRECT_DECL2: { /* function prototype */
+			k = get_token(direct_decl, 0)->text;
+			struct list *params = list_new(NULL, NULL);
+			if (tree_size(direct_decl) > 2)
+				proto_param_list(params, tree_index(direct_decl, 1));
+			v = typeinfo_new(FUNCTION_T, false, 3, t, params, NULL);
+			break;
+		}
+		default: {
+			/* simple variable, possibly with initializer */
+			if (tree_size(init_decl) <= 3) {
+				k = get_token(init_decl, 0)->text;
+				v = typeinfo_new(t, false, 0);
+			} else {
+				semantic_error("unsupported declaration type", n);
+			}
 		}
 		}
 		if (v)
