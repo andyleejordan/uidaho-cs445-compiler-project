@@ -30,8 +30,6 @@ struct list *yyscopes;
 #define get_rule(n) *(enum rule *)n->data
 #define get_token(n, i) ((struct token *)tree_index(n, i)->data)
 
-#define insert_symbol(k, v) hasht_insert(current_scope(), k, v)
-
 /* from lexer */
 extern struct hasht *typenames;
 extern bool usingstd;
@@ -49,16 +47,39 @@ void semantic_error(char *s, struct tree *n)
 	exit(3);
 }
 
-bool check_declared(struct list *s, char *k)
+void *find_declared(char *k)
 {
-	struct list_node *iter = list_tail(s);
+	struct list_node *iter = list_tail(yyscopes);
 	while (!list_end(iter)) {
-		if (hasht_search(iter->data, k))
-			return true;
+		struct typeinfo *t = hasht_search(iter->data, k);
+		if (t)
+			return t;
 		iter = iter->prev;
 	}
-	return false;
-}	
+	return NULL;
+}
+
+bool prototype_compare(struct typeinfo *a, struct typeinfo *b);
+
+void insert_symbol(char *k, struct typeinfo *v, struct tree *n, struct hasht *l)
+{
+	struct typeinfo *e = find_declared(k);
+	if (e == NULL) {
+		fprintf(stderr, "inserting ident %s into table %zu\n", k, list_size(yyscopes));
+		hasht_insert(current_scope(), k, v);
+	} else if (e->base == FUNCTION_T && v->base == FUNCTION_T) {
+		if (!prototype_compare(e, v)) {
+			semantic_error("function prototypes mismatched", n);
+		} else if (l) {
+			fprintf(stderr, "%s exists, assigning\n", k);
+			e->function.symbols = l;
+		}
+	} else if (e->base == CLASS_T && v->base == CLASS_T) {
+		fprintf(stderr, "classes not implemented yet\n");
+	} else {
+		semantic_error("identifier already declared", n);
+	}
+}
 
 enum type get_type(enum yytokentype t)
 {
@@ -243,13 +264,8 @@ bool handle_node(struct tree *n, int d)
 			break;
 		}
 		}
-
-		if (check_declared(yyscopes, k))
-			semantic_error("identifier already declared", n);
-
-		fprintf(stderr, "inserting ident %s into table %zu\n", k, list_size(yyscopes));		
-		
-		insert_symbol(k, v);
+		if (v)
+			insert_symbol(k, v, n, NULL);
 		return false;
 	}
 	case FUNCTION_DEF2: {
@@ -266,13 +282,8 @@ bool handle_node(struct tree *n, int d)
 			struct tree *param = tree_index(direct_decl, 1);
 			handle_param_list(local, param);
 		}
-
-		if (check_declared(yyscopes, k))
-			semantic_error("identifier already declared", n);
-		
-		fprintf(stderr, "inserting ident %s into table %zu\n", k, list_size(yyscopes));
-		
-		insert_symbol(k, v);
+		struct typeinfo *v = typeinfo_new(FUNCTION_T, false, 3, t, params, local);
+		insert_symbol(k, v, n, local);
 
 		/* recurse on children while in subscope */
 		list_push_back(yyscopes, local);
