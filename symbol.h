@@ -13,6 +13,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+struct list;
 struct tree;
 struct hash_node;
 
