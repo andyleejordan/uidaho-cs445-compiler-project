@@ -166,7 +166,7 @@ struct tree *tree_index(struct tree *self, int pos)
 	if (!list_end(n))
 		return n->data;
 	return NULL;
-}	
+}
 
 /*
  * Recursively deallocates a tree, and optionally frees data if given

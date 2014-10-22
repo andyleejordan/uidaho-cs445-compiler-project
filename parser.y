@@ -752,9 +752,9 @@ SEMICOLON_opt:
  */
 void yyerror(const char *s)
 {
-        fprintf(stderr, "Syntax error: file %s, line %d, token %s: %s\n",
+	fprintf(stderr, "Syntax error: file %s, line %d, token %s: %s\n",
                 (const char *)list_back(filenames), yylineno, yytext, s);
-        exit(2);
+	exit(2);
 }
 
 /*
@@ -768,12 +768,12 @@ bool print_tree(struct tree *t, int d)
 {
 	if (tree_size(t) == 1) /* holds a token */
 		printf("%*s %s (%d)\n", d*2, " ",
-		       (char *)((struct token *)t->data)->text,
-		       (int)((struct token *)t->data)->category);
+                       (char *)((struct token *)t->data)->text,
+                       (int)((struct token *)t->data)->category);
 	else /* holds a production rule name */
 		printf("%*s %s: %zu\n", d*2, " ",
-		       rule_lookup(*(int *)t->data),
-		       list_size(t->children));
+                       print_rule(*(int *)t->data),
+                       list_size(t->children));
 	return true;
 }
 

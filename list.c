@@ -248,7 +248,7 @@ void list_free(struct list *self)
 bool list_default_compare(void *a, void *b)
 {
 	return (strcmp((char *)a, (char *)b) == 0);
-}	
+}
 
 /*
  * Allocates new list_node with data.

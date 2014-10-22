@@ -316,9 +316,9 @@ void unsupported();
  */
 void lexerror(const char *s)
 {
-        fprintf(stderr, "Lexical error: file %s, line %d, token %s: %s\n",
+	fprintf(stderr, "Lexical error: file %s, line %d, token %s: %s\n",
                 (const char *)list_back(filenames), yylineno, yytext, s);
-        exit(1);
+	exit(1);
 }
 
 /*
@@ -326,9 +326,9 @@ void lexerror(const char *s)
  */
 void unsupported()
 {
-        fprintf(stderr, "C++ operation unsupported in 120++: file %s, line %d, token: %s\n",
+	fprintf(stderr, "C++ operation unsupported in 120++: file %s, line %d, token: %s\n",
                 (const char *)list_back(filenames), yylineno, yytext);
-        exit(3);
+	exit(3);
 }
 
 /*
@@ -337,9 +337,9 @@ void unsupported()
  */
 void prepare_token(int category)
 {
-        yytoken = token_new(category, yylineno, yytext,
+	yytoken = token_new(category, yylineno, yytext,
                             (const char *)list_back(filenames));
-        yylval.t = tree_new(NULL, yytoken, NULL,
+	yylval.t = tree_new(NULL, yytoken, NULL,
                             (void (*)(void *, bool))&delete_tree);
 }
 
@@ -352,35 +352,35 @@ void prepare_token(int category)
  */
 void handle_include(const char *s)
 {
-        /* get the include path */
-        size_t len = strlen(s) - 2; /* size without surrounding quotes */
-        char *include = calloc(len+1, sizeof(char));
-        if (include == NULL)
-                handle_error("handle include");
-        strncpy(include, s+1, len); /* copy substring */
-        include[len] = '\0';
+	/* get the include path */
+	size_t len = strlen(s) - 2; /* size without surrounding quotes */
+	char *include = calloc(len+1, sizeof(char));
+	if (include == NULL)
+		handle_error("handle include");
+	strncpy(include, s+1, len); /* copy substring */
+	include[len] = '\0';
 
-        /* get the real path */
-        char *filename = realpath(include, NULL);
-        if (filename == NULL) {
-                sprintf(error_buf, "Could not resolve path to included file: %s, included from %s\n",
+	/* get the real path */
+	char *filename = realpath(include, NULL);
+	if (filename == NULL) {
+		sprintf(error_buf, "Could not resolve path to included file: %s, included from %s\n",
                         include, (const char *)list_back(filenames));
-                handle_error(error_buf);
-        }
-        free(include);
-        list_push_back(filenames, filename);
+		handle_error(error_buf);
+	}
+	free(include);
+	list_push_back(filenames, filename);
 
-        /* open file and push buffer */
-        yyin = fopen(filename, "r");
-        if (yyin == NULL) {
-                sprintf(error_buf, "Could not open included file: %s, include from %s\n",
+	/* open file and push buffer */
+	yyin = fopen(filename, "r");
+	if (yyin == NULL) {
+		sprintf(error_buf, "Could not open included file: %s, include from %s\n",
                         filename, (const char *)list_back(filenames));
-                handle_error(error_buf);
-        }
-        yylineno = 1;
-        yypush_buffer_state(yy_create_buffer(yyin, YY_BUF_SIZE));
+		handle_error(error_buf);
+	}
+	yylineno = 1;
+	yypush_buffer_state(yy_create_buffer(yyin, YY_BUF_SIZE));
 
-        return;
+	return;
 }
 
 /*
@@ -415,7 +415,7 @@ void insert_typename(char *k, int c)
 	*i = c;
 
 	if (hasht_search(typenames, key))
-                lexerror("token previously declared as identifier");
+		lexerror("token previously declared as identifier");
 
 	if (hasht_insert(typenames, key, i) == NULL)
 		handle_error("typenames table failed to insert");
@@ -443,11 +443,11 @@ void free_typename(struct hash_node *t)
  */
 int check_identifier(const char *s)
 {
-        int *c = hasht_search(typenames, (void *)s);
-        if (c)
-	        TOKEN(*c);
-        else
-	        TOKEN(IDENTIFIER);
+	int *c = hasht_search(typenames, (void *)s);
+	if (c)
+		TOKEN(*c);
+	else
+		TOKEN(IDENTIFIER);
 }
 
 #undef TOKEN

@@ -27,7 +27,9 @@ GITREF = $(shell git tag | tail -n 1)
 -include local.mk
 
 # files
-SRCS = main.c token.c symbol.c list.c tree.c hasht.c lex.yy.c parser.tab.c rules.c lookup3.c
+SRCS = main.c symbol.c token.c rules.c \
+	list.c tree.c hasht.c lookup3.c \
+	lex.yy.c parser.tab.c
 OBJS = $(SRCS:.c=.o)
 TEST_DATA = data/pass/test.c data/pass/test.cpp
 

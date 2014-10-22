@@ -22,4 +22,3 @@ grammar that works with Bison.
 ** Assignment #3: Semantic Analysis
 Per the [[http://www2.cs.uidaho.edu/~jeffery/courses/445/hw3.html][requirements]], my next goal is to perform semantic analysis on
 the syntax tree for 120++.
-

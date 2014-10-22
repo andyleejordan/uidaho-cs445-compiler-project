@@ -62,7 +62,7 @@ void semantic_error(char *s, struct tree *n)
 		n = list_front(n->children);
 	struct token *t = n->data;
 	fprintf(stderr, "Semantic error: file %s, line %d, token %s: %s\n",
-		t->filename, t->lineno, t->text, s);
+	        t->filename, t->lineno, t->text, s);
 	exit(3);
 }
 
@@ -416,6 +416,7 @@ bool handle_node(struct tree *n, int d)
 			proto_param_list(params, tree_index(direct_decl, 1));
 			handle_param_list(local, tree_index(direct_decl, 1));
 		}
+
 		struct typeinfo *v = typeinfo_new(FUNCTION_T, false, 3, t, params, local);
 		insert_symbol(k, v, n, local);
 
@@ -445,24 +446,24 @@ struct hasht *build_symbols(struct tree *syntax)
 	if (usingstd) {
 		if (fstream) {
 			hasht_insert(global, "ifstream",
-				     typeinfo_new(CLASS_T, 2, false,
-						  hasht_search(typenames, "ifstream"), NULL));
+			             typeinfo_new(CLASS_T, 2, false,
+			                          hasht_search(typenames, "ifstream"), NULL));
 			hasht_insert(global, "ofstream",
-				     typeinfo_new(CLASS_T, 2, false,
-						  hasht_search(typenames, "ifstream"), NULL));
+			             typeinfo_new(CLASS_T, 2, false,
+			                          hasht_search(typenames, "ifstream"), NULL));
 		}
 		if (iostream) {
 			hasht_insert(global, "cin",
-				     typeinfo_new(CLASS_T, 2, false, "istream", NULL));
+			             typeinfo_new(CLASS_T, 2, false, "istream", NULL));
 			hasht_insert(global, "cout",
-				     typeinfo_new(CLASS_T, 2, false, "istream", NULL));
+			             typeinfo_new(CLASS_T, 2, false, "istream", NULL));
 			hasht_insert(global, "endl",
-				     typeinfo_new(CLASS_T, 2, false, "istream", NULL));
+			             typeinfo_new(CLASS_T, 2, false, "istream", NULL));
 		}
 		if (string) {
 			hasht_insert(global, "string",
-				     typeinfo_new(CLASS_T, 2, false,
-						  hasht_search(typenames, "string"), NULL));
+			             typeinfo_new(CLASS_T, 2, false,
+			                          hasht_search(typenames, "string"), NULL));
 		}
 	}
 

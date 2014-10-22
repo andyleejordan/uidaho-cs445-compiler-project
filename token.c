@@ -22,7 +22,7 @@ size_t token_sval_size = 0;
 
 /* malloc token and assign values */
 struct token *token_new(int category, int lineno,
-                           const char *text, const char* filename)
+                        const char *text, const char* filename)
 {
 	struct token *t = malloc(sizeof(*t));
 	if (t == NULL)
