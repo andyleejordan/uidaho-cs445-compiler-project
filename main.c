@@ -26,7 +26,7 @@ void free_typename(struct hash_node *t);
 
 /* from parser */
 int yyparse();
-void print_tree(struct tree *t, int d);
+bool print_tree(struct tree *t, int d);
 
 /* from symbol */
 struct hasht *build_symbols(struct tree *syntax);

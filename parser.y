@@ -66,7 +66,7 @@ void insert_typename_tree(struct tree *t, int category);
 
 /* syntax tree utilities */
 int *copy_int(int i);
-void print_tree(struct tree *t, int d);
+bool print_tree(struct tree *t, int d);
 void delete_tree(void *data, bool leaf);
 
 /* semantic action helpers */
@@ -764,7 +764,7 @@ void yyerror(const char *s)
  * Given a non-terminal tree node, prints its contained production
  * rule name.
  */
-void print_tree(struct tree *t, int d)
+bool print_tree(struct tree *t, int d)
 {
 	if (tree_size(t) == 1) /* holds a token */
 		printf("%*s %s (%d)\n", d*2, " ",
@@ -774,6 +774,7 @@ void print_tree(struct tree *t, int d)
 		printf("%*s %s: %zu\n", d*2, " ",
 		       rule_lookup(*(int *)t->data),
 		       list_size(t->children));
+	return true;
 }
 
 /*

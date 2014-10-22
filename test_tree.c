@@ -7,7 +7,7 @@
 
 #define P(name, ...) tree_new_group(NULL, #name, NULL, &delete_tree, __VA_ARGS__)
 
-void print_tree(struct tree *t, int d);
+bool print_tree(struct tree *t, int d);
 void delete_tree(void *data, bool leaf);
 
 void test_size(struct tree *tree, size_t size);
@@ -106,9 +106,10 @@ void test_new_group(struct tree *t)
 		failure("first child wasn't 'foo'");
 }
 
-void print_tree(struct tree *t, int d)
+bool print_tree(struct tree *t, int d)
 {
 	printf("%*s\n", d*2, (char *)t->data);
+	return true;
 }
 
 void delete_tree(void *data, bool leaf)

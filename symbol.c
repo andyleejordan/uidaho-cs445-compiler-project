@@ -21,6 +21,8 @@
 #include "lexer.h"
 #include "parser.tab.h"
 
+struct list *yyscopes;
+
 #define current_scope() (struct hasht *)list_back(yyscopes)
 #define push_scope(k) list_push_back(yyscopes, get_scope(current_scope(), k))
 #define pop_scope() list_pop_back(yyscopes)
@@ -159,16 +161,18 @@ struct hasht *build_symbols(struct tree *syntax)
 	struct hasht *global = hasht_new(32, true, NULL, NULL, &free_symbols);
 
 	/* initialize scope stack */
-	struct list *yyscopes = list_new(NULL, NULL);
+	yyscopes = list_new(NULL, NULL);
 	list_push_back(yyscopes, global);
 
 	/* handle standard libraries */
 	if (usingstd) {
 		if (fstream) {
 			hasht_insert(global, "ifstream",
-			             typeinfo_new(CLASS_T, 2, false, hasht_search(typenames, "ifstream"), NULL));
+			             typeinfo_new(CLASS_T, 2, false,
+			                          hasht_search(typenames, "ifstream"), NULL));
 			hasht_insert(global, "ofstream",
-			             typeinfo_new(CLASS_T, 2, false, hasht_search(typenames, "ifstream"), NULL));
+			             typeinfo_new(CLASS_T, 2, false,
+			                          hasht_search(typenames, "ifstream"), NULL));
 		}
 		if (iostream) {
 			hasht_insert(global, "cin",
@@ -180,73 +184,14 @@ struct hasht *build_symbols(struct tree *syntax)
 		}
 		if (string) {
 			hasht_insert(global, "string",
-			             typeinfo_new(CLASS_T, 2, false, hasht_search(typenames, "string"), NULL));
+			             typeinfo_new(CLASS_T, 2, false,
+			                          hasht_search(typenames, "string"), NULL));
 		}
 	}
 
-	/* breadth first traversal of syntax tree */
-	struct list *queue = list_new(NULL, NULL);
-	list_push_back(queue, syntax);
-	while (!list_empty(queue)) {
-		/* visit node */
-		struct tree *n = list_pop_front(queue);
-		
-		switch (get_rule(n)) {
-		case SIMPLE_DECL1: {
-			/* this may need to be synthesized */
-			enum type t = get_type(get_token(n, 0)->category);
-
-			char *k = NULL;
-			struct typeinfo *v = NULL;
-
-			struct tree *init_decl = tree_index(n, 1);
-			switch (tree_size(init_decl)) {
-			case 2: { /* simple variable */
-				k = get_token(init_decl, 0)->text;
-				v = typeinfo_new(t, false, 0);
-				break;
-			}
-			case 3: { /* simple variable with initalizer in child 1 */
-				k = get_token(init_decl, 0)->text;
-				v = typeinfo_new(t, false, 0);
-				break;
-			}
-			case 4: { /* simple pointer variable */
-				k = get_token(tree_index(init_decl, 0), 1)->text;
-				v = typeinfo_new(t, true, 0);
-				break;
-			}
-			case 6: { /* simple array with size */
-				k = get_token(tree_index(init_decl, 0), 0)->text;
-				size_t size = get_token(tree_index(init_decl, 0), 2)->ival;
-				v = typeinfo_new(ARRAY_T, 2, size, t);
-				break;
-			}
-			}
-
-			/* case FUNCTION_T: { */
-			/* 	v = typeinfo_new(t, 3 /\*, type, typeinfo list, symbols *\/ ); */
-			/* } */
-			/* case CLASS_T: { */
-			/* 	v = typeinfo_new(t, 2 /\*, type from typenames, symbols *\/ ); */
-			/* } */
-				
-			if (check_declared(yyscopes, k))
-				semantic_error("identifier already declared", n);
-			fprintf(stderr, "inserting ident %s into table\n", k);
-			insert_symbol(k, v);
-		}
-		default: {
-			/* enqueue children */
-			struct list_node *iter = list_head(n->children);
-			while (!list_end(iter)) {
-				list_push_back(queue, iter->data);
-				iter = iter->next;
-			}
-		}
-		}
-	}
-	list_free(queue);
+	/* do a top-down pre-order traversal to populate symbol tables */
+	tree_preorder(syntax, 0, &handle_node);
+	
 	list_free(yyscopes);
 
 	return global;

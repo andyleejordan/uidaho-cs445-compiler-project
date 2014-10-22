@@ -36,7 +36,7 @@ struct tree *tree_push_child(struct tree *self, struct tree *child);
 
 struct tree *tree_index(struct tree *self, int pos);
 
-void tree_preorder(struct tree *self, int d, void (*f)(struct tree *t, int d));
+void tree_preorder(struct tree *self, int d, bool (*f)(struct tree *t, int d));
 
 size_t tree_size(struct tree *self);
 void tree_free(struct tree *self);
