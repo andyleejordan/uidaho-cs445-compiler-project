@@ -188,6 +188,65 @@ void typeinfo_delete(struct typeinfo *t)
 	}
 }
 
+bool typeinfo_compare(struct typeinfo *a, struct typeinfo *b)
+{
+	if (a == NULL && b == NULL)
+		return true;
+
+	if (a == NULL && b != NULL)
+		return false;
+
+	if (a != NULL && b == NULL)
+		return false;
+
+	if (a->base != b->base)
+		return false;
+
+	if (a->pointer != b->pointer)
+		return false;
+
+	switch (a->base) {
+	case ARRAY_T: {
+		if (a->array.size != b->array.size)
+			return false;
+
+		if (!typeinfo_compare(a->array.type, b->array.type))
+			return false;
+
+		return true;
+	}
+	case FUNCTION_T: {
+		if (!typeinfo_compare(a->function.type, b->function.type))
+			return false;
+
+		if (!prototype_compare(a, b))
+			return false;
+
+		return true;
+	}
+	case CLASS_T: {
+		return strcmp(a->class.type, b->class.type) == 0;
+	}
+	default:
+		return true;
+	}
+}
+
+bool prototype_compare(struct typeinfo *a, struct typeinfo *b)
+{
+	struct list_node *a_iter = list_head(a->function.parameters);
+	struct list_node *b_iter = list_head(b->function.parameters);
+
+	while (!list_end(a_iter) && !list_end(b_iter)) {
+		if (!typeinfo_compare(a_iter->data, b_iter->data))
+			return false;
+
+		a_iter = a_iter->next;
+		b_iter = b_iter->next;
+	}
+	return list_end(a_iter) && list_end(b_iter);
+}
+
 /*
  * Handles a PARAM_DECL1 rule for basic types, pointers, and arrays
  */
@@ -212,8 +271,32 @@ void handle_param(struct hasht *s, struct tree *n)
 		break;
 	}
 	}
-	fprintf(stderr, "param name is %s\n", k);
 	hasht_insert(s, k, v);
+}
+
+void proto_param(struct list *p, struct tree *n)
+{
+	struct typeinfo *v = NULL;
+	switch (tree_size(n)) {
+	case 2:
+	case 3: { /* simple parameter */
+		v = typeinfo_new(get_type(get_token(n, 0)->category), false, 0);
+		break;
+	}
+	case 4:
+	case 5: { /* simple parameter pointer */
+		v = typeinfo_new(get_type(get_token(n, 0)->category), true, 0);
+		break;
+	}
+	case 6: { /* simple array parameter */
+		v = typeinfo_new(ARRAY_T, false, 2, 0, get_type(get_token(n, 0)->category));
+		break;
+	}
+	}
+	if (v)
+		list_push_back(p, v);
+	else
+		semantic_error("prototype unsupported", n);
 }
 
 /*
@@ -226,8 +309,20 @@ void handle_param_list(struct hasht *local, struct tree *param)
 	} else {
 		struct list_node *iter = list_head(param->children);
 		while (!list_end(iter)) {
-			struct tree *subparam = iter->data;
-			handle_param_list(local, subparam);
+			handle_param_list(local, iter->data);
+			iter = iter->next;
+		}
+	}
+}
+
+void proto_param_list(struct list *p, struct tree *param)
+{
+	if (get_rule(param) == PARAM_DECL1) {
+		proto_param(p, param);
+	} else {
+		struct list_node *iter = list_head(param->children);
+		while (!list_end(iter)) {
+			proto_param_list(p, iter->data);
 			iter = iter->next;
 		}
 	}
@@ -278,12 +373,12 @@ bool handle_node(struct tree *n, int d)
 		struct tree *direct_decl = tree_index(n, 1);
 
 		char *k = get_token(direct_decl, 0)->text;
-		struct typeinfo *v = typeinfo_new(FUNCTION_T, false, 2, t, local);
+		struct list *params = list_new(NULL, NULL);
 
 		/* add parameters (if they exist) to local symbol table */
 		if (tree_size(direct_decl) > 2) {
-			struct tree *param = tree_index(direct_decl, 1);
-			handle_param_list(local, param);
+			proto_param_list(params, tree_index(direct_decl, 1));
+			handle_param_list(local, tree_index(direct_decl, 1));
 		}
 		struct typeinfo *v = typeinfo_new(FUNCTION_T, false, 3, t, params, local);
 		insert_symbol(k, v, n, local);
