@@ -380,7 +380,7 @@ compound_statement:
         ;
 
 statement_seq:
-        statement                 { $$ = $1; }
+        statement                 { $$ = P(STATEMENT_SEQ1, 1, $1); }
         | statement_seq statement { $$ = P(STATEMENT_SEQ2, 2, $1, $2); }
         ;
 

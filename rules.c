@@ -74,6 +74,7 @@ char *rule_lookup(int rule)
 		R(EXPR2);
 		R(LABELED_STATEMENT1);
 		R(LABELED_STATEMENT2);
+		R(STATEMENT_SEQ1);
 		R(STATEMENT_SEQ2);
 		R(SELECT1);
 		R(SELECT2);
