@@ -356,6 +356,60 @@ void proto_param_list(struct list *p, struct tree *param)
 	}
 }
 
+void init_decl(enum type t, struct tree *n)
+{
+	char *k = NULL;
+	struct typeinfo *v = NULL;
+
+	switch (get_rule(n)) {
+	case INIT_DECL: { /* simple variable, possibly with initializer */
+		if (tree_size(n) == 2) {
+			k = get_token(n, 0)->text;
+			v = typeinfo_new(t, false, 0);
+		} else {
+			init_decl(t, tree_index(n, 0));
+		}
+		break;
+	}
+	case DECL2: { /* simple pointer variable */
+		k = get_token(n, 1)->text;
+		v = typeinfo_new(t, true, 0);
+		break;
+	}
+	case DIRECT_DECL6: { /* simple array with size */
+		k = get_token(n, 0)->text;
+		size_t size = get_token(n, 2)->ival;
+		v = typeinfo_new(ARRAY_T, false, 2, typeinfo_new(t, false, 0), size);
+		break;
+	}
+	case DIRECT_DECL2: { /* function prototype */
+		k = get_token(n, 0)->text;
+		struct list *params = list_new(NULL, NULL);
+		if (tree_size(n) > 2)
+			proto_param_list(params, tree_index(n, 1));
+		v = typeinfo_new(FUNCTION_T, false, 3, t, params, NULL);
+		break;
+	}
+	default:
+		semantic_error("unsupported declaration type", n);
+	}
+	if (v)
+		insert_symbol(k, v, n, NULL);
+}
+
+void init_decl_list(enum type t, struct tree *n)
+{
+	if (get_rule(n) == INIT_DECL_LIST2) {
+		struct list_node *iter = list_head(n->children);
+		while (!list_end(iter)) {
+			init_decl_list(t, iter->data);
+			iter = iter->next;
+		}
+	} else {
+		init_decl(t, n);
+	}
+}
+
 bool handle_node(struct tree *n, int d)
 {
 	switch (get_rule(n)) {
@@ -363,44 +417,9 @@ bool handle_node(struct tree *n, int d)
 		/* this may need to be synthesized */
 		enum type t = get_type(get_token(n, 0)->category);
 
-		char *k = NULL;
-		struct typeinfo *v = NULL;
-
 		struct tree *init_decl = tree_index(n, 1);
-		struct tree *direct_decl = tree_index(init_decl, 0);
+		init_decl_list(t, init_decl);
 
-		switch (get_rule(direct_decl)) {
-		case DECL2: { /* simple pointer variable */
-			k = get_token(direct_decl, 1)->text;
-			v = typeinfo_new(t, true, 0);
-			break;
-		}
-		case DIRECT_DECL6: { /* simple array with size */
-			k = get_token(direct_decl, 0)->text;
-			size_t size = get_token(direct_decl, 2)->ival;
-			v = typeinfo_new(ARRAY_T, false, 2, size, t);
-			break;
-		}
-		case DIRECT_DECL2: { /* function prototype */
-			k = get_token(direct_decl, 0)->text;
-			struct list *params = list_new(NULL, NULL);
-			if (tree_size(direct_decl) > 2)
-				proto_param_list(params, tree_index(direct_decl, 1));
-			v = typeinfo_new(FUNCTION_T, false, 3, t, params, NULL);
-			break;
-		}
-		default: {
-			/* simple variable, possibly with initializer */
-			if (tree_size(init_decl) <= 3) {
-				k = get_token(init_decl, 0)->text;
-				v = typeinfo_new(t, false, 0);
-			} else {
-				semantic_error("unsupported declaration type", n);
-			}
-		}
-		}
-		if (v)
-			insert_symbol(k, v, n, NULL);
 		return false;
 	}
 	case FUNCTION_DEF2: {
