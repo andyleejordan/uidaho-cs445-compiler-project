@@ -45,9 +45,9 @@ void semantic_error(char *s, struct tree *n)
 		n = list_front(n->children);
 	struct token *t = n->data;
 	fprintf(stderr, "Semantic error: file %s, line %d, token %s: %s\n",
-	        t->filename, t->lineno, t->text, s);
+		t->filename, t->lineno, t->text, s);
 	exit(3);
-}	
+}
 
 bool check_declared(struct list *s, char *k)
 {
@@ -138,9 +138,8 @@ struct typeinfo *typeinfo_new(enum type base, bool pointer, int count, ...)
 	}
 
 	va_end(ap);
-		
 	return t;
-}	
+}
 
 /*
  * Frees types for array and function.
@@ -208,7 +207,7 @@ void handle_param_list(struct hasht *local, struct tree *param)
 			iter = iter->next;
 		}
 	}
-}	
+}
 
 bool handle_node(struct tree *n, int d)
 {
@@ -258,7 +257,7 @@ bool handle_node(struct tree *n, int d)
 
 		enum type t = get_type(get_token(n, 0)->category);
 		struct tree *direct_decl = tree_index(n, 1);
-		
+
 		char *k = get_token(direct_decl, 0)->text;
 		struct typeinfo *v = typeinfo_new(FUNCTION_T, false, 2, t, local);
 
@@ -282,10 +281,12 @@ bool handle_node(struct tree *n, int d)
 
 		return false;
 	}
-	default: /* rule did not provide a symbol, so recurse on children */
+	default: { /* rule did not provide a symbol, so recurse on children */
 		return true;
 	}
+	}
 }
+
 
 struct hasht *build_symbols(struct tree *syntax)
 {
@@ -299,34 +300,34 @@ struct hasht *build_symbols(struct tree *syntax)
 	if (usingstd) {
 		if (fstream) {
 			hasht_insert(global, "ifstream",
-			             typeinfo_new(CLASS_T, 2, false,
-			                          hasht_search(typenames, "ifstream"), NULL));
+				     typeinfo_new(CLASS_T, 2, false,
+						  hasht_search(typenames, "ifstream"), NULL));
 			hasht_insert(global, "ofstream",
-			             typeinfo_new(CLASS_T, 2, false,
-			                          hasht_search(typenames, "ifstream"), NULL));
+				     typeinfo_new(CLASS_T, 2, false,
+						  hasht_search(typenames, "ifstream"), NULL));
 		}
 		if (iostream) {
 			hasht_insert(global, "cin",
-			             typeinfo_new(CLASS_T, 2, false, "istream", NULL));
+				     typeinfo_new(CLASS_T, 2, false, "istream", NULL));
 			hasht_insert(global, "cout",
-			             typeinfo_new(CLASS_T, 2, false, "istream", NULL));
+				     typeinfo_new(CLASS_T, 2, false, "istream", NULL));
 			hasht_insert(global, "endl",
-			             typeinfo_new(CLASS_T, 2, false, "istream", NULL));
+				     typeinfo_new(CLASS_T, 2, false, "istream", NULL));
 		}
 		if (string) {
 			hasht_insert(global, "string",
-			             typeinfo_new(CLASS_T, 2, false,
-			                          hasht_search(typenames, "string"), NULL));
+				     typeinfo_new(CLASS_T, 2, false,
+						  hasht_search(typenames, "string"), NULL));
 		}
 	}
 
 	/* do a top-down pre-order traversal to populate symbol tables */
 	tree_preorder(syntax, 0, &handle_node);
-	
+
 	list_free(yyscopes);
 
 	return global;
-}	
+}
 
 void free_symbols(struct hash_node *n)
 {
