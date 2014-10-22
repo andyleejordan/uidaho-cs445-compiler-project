@@ -142,15 +142,24 @@ struct typeinfo *typeinfo_new(enum type base, bool pointer, int count, ...)
 	return t;
 }	
 
+/*
+ * Frees types for array and function.
+ */
 void typeinfo_delete(struct typeinfo *t)
 {
 	switch (t->base) {
-	case ARRAY_T:
+	case ARRAY_T: {
 		typeinfo_delete(t->array.type);
-	case FUNCTION_T:
+		break;
+	}
+	case FUNCTION_T: {
 		list_free(t->function.parameters);
-	case CLASS_T:
-		free(t->class.type);
+		typeinfo_delete(t->function.type);
+		break;
+	}
+	case CLASS_T: {
+		break;
+	}
 	default:
 		break;
 	}
