@@ -165,6 +165,83 @@ void typeinfo_delete(struct typeinfo *t)
 	}
 }
 
+bool handle_node(struct tree *n, int d)
+{
+	switch (get_rule(n)) {
+	case SIMPLE_DECL1: {
+		/* this may need to be synthesized */
+		enum type t = get_type(get_token(n, 0)->category);
+
+		char *k = NULL;
+		struct typeinfo *v = NULL;
+
+		struct tree *init_decl = tree_index(n, 1);
+		switch (tree_size(init_decl)) {
+		case 2: { /* simple variable */
+			k = get_token(init_decl, 0)->text;
+			v = typeinfo_new(t, false, 0);
+			break;
+		}
+		case 3: { /* simple variable with initalizer in child 1 */
+			k = get_token(init_decl, 0)->text;
+			v = typeinfo_new(t, false, 0);
+			break;
+		}
+		case 4: { /* simple pointer variable */
+			k = get_token(tree_index(init_decl, 0), 1)->text;
+			v = typeinfo_new(t, true, 0);
+			break;
+		}
+		case 6: { /* simple array with size */
+			k = get_token(tree_index(init_decl, 0), 0)->text;
+			size_t size = get_token(tree_index(init_decl, 0), 2)->ival;
+			v = typeinfo_new(ARRAY_T, 2, size, t);
+			break;
+		}
+		}
+
+		if (check_declared(yyscopes, k))
+			semantic_error("identifier already declared", n);
+
+		fprintf(stderr, "inserting ident %s into table %zu\n", k, list_size(yyscopes));		
+		
+		insert_symbol(k, v);
+		return false;
+	}
+	case FUNCTION_DEF2: {
+		struct hasht *local = hasht_new(32, true, NULL, NULL, &free_symbols);
+
+		enum type t = get_type(get_token(n, 0)->category);
+		struct tree *direct_decl = tree_index(n, 1);
+		
+		char *k = get_token(direct_decl, 0)->text;
+		struct typeinfo *v = typeinfo_new(FUNCTION_T, false, 2, t, local);
+
+		/* add parameters (if they exist) to local symbol table */
+		if (tree_size(direct_decl) > 2) {
+			struct tree *param = tree_index(direct_decl, 1);
+			handle_param_list(local, param);
+		}
+
+		if (check_declared(yyscopes, k))
+			semantic_error("identifier already declared", n);
+		
+		fprintf(stderr, "inserting ident %s into table %zu\n", k, list_size(yyscopes));
+		
+		insert_symbol(k, v);
+
+		/* recurse on children while in subscope */
+		list_push_back(yyscopes, local);
+		tree_preorder(tree_index(n, 2), d, &handle_node);
+		pop_scope();
+
+		return false;
+	}
+	default: /* rule did not provide a symbol, so recurse on children */
+		return true;
+	}
+}
+
 struct hasht *build_symbols(struct tree *syntax)
 {
 	struct hasht *global = hasht_new(32, true, NULL, NULL, &free_symbols);
