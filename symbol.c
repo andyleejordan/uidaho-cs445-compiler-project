@@ -165,6 +165,51 @@ void typeinfo_delete(struct typeinfo *t)
 	}
 }
 
+/*
+ * Handles a PARAM_DECL1 rule for basic types, pointers, and arrays
+ */
+void handle_param(struct hasht *s, struct tree *n)
+{
+	char *k = NULL;
+	struct typeinfo *v = NULL;
+	switch (tree_size(n)) {
+	case 3: { /* simple parameter */
+		k = get_token(n, 1)->text;
+		v = typeinfo_new(get_type(get_token(n, 0)->category), false, 0);
+		break;
+	}
+	case 5: { /* simple parameter pointer */
+		k = get_token(tree_index(n, 1), 1)->text;
+		v = typeinfo_new(get_type(get_token(n, 0)->category), true, 0);
+		break;
+	}
+	case 6: { /* simple array parameter */
+		k = get_token(tree_index(n, 1), 0)->text;
+		v = typeinfo_new(ARRAY_T, false, 2, 0, get_type(get_token(n, 0)->category));
+		break;
+	}
+	}
+	fprintf(stderr, "param name is %s\n", k);
+	hasht_insert(s, k, v);
+}
+
+/*
+ * Handles an arbitrarily nested list of parameters recursively
+ */
+void handle_param_list(struct hasht *local, struct tree *param)
+{
+	if (get_rule(param) == PARAM_DECL1) {
+		handle_param(local, param);
+	} else {
+		struct list_node *iter = list_head(param->children);
+		while (!list_end(iter)) {
+			struct tree *subparam = iter->data;
+			handle_param_list(local, subparam);
+			iter = iter->next;
+		}
+	}
+}	
+
 bool handle_node(struct tree *n, int d)
 {
 	switch (get_rule(n)) {
