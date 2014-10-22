@@ -71,7 +71,6 @@ void insert_symbol(char *k, struct typeinfo *v, struct tree *n, struct hasht *l)
 		if (!prototype_compare(e, v)) {
 			semantic_error("function prototypes mismatched", n);
 		} else if (l) {
-			fprintf(stderr, "%s exists, assigning\n", k);
 			e->function.symbols = l;
 		}
 	} else if (e->base == CLASS_T && v->base == CLASS_T) {
@@ -254,21 +253,25 @@ void handle_param(struct hasht *s, struct tree *n)
 {
 	char *k = NULL;
 	struct typeinfo *v = NULL;
+	enum type t = get_type(get_token(n, 0)->category);
 	switch (tree_size(n)) {
 	case 3: { /* simple parameter */
 		k = get_token(n, 1)->text;
-		v = typeinfo_new(get_type(get_token(n, 0)->category), false, 0);
+		v = typeinfo_new(t, false, 0);
 		break;
 	}
 	case 5: { /* simple parameter pointer */
 		k = get_token(tree_index(n, 1), 1)->text;
-		v = typeinfo_new(get_type(get_token(n, 0)->category), true, 0);
+		v = typeinfo_new(t, true, 0);
 		break;
 	}
 	case 6: { /* simple array parameter */
 		k = get_token(tree_index(n, 1), 0)->text;
-		v = typeinfo_new(ARRAY_T, false, 2, 0, get_type(get_token(n, 0)->category));
+		v = typeinfo_new(ARRAY_T, false, 2, 0, t);
 		break;
+	}
+	default: {
+		semantic_error("parameter declaration", n);
 	}
 	}
 	hasht_insert(s, k, v);
@@ -277,26 +280,31 @@ void handle_param(struct hasht *s, struct tree *n)
 void proto_param(struct list *p, struct tree *n)
 {
 	struct typeinfo *v = NULL;
-	switch (tree_size(n)) {
-	case 2:
-	case 3: { /* simple parameter */
-		v = typeinfo_new(get_type(get_token(n, 0)->category), false, 0);
-		break;
+	enum type t = get_type(get_token(n, 0)->category);
+
+	if (tree_size(n) == 2) { /* simple variable */
+		v = typeinfo_new(t, false, 0);
+	} else {
+		switch (get_rule(tree_index(n, 1))) {
+		case ABSTRACT_DECL1:
+		case DECL2: {
+			v = typeinfo_new(t, true, 0);
+			break;
+		}
+		case DIRECT_ABSTRACT_DECL4:
+		case DIRECT_DECL6: {
+			v = typeinfo_new(ARRAY_T, false, 2, 0, t);
+			break;
+		}
+		default: {
+			if (tree_size(n) == 3)
+				v = typeinfo_new(t, false, 0);
+			else
+				semantic_error("prototype unsupported", n);
+		}
+		}
 	}
-	case 4:
-	case 5: { /* simple parameter pointer */
-		v = typeinfo_new(get_type(get_token(n, 0)->category), true, 0);
-		break;
-	}
-	case 6: { /* simple array parameter */
-		v = typeinfo_new(ARRAY_T, false, 2, 0, get_type(get_token(n, 0)->category));
-		break;
-	}
-	}
-	if (v)
-		list_push_back(p, v);
-	else
-		semantic_error("prototype unsupported", n);
+	list_push_back(p, v);
 }
 
 /*
