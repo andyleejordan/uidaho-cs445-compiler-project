@@ -344,7 +344,7 @@ void handle_param_list(struct hasht *local, struct tree *param)
 
 void proto_param_list(struct list *p, struct tree *param)
 {
-	if (get_rule(param) == PARAM_DECL1) {
+	if (get_rule(param) == PARAM_DECL1 || get_rule(param) == PARAM_DECL3) {
 		proto_param(p, param);
 	} else {
 		struct list_node *iter = list_head(param->children);
