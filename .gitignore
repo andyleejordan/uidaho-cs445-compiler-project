@@ -1,6 +1,6 @@
 /.dir-locals.el
 /local.mk
-/120++
+/120
 /test-list
 /test-tree
 /test-hasht
