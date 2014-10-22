@@ -145,7 +145,7 @@ struct hasht *get_scope(struct hasht *s, char *k)
 /*
  * Constructs new typeinfo.
  *
- * array: count 2, size, typeinfo
+ * array: count 2, typeinfo, size
  * function: count 3, typeinfo, parameters list, scope
  * class: count 2, name, scope
  */
@@ -160,8 +160,8 @@ struct typeinfo *typeinfo_new(enum type base, bool pointer, int count, ...)
 
 	switch (t->base) {
 	case ARRAY_T: {
-		t->array.size = va_arg(ap, size_t);
 		t->array.type = va_arg(ap, struct typeinfo *);
+		t->array.size = va_arg(ap, size_t);
 		break;
 	}
 	case FUNCTION_T: {
@@ -211,10 +211,7 @@ bool typeinfo_compare(struct typeinfo *a, struct typeinfo *b)
 	if (a == NULL && b == NULL)
 		return true;
 
-	if (a == NULL && b != NULL)
-		return false;
-
-	if (a != NULL && b == NULL)
+	if (a == NULL || b == NULL)
 		return false;
 
 	if (a->base != b->base)
@@ -225,10 +222,10 @@ bool typeinfo_compare(struct typeinfo *a, struct typeinfo *b)
 
 	switch (a->base) {
 	case ARRAY_T: {
-		if (a->array.size != b->array.size)
+		if (!typeinfo_compare(a->array.type, b->array.type))
 			return false;
 
-		if (!typeinfo_compare(a->array.type, b->array.type))
+		if (a->array.size != b->array.size)
 			return false;
 
 		return true;
@@ -245,6 +242,8 @@ bool typeinfo_compare(struct typeinfo *a, struct typeinfo *b)
 	case CLASS_T: {
 		return strcmp(a->class.type, b->class.type) == 0;
 	}
+	case UNKNOWN_T:
+		return false;
 	default:
 		return true;
 	}
@@ -286,16 +285,18 @@ void handle_param(struct hasht *s, struct tree *n)
 	}
 	case 6: { /* simple array parameter */
 		k = get_token(tree_index(n, 1), 0)->text;
-		v = typeinfo_new(ARRAY_T, false, 2, 0, t);
+		v = typeinfo_new(ARRAY_T, false, 2, typeinfo_new(t, false, 0), 0);
 		break;
 	}
-	default: {
+	default:
 		semantic_error("parameter declaration", n);
-	}
 	}
 	hasht_insert(s, k, v);
 }
 
+/*
+ * Handles a PARAM_DECL1 or a PARAM_DECL3 rule
+ */
 void proto_param(struct list *p, struct tree *n)
 {
 	struct typeinfo *v = NULL;
@@ -312,7 +313,7 @@ void proto_param(struct list *p, struct tree *n)
 		}
 		case DIRECT_ABSTRACT_DECL4:
 		case DIRECT_DECL6: {
-			v = typeinfo_new(ARRAY_T, false, 2, 0, t);
+			v = typeinfo_new(ARRAY_T, false, 2, typeinfo_new(t, false, 0), 0);
 			break;
 		}
 		default: {
@@ -427,9 +428,8 @@ bool handle_node(struct tree *n, int d)
 
 		return false;
 	}
-	default: { /* rule did not provide a symbol, so recurse on children */
+	default: /* rule did not provide a symbol, so recurse on children */
 		return true;
-	}
 	}
 }
 

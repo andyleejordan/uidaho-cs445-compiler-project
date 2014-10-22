@@ -38,8 +38,8 @@ struct typeinfo {
 	bool pointer;
 	union {
 		struct arrayinfo {
-			size_t size;
 			struct typeinfo *type;
+			size_t size;
 		} array;
 		struct functioninfo {
 			struct typeinfo *type; /* return */
