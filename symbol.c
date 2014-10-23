@@ -43,18 +43,20 @@ struct list *yyscopes;
  * Given a type enum, returns its name as a static string.
  */
 #define R(rule) case rule: return #rule
-char *print_type(enum type t)
+char *print_basetype(struct typeinfo *t)
 {
-	switch (t) {
+	switch (t->base) {
 		R(INT_T);
 		R(DOUBLE_T);
 		R(CHAR_T);
 		R(BOOL_T);
 		R(ARRAY_T);
-		R(FUNCTION_T);
-		R(CLASS_T);
 		R(VOID_T);
 		R(UNKNOWN_T);
+	case FUNCTION_T:
+		return print_basetype(t->function.type);
+	case CLASS_T:
+		return t->class.type;
 	}
 }
 #undef R
@@ -76,8 +78,7 @@ enum type get_type(enum yytokentype t)
 		return CHAR_T;
 	case BOOL:
 		return BOOL_T;
-	case CLASS:
-	case STRUCT:
+	case CLASS_NAME:
 		return CLASS_T;
 	case VOID:
 		return VOID_T;
@@ -114,6 +115,53 @@ void *find_declared(char *k)
 	return NULL;
 }
 
+void print_typeinfo(FILE *stream, char *k, struct typeinfo *v)
+{
+	if (v == NULL) {
+		puts("wtf");
+		return;
+	}
+
+	switch (v->base) {
+	case INT_T:
+	case DOUBLE_T:
+	case CHAR_T:
+	case BOOL_T:
+	case VOID_T: {
+		fprintf(stream, "%s %s%s", print_basetype(v),
+		        (v->pointer) ? "*" : "", k);
+		return;
+	}
+	case ARRAY_T: {
+		print_typeinfo(stream, k, v->array.type);
+		fprintf(stream, "[%zu]", v->array.size);
+		return;
+	}
+	case FUNCTION_T: {
+		print_typeinfo(stream, "", v->function.type);
+		fprintf(stream, "(*%s)(", k);
+		struct list_node *iter = list_head(v->function.parameters);
+		while (!list_end(iter)) {
+			print_typeinfo(stream, "", iter->data);
+			iter = iter->next;
+			if (!list_end(iter))
+				fprintf(stream, ", ");
+		}
+		fprintf(stream, ")");
+		return;
+	}
+	case CLASS_T: {
+		fprintf(stream, "%s %s%s", v->class.type,
+		        (v->pointer) ? "*" : "", k);
+		return;
+	}
+	case UNKNOWN_T: {
+		fprintf(stream, "unknown type");
+		return;
+	}
+	}
+}
+
 bool prototype_compare(struct list *a, struct list *b);
 
 /*
@@ -128,7 +176,9 @@ void insert_symbol(char *k, struct typeinfo *v, struct tree *n, struct hasht *l)
 {
 	struct typeinfo *e = find_declared(k);
 	if (e == NULL) {
-		fprintf(stderr, "inserting ident %s into table %zu\n", k, list_size(yyscopes));
+		fprintf(stderr, "inserting ");
+		print_typeinfo(stderr, k, v);
+		fprintf(stderr, " into table %zu\n", list_size(yyscopes));
 		hasht_insert(current_scope(), k, v);
 	} else if (e->base == FUNCTION_T && v->base == FUNCTION_T) {
 		if (!prototype_compare(e->function.parameters, v->function.parameters)) {
