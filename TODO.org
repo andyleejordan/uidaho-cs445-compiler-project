@@ -8,10 +8,8 @@
 - =list_split=
 - =list_sort=
 ** TODO Assignment #3
-*** TODO Refactor rule handling
 *** TODO Handle classes
 *** TODO Handle declarations in for loops
-*** TODO Support arrays of pointer types
 *** TODO Handle undeclared variables
 *** TODO Type checking
 **** TODO Require and check types everywhere at compile-time
