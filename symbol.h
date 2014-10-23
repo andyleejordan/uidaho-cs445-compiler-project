@@ -53,7 +53,7 @@ struct typeinfo {
 	};
 };
 
-struct typeinfo *typeinfo_new(enum type base, bool pointer, int count, ...);
+struct typeinfo *typeinfo_new();
 void typeinfo_delete(struct typeinfo *n);
 void free_symbols(struct hash_node *n);
 

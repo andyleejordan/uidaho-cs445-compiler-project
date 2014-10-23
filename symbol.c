@@ -218,44 +218,96 @@ struct hasht *get_scope(struct hasht *s, char *k)
 	}
 }
 
+struct token *get_category_(struct tree *n, int target, int before);
+
+/*
+ * Wrapper to return null if token not found, else return token.
+ */
+struct token *get_category(struct tree *n, int target, int before)
+{
+	struct token *t = get_category_(n, target, before);
+	if (t && t->category == target)
+		return t;
+	else
+		return NULL;
+}
+
+/*
+ * Walks tree returning first token matching category, else null.
+ */
+struct token *get_category_(struct tree *n, int target, int before)
+{
+	if (tree_size(n) == 1) {
+		struct token *t = n->data;
+		if (t->category == target || t->category == before)
+			return t;
+	}
+
+	struct list_node *iter = list_head(n->children);
+	while (!list_end(iter)) {
+		struct token *t = get_category_(iter->data, target, before);
+		if (t && (t->category == target || t->category == before))
+			return t;
+		iter = iter->next;
+	}
+
+	return NULL;
+}
+
+/*
+ * Returns identifier if found, else null.
+ */
+char *get_identifier(struct tree *n)
+{
+	struct token *t = get_category(n, IDENTIFIER, -1);
+	if (t)
+		return t->text;
+	else
+		return NULL;
+}
+
+/*
+ * Returns if pointer is found in tree.
+ */
+bool get_pointer(struct tree *n)
+{
+	return get_category(n, '*', IDENTIFIER);
+}
+
+/*
+ * Returns size of array if found, 0 if not given, -1 if not array.
+ */
+int get_array(struct tree *n)
+{
+	if (get_category(n, '[', INTEGER)) {
+		struct token *t = get_category(n, INTEGER, -1);
+		return t ? t->ival : 0;
+	}
+	return -1;
+}
+
+/*
+ * Returns class name if found, else null.
+ */
+char *get_class(struct tree *n)
+{
+	struct token *t = get_category(n, CLASS_NAME, IDENTIFIER);
+	if (t)
+		return t->text;
+	else
+		return NULL;
+}
+
 /*
  * Constructs new typeinfo.
  *
- * array: count 2, typeinfo, size
- * function: count 3, typeinfo, parameters list, scope
- * class: count 2, name, scope
  */
-struct typeinfo *typeinfo_new(enum type base, bool pointer, int count, ...)
+struct typeinfo *typeinfo_new()
 {
-	va_list ap;
-	va_start(ap, count);
+	struct typeinfo *t = calloc(1, sizeof(*t));
+	t->base = UNKNOWN_T;
+	t->pointer = false;
 
-	struct typeinfo *t = malloc(sizeof(*t));
-	t->base = base;
-	t->pointer = pointer;
-
-	switch (t->base) {
-	case ARRAY_T: {
-		t->array.type = va_arg(ap, struct typeinfo *);
-		t->array.size = va_arg(ap, size_t);
-		break;
-	}
-	case FUNCTION_T: {
-		t->function.type = va_arg(ap, struct typeinfo *);
-		t->function.parameters = va_arg(ap, struct list *);
-		t->function.symbols = va_arg(ap, struct hasht *);
-		break;
-	}
-	case CLASS_T: {
-		t->class.type = va_arg(ap, char *);
-		t->class.symbols = va_arg(ap, struct hasht *);
-		break;
-	}
-	default:
-		break;
-	}
-
-	va_end(ap);
 	return t;
 }
 
@@ -354,34 +406,41 @@ bool prototype_compare(struct list *a, struct list *b)
  */
 void handle_param(struct tree *n, struct hasht *s, struct list *l)
 {
-	char *k = NULL;
-	struct typeinfo *v = NULL;
+	char *k = get_identifier(n);
+	struct typeinfo *v = typeinfo_new();
 	enum type t = get_type(get_token(n, 0)->category);
+	bool p = get_pointer(n);
+	/* if (t == CLASS_T) */
+	/* 	char *typetext = get_token(n, 0)->text; */
 
 	if (tree_size(n) == 2) {
 		/* simple variable */
-		v = typeinfo_new(t, false, 0);
+		v->base = t;
+		v->pointer = p;
 	} else if (tree_size(n) == 3) {
 		/* simple variable with identifier */
-		k = get_token(n, 1)->text;
-		v = typeinfo_new(t, false, 0);
+		v->base = t;
+		v->pointer = p;
 	} else {
 		struct tree *m = tree_index(n, 1);
 		enum rule r = get_rule(m);
 
 		/* simple parameter pointer */
-		if (r == ABSTRACT_DECL1 || r == DECL2)
-			v = typeinfo_new(t, true, 0);
-		if (r == DECL2) /* with identifier */
-			k = get_token(m, 1)->text;
+		if (r == ABSTRACT_DECL1 || r == DECL2) {
+			v->base = t;
+			v->pointer = p;
+		}
+		/* if (r == DECL2) /\* with identifier *\/ */
 
 		/* simple array parameter */
 		if (r == DIRECT_ABSTRACT_DECL4 || r == DIRECT_DECL6) {
-			struct typeinfo *array_type = typeinfo_new(t, false, 0);
-			v = typeinfo_new(ARRAY_T, false, 2, array_type, 0);
+			v->base = ARRAY_T;
+			v->array.type = typeinfo_new();
+			v->array.type->base = t;
+			v->array.type->pointer = p;
+			v->array.size = get_array(m);
 		}
-		if (r == DIRECT_DECL6) /* with identifier */
-			k = get_token(m, 0)->text;
+		/* if (r == DIRECT_DECL6) /\* with identifier *\/ */
 	}
 
 	if (l && v)
@@ -416,14 +475,14 @@ void handle_param_list(struct tree *n, struct hasht *s, struct list *l)
  */
 void handle_init(enum type t, struct tree *n)
 {
-	char *k = NULL;
+	char *k = get_identifier(n);
 	struct typeinfo *v = NULL;
 
 	switch (get_rule(n)) {
 	case INIT_DECL: { /* simple variable, possibly with initializer */
 		if (tree_size(n) <= 3) {
-			k = get_token(n, 0)->text;
-			v = typeinfo_new(t, false, 0);
+			v = typeinfo_new();
+			v->base = t;
 		} else {
 			handle_init(t, tree_index(n, 0));
 			return;
@@ -431,24 +490,32 @@ void handle_init(enum type t, struct tree *n)
 		break;
 	}
 	case DECL2: { /* simple pointer variable */
-		k = get_token(n, 1)->text;
-		v = typeinfo_new(t, true, 0);
+		v = typeinfo_new();
+		v->base = t;
+		v->pointer = get_pointer(n);
 		break;
 	}
 	case DIRECT_DECL6: { /* simple array with size */
-		k = get_token(n, 0)->text;
-		size_t size = get_token(n, 2)->ival;
-		v = typeinfo_new(ARRAY_T, false, 2, typeinfo_new(t, false, 0), size);
+		v = typeinfo_new();
+		v->base = ARRAY_T;
+		v->array.type = typeinfo_new();
+		v->array.type->base = t;
+		v->array.type->pointer = get_pointer(n);
+		v->array.size = get_array(n);
 		break;
 	}
 	case DIRECT_DECL2: { /* function declaration */
-		k = get_token(n, 0)->text;
+		v = typeinfo_new();
 
 		struct list *params = list_new(NULL, NULL);
 		if (tree_size(n) > 2)
 			handle_param_list(tree_index(n, 1), NULL, params);
 
-		v = typeinfo_new(FUNCTION_T, false, 3, t, params, NULL);
+		v->base = FUNCTION_T;
+		v->function.type = typeinfo_new();
+		v->function.type->base = t;
+		v->function.parameters = params;
+		v->function.symbols = NULL;
 		break;
 	}
 	default:
@@ -505,9 +572,13 @@ bool handle_node(struct tree *n, int d)
 		if (tree_size(m) > 2)
 			handle_param_list(tree_index(m, 1), local, params);
 
-		struct typeinfo *function_type = typeinfo_new(t, false, 0);
-		struct typeinfo *v = typeinfo_new(FUNCTION_T, false,
-		                                  3, function_type, params, local);
+		struct typeinfo *v = typeinfo_new();
+		v->base = FUNCTION_T;
+		v->function.type = typeinfo_new();
+		v->function.type->base = t;
+		v->function.type->pointer = get_pointer(n);
+		v->function.parameters = params;
+		v->function.symbols = local;
 
 		insert_symbol(k, v, n, local);
 
@@ -533,29 +604,29 @@ struct hasht *build_symbols(struct tree *syntax)
 	list_push_back(yyscopes, global);
 
 	/* handle standard libraries */
-	if (usingstd) {
-		if (fstream) {
-			hasht_insert(global, "ifstream",
-			             typeinfo_new(CLASS_T, 2, false,
-			                          hasht_search(typenames, "ifstream"), NULL));
-			hasht_insert(global, "ofstream",
-			             typeinfo_new(CLASS_T, 2, false,
-			                          hasht_search(typenames, "ifstream"), NULL));
-		}
-		if (iostream) {
-			hasht_insert(global, "cin",
-			             typeinfo_new(CLASS_T, 2, false, "istream", NULL));
-			hasht_insert(global, "cout",
-			             typeinfo_new(CLASS_T, 2, false, "istream", NULL));
-			hasht_insert(global, "endl",
-			             typeinfo_new(CLASS_T, 2, false, "istream", NULL));
-		}
-		if (string) {
-			hasht_insert(global, "string",
-			             typeinfo_new(CLASS_T, 2, false,
-			                          hasht_search(typenames, "string"), NULL));
-		}
-	}
+	/* if (usingstd) { */
+	/* 	if (fstream) { */
+	/* 		hasht_insert(global, "ifstream", */
+	/* 		             typeinfo_new(CLASS_T, 2, false, */
+	/* 		                          hasht_search(typenames, "ifstream"), NULL)); */
+	/* 		hasht_insert(global, "ofstream", */
+	/* 		             typeinfo_new(CLASS_T, 2, false, */
+	/* 		                          hasht_search(typenames, "ifstream"), NULL)); */
+	/* 	} */
+	/* 	if (iostream) { */
+	/* 		hasht_insert(global, "cin", */
+	/* 		             typeinfo_new(CLASS_T, 2, false, "istream", NULL)); */
+	/* 		hasht_insert(global, "cout", */
+	/* 		             typeinfo_new(CLASS_T, 2, false, "istream", NULL)); */
+	/* 		hasht_insert(global, "endl", */
+	/* 		             typeinfo_new(CLASS_T, 2, false, "istream", NULL)); */
+	/* 	} */
+	/* 	if (string) { */
+	/* 		hasht_insert(global, "string", */
+	/* 		             typeinfo_new(CLASS_T, 2, false, */
+	/* 		                          hasht_search(typenames, "string"), NULL)); */
+	/* 	} */
+	/* } */
 
 	/* do a top-down pre-order traversal to populate symbol tables */
 	tree_preorder(syntax, 0, &handle_node);
