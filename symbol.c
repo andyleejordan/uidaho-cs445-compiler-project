@@ -21,15 +21,6 @@
 #include "lexer.h"
 #include "parser.tab.h"
 
-struct list *yyscopes;
-
-#define current_scope() (struct hasht *)list_back(yyscopes)
-#define push_scope(k) list_push_back(yyscopes, get_scope(current_scope(), k))
-#define pop_scope() list_pop_back(yyscopes)
-
-#define get_rule(n) *(enum rule *)n->data
-#define get_token(n, i) ((struct token *)tree_index(n, i)->data)
-
 /* from lexer */
 extern struct hasht *typenames;
 extern bool usingstd;
@@ -37,8 +28,21 @@ extern bool fstream;
 extern bool iostream;
 extern bool string;
 
-#define R(rule) case rule: return #rule
+/* stack of scopes */
+struct list *yyscopes;
 
+#define current_scope() (struct hasht *)list_back(yyscopes)
+#define push_scope(k) list_push_back(yyscopes, get_scope(current_scope(), k))
+#define pop_scope() list_pop_back(yyscopes)
+
+/* syntax tree helpers */
+#define get_rule(n) *(enum rule *)n->data
+#define get_token(n, i) ((struct token *)tree_index(n, i)->data)
+
+/*
+ * Given a type enum, returns its name as a static string.
+ */
+#define R(rule) case rule: return #rule
 char *print_type(enum type t)
 {
 	switch (t) {
@@ -53,52 +57,11 @@ char *print_type(enum type t)
 		R(UNKNOWN_T);
 	}
 }
-
 #undef R
 
-void semantic_error(char *s, struct tree *n)
-{
-	while (tree_size(n) > 1)
-		n = list_front(n->children);
-	struct token *t = n->data;
-	fprintf(stderr, "Semantic error: file %s, line %d, token %s: %s\n",
-	        t->filename, t->lineno, t->text, s);
-	exit(3);
-}
-
-void *find_declared(char *k)
-{
-	struct list_node *iter = list_tail(yyscopes);
-	while (!list_end(iter)) {
-		struct typeinfo *t = hasht_search(iter->data, k);
-		if (t)
-			return t;
-		iter = iter->prev;
-	}
-	return NULL;
-}
-
-bool prototype_compare(struct list *a, struct list *b);
-
-void insert_symbol(char *k, struct typeinfo *v, struct tree *n, struct hasht *l)
-{
-	struct typeinfo *e = find_declared(k);
-	if (e == NULL) {
-		fprintf(stderr, "inserting ident %s into table %zu\n", k, list_size(yyscopes));
-		hasht_insert(current_scope(), k, v);
-	} else if (e->base == FUNCTION_T && v->base == FUNCTION_T) {
-		if (!prototype_compare(e->function.parameters, v->function.parameters)) {
-			semantic_error("function prototypes mismatched", n);
-		} else if (l) {
-			e->function.symbols = l;
-		}
-	} else if (e->base == CLASS_T && v->base == CLASS_T) {
-		fprintf(stderr, "classes not implemented yet\n");
-	} else {
-		semantic_error("identifier already declared", n);
-	}
-}
-
+/*
+ * Maps a Bison type to a 120++ type.
+ */
 enum type get_type(enum yytokentype t)
 {
 	switch (t) {
@@ -120,6 +83,63 @@ enum type get_type(enum yytokentype t)
 		return VOID_T;
 	default:
 		return UNKNOWN_T;
+	}
+}
+
+/*
+ * Follow a node to a token, emit error, exit with 3.
+ */
+void semantic_error(char *s, struct tree *n)
+{
+	while (tree_size(n) > 1)
+		n = list_front(n->children);
+	struct token *t = n->data;
+	fprintf(stderr, "Semantic error: file %s, line %d, token %s: %s\n",
+	        t->filename, t->lineno, t->text, s);
+	exit(3);
+}
+
+/*
+ * Search the stack of scopes for a given identifier.
+ */
+void *find_declared(char *k)
+{
+	struct list_node *iter = list_tail(yyscopes);
+	while (!list_end(iter)) {
+		struct typeinfo *t = hasht_search(iter->data, k);
+		if (t)
+			return t;
+		iter = iter->prev;
+	}
+	return NULL;
+}
+
+bool prototype_compare(struct list *a, struct list *b);
+
+/*
+ * Insert symbol as ident/typeinfo pair.
+ *
+ * Tree used to find token on error. If attempting to insert a
+ * function symbol, if the function has been previously declared, it
+ * will define the function with the given symbol table. Will error
+ * for duplicate symbols or mismatched function declarations.
+ */
+void insert_symbol(char *k, struct typeinfo *v, struct tree *n, struct hasht *l)
+{
+	struct typeinfo *e = find_declared(k);
+	if (e == NULL) {
+		fprintf(stderr, "inserting ident %s into table %zu\n", k, list_size(yyscopes));
+		hasht_insert(current_scope(), k, v);
+	} else if (e->base == FUNCTION_T && v->base == FUNCTION_T) {
+		if (!prototype_compare(e->function.parameters, v->function.parameters)) {
+			semantic_error("function prototypes mismatched", n);
+		} else if (l) {
+			e->function.symbols = l;
+		}
+	} else if (e->base == CLASS_T && v->base == CLASS_T) {
+		fprintf(stderr, "classes not implemented yet\n");
+	} else {
+		semantic_error("identifier already declared", n);
 	}
 }
 
@@ -184,39 +204,43 @@ struct typeinfo *typeinfo_new(enum type base, bool pointer, int count, ...)
 }
 
 /*
- * Frees types for array and function.
+ * Frees types for arrays and functions, and parameter lists.
  */
 void typeinfo_delete(struct typeinfo *t)
 {
 	switch (t->base) {
 	case ARRAY_T: {
 		typeinfo_delete(t->array.type);
-		break;
+		return;
 	}
 	case FUNCTION_T: {
 		list_free(t->function.parameters);
 		typeinfo_delete(t->function.type);
-		break;
-	}
-	case CLASS_T: {
-		break;
+		return;
 	}
 	default:
-		break;
+		return;
 	}
 }
 
+/*
+ * Recursively compares two typeinfos.
+ */
 bool typeinfo_compare(struct typeinfo *a, struct typeinfo *b)
 {
+	/* Two null types are the same */
 	if (a == NULL && b == NULL)
 		return true;
 
+	/* Null is unlike not null */
 	if (a == NULL || b == NULL)
 		return false;
 
+	/* Same base type */
 	if (a->base != b->base)
 		return false;
 
+	/* Both pointers (or not) */
 	if (a->pointer != b->pointer)
 		return false;
 
@@ -240,15 +264,16 @@ bool typeinfo_compare(struct typeinfo *a, struct typeinfo *b)
 		return true;
 	}
 	case CLASS_T: {
-		return strcmp(a->class.type, b->class.type) == 0;
+		return (strcmp(a->class.type, b->class.type) == 0);
 	}
-	case UNKNOWN_T:
-		return false;
 	default:
 		return true;
 	}
 }
 
+/*
+ * Compares each type of two lists of types (for functions).
+ */
 bool prototype_compare(struct list *a, struct list *b)
 {
 	struct list_node *a_iter = list_head(a);
