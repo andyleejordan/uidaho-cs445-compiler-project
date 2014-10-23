@@ -502,7 +502,9 @@ bool handle_node(struct tree *n, int d)
 		if (tree_size(m) > 2)
 			handle_param_list(tree_index(m, 1), local, params);
 
-		struct typeinfo *v = typeinfo_new(FUNCTION_T, false, 3, t, params, local);
+		struct typeinfo *function_type = typeinfo_new(t, false, 0);
+		struct typeinfo *v = typeinfo_new(FUNCTION_T, false,
+		                                  3, function_type, params, local);
 
 		insert_symbol(k, v, n, local);
 
