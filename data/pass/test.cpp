@@ -32,8 +32,6 @@ int main(int argc, char *argv[])
 
 	TestClass myclass;
 
-	int double_array[2][2] = {{1, 2}, {3, 4}};
-
 	bool is = false;
 	char character = 'A';
 	short quick = 2;
