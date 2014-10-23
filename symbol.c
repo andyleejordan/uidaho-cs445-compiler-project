@@ -117,49 +117,53 @@ void *find_declared(char *k)
 
 void print_typeinfo(FILE *stream, char *k, struct typeinfo *v)
 {
-	if (v == NULL) {
-		puts("wtf");
-		return;
-	}
-
 	switch (v->base) {
 	case INT_T:
 	case DOUBLE_T:
 	case CHAR_T:
 	case BOOL_T:
 	case VOID_T: {
-		fprintf(stream, "%s %s%s", print_basetype(v),
-		        (v->pointer) ? "*" : "", k);
-		return;
+		fprintf(stream, "%s", print_basetype(v));
+		break;
 	}
 	case ARRAY_T: {
-		print_typeinfo(stream, k, v->array.type);
-		fprintf(stream, "[%zu]", v->array.size);
+		print_typeinfo(stream, NULL, v->array.type);
+		if (k)
+			fprintf(stream, " %s", k);
+		if (v->array.size)
+			fprintf(stream, "[%zu]", v->array.size);
+		else
+			fprintf(stream, "[]");
+		if (k)
+			fprintf(stream, "\n");
 		return;
 	}
 	case FUNCTION_T: {
-		print_typeinfo(stream, "", v->function.type);
-		fprintf(stream, "(*%s)(", k);
+		print_typeinfo(stream, NULL, v->function.type);
+		fprintf(stream, " (*%s)(", k);
 		struct list_node *iter = list_head(v->function.parameters);
 		while (!list_end(iter)) {
-			print_typeinfo(stream, "", iter->data);
+			print_typeinfo(stream, NULL, iter->data);
 			iter = iter->next;
 			if (!list_end(iter))
 				fprintf(stream, ", ");
 		}
-		fprintf(stream, ")");
+		fprintf(stream, ")\n");
 		return;
 	}
 	case CLASS_T: {
-		fprintf(stream, "%s %s%s", v->class.type,
-		        (v->pointer) ? "*" : "", k);
-		return;
+		fprintf(stream, "%s", v->class.type);
+		break;
 	}
 	case UNKNOWN_T: {
 		fprintf(stream, "unknown type");
-		return;
+		break;
 	}
 	}
+	if (k)
+		fprintf(stream, " %s%s\n", (v->pointer) ? "*" : "", k);
+	else
+		fprintf(stream, "%s", (v->pointer) ? " *" : "");
 }
 
 bool prototype_compare(struct list *a, struct list *b);
@@ -178,7 +182,6 @@ void insert_symbol(char *k, struct typeinfo *v, struct tree *n, struct hasht *l)
 	if (e == NULL) {
 		fprintf(stderr, "inserting ");
 		print_typeinfo(stderr, k, v);
-		fprintf(stderr, " into table %zu\n", list_size(yyscopes));
 		hasht_insert(current_scope(), k, v);
 	} else if (e->base == FUNCTION_T && v->base == FUNCTION_T) {
 		if (!prototype_compare(e->function.parameters, v->function.parameters)) {
