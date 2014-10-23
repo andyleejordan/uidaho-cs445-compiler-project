@@ -78,7 +78,7 @@ void *find_declared(char *k)
 	return NULL;
 }
 
-bool prototype_compare(struct typeinfo *a, struct typeinfo *b);
+bool prototype_compare(struct list *a, struct list *b);
 
 void insert_symbol(char *k, struct typeinfo *v, struct tree *n, struct hasht *l)
 {
@@ -87,7 +87,7 @@ void insert_symbol(char *k, struct typeinfo *v, struct tree *n, struct hasht *l)
 		fprintf(stderr, "inserting ident %s into table %zu\n", k, list_size(yyscopes));
 		hasht_insert(current_scope(), k, v);
 	} else if (e->base == FUNCTION_T && v->base == FUNCTION_T) {
-		if (!prototype_compare(e, v)) {
+		if (!prototype_compare(e->function.parameters, v->function.parameters)) {
 			semantic_error("function prototypes mismatched", n);
 		} else if (l) {
 			e->function.symbols = l;
@@ -234,7 +234,7 @@ bool typeinfo_compare(struct typeinfo *a, struct typeinfo *b)
 		if (!typeinfo_compare(a->function.type, b->function.type))
 			return false;
 
-		if (!prototype_compare(a, b))
+		if (!prototype_compare(a->function.parameters, b->function.parameters))
 			return false;
 
 		return true;
@@ -249,10 +249,10 @@ bool typeinfo_compare(struct typeinfo *a, struct typeinfo *b)
 	}
 }
 
-bool prototype_compare(struct typeinfo *a, struct typeinfo *b)
+bool prototype_compare(struct list *a, struct list *b)
 {
-	struct list_node *a_iter = list_head(a->function.parameters);
-	struct list_node *b_iter = list_head(b->function.parameters);
+	struct list_node *a_iter = list_head(a);
+	struct list_node *b_iter = list_head(b);
 
 	while (!list_end(a_iter) && !list_end(b_iter)) {
 		if (!typeinfo_compare(a_iter->data, b_iter->data))
