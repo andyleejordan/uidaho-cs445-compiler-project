@@ -134,7 +134,10 @@ void insert_symbol(char *k, struct typeinfo *v, struct tree *n, struct hasht *l)
 		if (!prototype_compare(e->function.parameters, v->function.parameters)) {
 			semantic_error("function prototypes mismatched", n);
 		} else if (l) {
-			e->function.symbols = l;
+			if (e->function.symbols == NULL)
+				e->function.symbols = l;
+			else
+				semantic_error("function already defined", n);
 		}
 	} else if (e->base == CLASS_T && v->base == CLASS_T) {
 		fprintf(stderr, "classes not implemented yet\n");
@@ -290,109 +293,87 @@ bool prototype_compare(struct list *a, struct list *b)
 }
 
 /*
- * Handles a PARAM_DECL1 rule for basic types, pointers, and arrays
+ * Handles a PARAM_DECL1 or a PARAM_DECL3 rules.
+ *
+ * Works for basic types, pointers, and arrays. If given a scope hash
+ * table and able to find an indentifier, inserts into the scope. If
+ * given a parameters list, will insert into the list.
  */
-void handle_param(struct hasht *s, struct tree *n)
+void handle_param(struct tree *n, struct hasht *s, struct list *l)
 {
 	char *k = NULL;
 	struct typeinfo *v = NULL;
 	enum type t = get_type(get_token(n, 0)->category);
-	switch (tree_size(n)) {
-	case 3: { /* simple parameter */
+
+	if (tree_size(n) == 2) {
+		/* simple variable */
+		v = typeinfo_new(t, false, 0);
+	} else if (tree_size(n) == 3) {
+		/* simple variable with identifier */
 		k = get_token(n, 1)->text;
 		v = typeinfo_new(t, false, 0);
-		break;
-	}
-	case 5: { /* simple parameter pointer */
-		k = get_token(tree_index(n, 1), 1)->text;
-		v = typeinfo_new(t, true, 0);
-		break;
-	}
-	case 6: { /* simple array parameter */
-		k = get_token(tree_index(n, 1), 0)->text;
-		v = typeinfo_new(ARRAY_T, false, 2, typeinfo_new(t, false, 0), 0);
-		break;
-	}
-	default:
-		semantic_error("parameter declaration", n);
-	}
-	hasht_insert(s, k, v);
-}
-
-/*
- * Handles a PARAM_DECL1 or a PARAM_DECL3 rule
- */
-void proto_param(struct list *p, struct tree *n)
-{
-	struct typeinfo *v = NULL;
-	enum type t = get_type(get_token(n, 0)->category);
-
-	if (tree_size(n) == 2) { /* simple variable */
-		v = typeinfo_new(t, false, 0);
 	} else {
-		switch (get_rule(tree_index(n, 1))) {
-		case ABSTRACT_DECL1:
-		case DECL2: {
+		struct tree *m = tree_index(n, 1);
+		enum rule r = get_rule(m);
+
+		/* simple parameter pointer */
+		if (r == ABSTRACT_DECL1 || r == DECL2)
 			v = typeinfo_new(t, true, 0);
-			break;
+		if (r == DECL2) /* with identifier */
+			k = get_token(m, 1)->text;
+
+		/* simple array parameter */
+		if (r == DIRECT_ABSTRACT_DECL4 || r == DIRECT_DECL6) {
+			struct typeinfo *array_type = typeinfo_new(t, false, 0);
+			v = typeinfo_new(ARRAY_T, false, 2, array_type, 0);
 		}
-		case DIRECT_ABSTRACT_DECL4:
-		case DIRECT_DECL6: {
-			v = typeinfo_new(ARRAY_T, false, 2, typeinfo_new(t, false, 0), 0);
-			break;
-		}
-		default: {
-			if (tree_size(n) == 3)
-				v = typeinfo_new(t, false, 0);
-			else
-				semantic_error("prototype unsupported", n);
-		}
-		}
+		if (r == DIRECT_DECL6) /* with identifier */
+			k = get_token(m, 0)->text;
 	}
-	list_push_back(p, v);
+
+	if (l && v)
+		list_push_back(l, v);
+	else if (s && k && v)
+		hasht_insert(s, k, v);
+	else
+		semantic_error("unsupported parameter declaration", n);
 }
 
 /*
- * Handles an arbitrarily nested list of parameters recursively
+ * Handles an arbitrarily nested list of parameters recursively.
  */
-void handle_param_list(struct hasht *local, struct tree *param)
+void handle_param_list(struct tree *n, struct hasht *s, struct list *l)
 {
-	if (get_rule(param) == PARAM_DECL1) {
-		handle_param(local, param);
+	enum rule r = get_rule(n);
+	if (r == PARAM_DECL1 || r == PARAM_DECL3) {
+		handle_param(n, s, l);
 	} else {
-		struct list_node *iter = list_head(param->children);
+		struct list_node *iter = list_head(n->children);
 		while (!list_end(iter)) {
-			handle_param_list(local, iter->data);
+			handle_param_list(iter->data, s, l);
 			iter = iter->next;
 		}
 	}
 }
 
-void proto_param_list(struct list *p, struct tree *param)
-{
-	if (get_rule(param) == PARAM_DECL1 || get_rule(param) == PARAM_DECL3) {
-		proto_param(p, param);
-	} else {
-		struct list_node *iter = list_head(param->children);
-		while (!list_end(iter)) {
-			proto_param_list(p, iter->data);
-			iter = iter->next;
-		}
-	}
-}
-
-void init_decl(enum type t, struct tree *n)
+/*
+ * Handles an init declarator recursively.
+ *
+ * Works for basic types, pointers, arrays, and function declarations.
+ */
+void handle_init(enum type t, struct tree *n)
 {
 	char *k = NULL;
 	struct typeinfo *v = NULL;
 
 	switch (get_rule(n)) {
 	case INIT_DECL: { /* simple variable, possibly with initializer */
-		if (tree_size(n) == 2) {
+		if (tree_size(n) <= 3) {
 			k = get_token(n, 0)->text;
 			v = typeinfo_new(t, false, 0);
 		} else {
-			init_decl(t, tree_index(n, 0));
+			handle_init(t, tree_index(n, 0));
+			return;
 		}
 		break;
 	}
@@ -407,34 +388,45 @@ void init_decl(enum type t, struct tree *n)
 		v = typeinfo_new(ARRAY_T, false, 2, typeinfo_new(t, false, 0), size);
 		break;
 	}
-	case DIRECT_DECL2: { /* function prototype */
+	case DIRECT_DECL2: { /* function declaration */
 		k = get_token(n, 0)->text;
+
 		struct list *params = list_new(NULL, NULL);
 		if (tree_size(n) > 2)
-			proto_param_list(params, tree_index(n, 1));
+			handle_param_list(tree_index(n, 1), NULL, params);
+
 		v = typeinfo_new(FUNCTION_T, false, 3, t, params, NULL);
 		break;
 	}
 	default:
-		semantic_error("unsupported declaration type", n);
+		semantic_error("unsupported init declaration", n);
 	}
-	if (v)
+	if (k && v)
 		insert_symbol(k, v, n, NULL);
+	else
+		semantic_error("failed to get init declarator symbol", n);
 }
 
-void init_decl_list(enum type t, struct tree *n)
+/*
+ * Handles lists of init declarators recursively.
+ */
+void handle_init_list(enum type t, struct tree *n)
 {
-	if (get_rule(n) == INIT_DECL_LIST2) {
+	if (get_rule(n) != INIT_DECL_LIST2) {
+		handle_init(t, n);
+	} else {
 		struct list_node *iter = list_head(n->children);
 		while (!list_end(iter)) {
-			init_decl_list(t, iter->data);
+			handle_init_list(t, iter->data);
 			iter = iter->next;
 		}
-	} else {
-		init_decl(t, n);
 	}
 }
 
+/*
+ * Recursively handles nodes, processing SIMPLE_DECL1 and
+ * FUNCTION_DEF2 for symbols.
+ */
 bool handle_node(struct tree *n, int d)
 {
 	switch (get_rule(n)) {
@@ -442,27 +434,26 @@ bool handle_node(struct tree *n, int d)
 		/* this may need to be synthesized */
 		enum type t = get_type(get_token(n, 0)->category);
 
-		struct tree *init_decl = tree_index(n, 1);
-		init_decl_list(t, init_decl);
+		struct tree *m = tree_index(n, 1);
+		handle_init_list(t, m);
 
 		return false;
 	}
 	case FUNCTION_DEF2: {
-		struct hasht *local = hasht_new(32, true, NULL, NULL, &free_symbols);
-
 		enum type t = get_type(get_token(n, 0)->category);
-		struct tree *direct_decl = tree_index(n, 1);
-
-		char *k = get_token(direct_decl, 0)->text;
+		struct hasht *local = hasht_new(32, true, NULL, NULL, &free_symbols);
 		struct list *params = list_new(NULL, NULL);
 
+		struct tree *m = tree_index(n, 1);
+
+		char *k = get_token(m, 0)->text;
+
 		/* add parameters (if they exist) to local symbol table */
-		if (tree_size(direct_decl) > 2) {
-			proto_param_list(params, tree_index(direct_decl, 1));
-			handle_param_list(local, tree_index(direct_decl, 1));
-		}
+		if (tree_size(m) > 2)
+			handle_param_list(tree_index(m, 1), local, params);
 
 		struct typeinfo *v = typeinfo_new(FUNCTION_T, false, 3, t, params, local);
+
 		insert_symbol(k, v, n, local);
 
 		/* recurse on children while in subscope */
