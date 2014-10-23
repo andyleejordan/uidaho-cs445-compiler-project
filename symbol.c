@@ -58,6 +58,8 @@ char *print_basetype(struct typeinfo *t)
 	case CLASS_T:
 		return t->class.type;
 	}
+
+	return NULL; /* error */
 }
 #undef R
 
