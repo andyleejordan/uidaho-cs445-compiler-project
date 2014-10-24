@@ -408,43 +408,23 @@ bool prototype_compare(struct list *a, struct list *b)
  * table and able to find an indentifier, inserts into the scope. If
  * given a parameters list, will insert into the list.
  */
-void handle_param(struct tree *n, struct hasht *s, struct list *l)
+void handle_param(struct typeinfo *v, struct tree *n,
+                  struct hasht *s, struct list *l)
 {
 	char *k = get_identifier(n);
-	struct typeinfo *v = typeinfo_new();
-	enum type t = get_type(get_token(n, 0)->category);
-	bool p = get_pointer(n);
-	/* if (t == CLASS_T) */
-	/* 	char *typetext = get_token(n, 0)->text; */
 
-	if (tree_size(n) == 2) {
-		/* simple variable */
-		v->base = t;
-		v->pointer = p;
-	} else if (tree_size(n) == 3) {
-		/* simple variable with identifier */
-		v->base = t;
-		v->pointer = p;
-	} else {
+	if (tree_size(n) > 3) { /* not a simple type */
 		struct tree *m = tree_index(n, 1);
 		enum rule r = get_rule(m);
 
-		/* simple parameter pointer */
-		if (r == ABSTRACT_DECL1 || r == DECL2) {
-			v->base = t;
-			v->pointer = p;
-		}
-		/* if (r == DECL2) /\* with identifier *\/ */
-
-		/* simple array parameter */
+		/* array (with possible size) */
 		if (r == DIRECT_ABSTRACT_DECL4 || r == DIRECT_DECL6) {
-			v->base = ARRAY_T;
-			v->array.type = typeinfo_new();
-			v->array.type->base = t;
-			v->array.type->pointer = p;
-			v->array.size = get_array(m);
+			struct typeinfo *array = typeinfo_new();
+			array->base = ARRAY_T;
+			array->array.type = v;
+			array->array.size = get_array(m);
+			v = array;
 		}
-		/* if (r == DIRECT_DECL6) /\* with identifier *\/ */
 	}
 
 	if (l && v)
@@ -462,7 +442,12 @@ void handle_param_list(struct tree *n, struct hasht *s, struct list *l)
 {
 	enum rule r = get_rule(n);
 	if (r == PARAM_DECL1 || r == PARAM_DECL3) {
-		handle_param(n, s, l);
+		struct typeinfo *v = typeinfo_new();
+		v->base = get_type(get_token(n, 0)->category);
+		v->pointer = get_pointer(n);
+		if (v->base == CLASS_T)
+			v->class.type = get_class(n);
+		handle_param(v, n, s, l);
 	} else {
 		struct list_node *iter = list_head(n->children);
 		while (!list_end(iter)) {
@@ -477,49 +462,52 @@ void handle_param_list(struct tree *n, struct hasht *s, struct list *l)
  *
  * Works for basic types, pointers, arrays, and function declarations.
  */
-void handle_init(enum type t, struct tree *n)
+void handle_init(struct typeinfo *v, struct tree *n)
 {
 	char *k = get_identifier(n);
-	struct typeinfo *v = NULL;
 
 	switch (get_rule(n)) {
 	case INIT_DECL: { /* simple variable, possibly with initializer */
-		if (tree_size(n) <= 3) {
-			v = typeinfo_new();
-			v->base = t;
-		} else {
-			handle_init(t, tree_index(n, 0));
-			return;
+		struct list_node *iter = list_head(n->children);
+		while (!list_end(iter)) {
+			if (tree_size(iter->data) != 1) {
+				handle_init(v, iter->data);
+				return;
+			}
+			iter = iter->next;
 		}
+		v->pointer = get_pointer(n);
+		break;
+	}
+	case UNARY_EXPR4: {
 		break;
 	}
 	case DECL2: { /* simple pointer variable */
-		v = typeinfo_new();
-		v->base = t;
 		v->pointer = get_pointer(n);
 		break;
 	}
 	case DIRECT_DECL6: { /* simple array with size */
-		v = typeinfo_new();
-		v->base = ARRAY_T;
-		v->array.type = typeinfo_new();
-		v->array.type->base = t;
-		v->array.type->pointer = get_pointer(n);
-		v->array.size = get_array(n);
+		struct typeinfo *array = typeinfo_new();
+		array->base = ARRAY_T;
+		array->pointer = get_pointer(n);
+		array->array.type = v;
+		array->array.size = get_array(n);
+		v = array;
 		break;
 	}
 	case DIRECT_DECL2: { /* function declaration */
-		v = typeinfo_new();
+		struct typeinfo *function = typeinfo_new();
 
 		struct list *params = list_new(NULL, NULL);
 		if (tree_size(n) > 2)
 			handle_param_list(tree_index(n, 1), NULL, params);
 
-		v->base = FUNCTION_T;
-		v->function.type = typeinfo_new();
-		v->function.type->base = t;
-		v->function.parameters = params;
-		v->function.symbols = NULL;
+		function->base = FUNCTION_T;
+		function->pointer = get_pointer(n);
+		function->function.type = v;
+		function->function.parameters = params;
+		function->function.symbols = NULL;
+		v = function;
 		break;
 	}
 	default:
@@ -534,14 +522,14 @@ void handle_init(enum type t, struct tree *n)
 /*
  * Handles lists of init declarators recursively.
  */
-void handle_init_list(enum type t, struct tree *n)
+void handle_init_list(struct typeinfo *v, struct tree *n)
 {
 	if (get_rule(n) != INIT_DECL_LIST2) {
-		handle_init(t, n);
+		handle_init(v, n);
 	} else {
 		struct list_node *iter = list_head(n->children);
 		while (!list_end(iter)) {
-			handle_init_list(t, iter->data);
+			handle_init_list(v, iter->data);
 			iter = iter->next;
 		}
 	}
@@ -556,21 +544,22 @@ bool handle_node(struct tree *n, int d)
 	switch (get_rule(n)) {
 	case SIMPLE_DECL1: {
 		/* this may need to be synthesized */
-		enum type t = get_type(get_token(n, 0)->category);
+		struct typeinfo *v = typeinfo_new();
+		v->base = get_type(get_token(n, 0)->category);
+		if (v->base == CLASS_T)
+			v->class.type = get_class(n);
 
 		struct tree *m = tree_index(n, 1);
-		handle_init_list(t, m);
+		handle_init_list(v, m);
 
 		return false;
 	}
 	case FUNCTION_DEF2: {
-		enum type t = get_type(get_token(n, 0)->category);
+		char *k = get_identifier(n);
 		struct hasht *local = hasht_new(32, true, NULL, NULL, &free_symbols);
 		struct list *params = list_new(NULL, NULL);
 
 		struct tree *m = tree_index(n, 1);
-
-		char *k = get_token(m, 0)->text;
 
 		/* add parameters (if they exist) to local symbol table */
 		if (tree_size(m) > 2)
@@ -579,7 +568,9 @@ bool handle_node(struct tree *n, int d)
 		struct typeinfo *v = typeinfo_new();
 		v->base = FUNCTION_T;
 		v->function.type = typeinfo_new();
-		v->function.type->base = t;
+		v->function.type->base = get_type(get_token(n, 0)->category);
+		if (v->function.type->base == CLASS_T)
+			v->function.type->class.type = get_class(n);
 		v->function.type->pointer = get_pointer(n);
 		v->function.parameters = params;
 		v->function.symbols = local;
@@ -592,6 +583,8 @@ bool handle_node(struct tree *n, int d)
 		pop_scope();
 
 		return false;
+	}
+	case CLASS_SPEC: {
 	}
 	default: /* rule did not provide a symbol, so recurse on children */
 		return true;

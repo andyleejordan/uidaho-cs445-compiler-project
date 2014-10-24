@@ -76,7 +76,7 @@ struct tree *tree_new_group(struct tree *parent, void *data,
 size_t tree_size(struct tree *self)
 {
 	if (self == NULL) {
-		fprintf(stderr, "tree_size(): sef was null\n");
+		fprintf(stderr, "tree_size(): self was null\n");
 		return 0;
 	}
 
