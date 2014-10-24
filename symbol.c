@@ -131,7 +131,7 @@ void print_typeinfo(FILE *stream, char *k, struct typeinfo *v)
 	case ARRAY_T: {
 		print_typeinfo(stream, NULL, v->array.type);
 		if (k)
-			fprintf(stream, " %s", k);
+			fprintf(stream, " %s%s", (v->pointer) ? "*" : "", k);
 		if (v->array.size)
 			fprintf(stream, "[%zu]", v->array.size);
 		else
@@ -142,10 +142,14 @@ void print_typeinfo(FILE *stream, char *k, struct typeinfo *v)
 	}
 	case FUNCTION_T: {
 		print_typeinfo(stream, NULL, v->function.type);
-		fprintf(stream, " (*%s)(", k);
+		fprintf(stream, " %s%s(",
+		        (v->function.type->pointer) ? "*" : "", k);
+
 		struct list_node *iter = list_head(v->function.parameters);
 		while (!list_end(iter)) {
-			print_typeinfo(stream, NULL, iter->data);
+			struct typeinfo *p = iter->data;
+			print_typeinfo(stream, NULL, p);
+			fprintf(stream, "%s", (p->pointer) ? " *" : "");
 			iter = iter->next;
 			if (!list_end(iter))
 				fprintf(stream, ", ");
@@ -164,8 +168,6 @@ void print_typeinfo(FILE *stream, char *k, struct typeinfo *v)
 	}
 	if (k)
 		fprintf(stream, " %s%s\n", (v->pointer) ? "*" : "", k);
-	else
-		fprintf(stream, "%s", (v->pointer) ? " *" : "");
 }
 
 bool prototype_compare(struct list *a, struct list *b);
