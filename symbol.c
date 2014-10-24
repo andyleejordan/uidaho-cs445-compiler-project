@@ -69,6 +69,7 @@ bool typeinfo_list_compare(struct list *a, struct list *b);
 bool handle_node(struct tree *n, int d);
 void handle_init(struct typeinfo *v, struct tree *n);
 void handle_init_list(struct typeinfo *v, struct tree *n);
+void handle_function(struct typeinfo *t, struct tree *n);
 void handle_param(struct typeinfo *v, struct tree *n, struct hasht *s, struct list *l);
 void handle_param_list(struct tree *n, struct hasht *s, struct list *l);
 
@@ -527,21 +528,11 @@ bool handle_node(struct tree *n, int d)
 	switch (get_rule(n)) {
 	case SIMPLE_DECL1: {
 		/* this may need to be synthesized */
-		struct tree *m = tree_index(n, 1);
-		handle_init_list(typeinfo_new(n), m);
-
+		handle_init_list(typeinfo_new(n), tree_index(n, 1));
 		return false;
 	}
 	case FUNCTION_DEF2: {
-		char *k = get_identifier(n);
-		struct typeinfo *v = typeinfo_new_function(n, typeinfo_new(n), true);
-		symbol_insert(k, v, n, v->function.symbols);
-
-		/* recurse on children while in subscope */
-		scope_push(v->function.symbols);
-		tree_preorder(tree_index(n, 2), d, &handle_node);
-		scope_pop();
-
+		handle_function(typeinfo_new(n), n);
 		return false;
 	}
 	case CLASS_SPEC: {
@@ -564,6 +555,7 @@ void handle_init(struct typeinfo *v, struct tree *n)
 	case INIT_DECL:
 	case UNARY_EXPR4:
 	case DECL2: {
+		/* recurse if necessary (for pointers) */
 		struct list_node *iter = list_head(n->children);
 		while (!list_end(iter)) {
 			if (tree_size(iter->data) != 1) {
@@ -572,9 +564,10 @@ void handle_init(struct typeinfo *v, struct tree *n)
 			}
 			iter = iter->next;
 		}
+		/* might not recurse */
 		break;
 	}
-	case DIRECT_DECL6: { /* simple array with size */
+	case DIRECT_DECL6: { /* array with size */
 		v = typeinfo_new_array(n, v);
 		break;
 	}
@@ -606,6 +599,21 @@ void handle_init_list(struct typeinfo *v, struct tree *n)
 			iter = iter->next;
 		}
 	}
+}
+
+/*
+ * Handles function definitions, recursing with handle_node().
+ */
+void handle_function(struct typeinfo *t, struct tree *n)
+{
+	char *k = get_identifier(n);
+	struct typeinfo *v = typeinfo_new_function(n, t, true);
+	symbol_insert(k, v, n, v->function.symbols);
+
+	/* recurse on children while in subscope */
+	scope_push(v->function.symbols);
+	tree_preorder(tree_index(n, 2), 0, &handle_node);
+	scope_pop();
 }
 
 /*
