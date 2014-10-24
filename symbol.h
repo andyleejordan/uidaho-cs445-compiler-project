@@ -13,11 +13,9 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-struct list;
 struct tree;
-struct hash_node;
 
-struct hasht *build_symbols(struct tree *syntax);
+struct hasht *symbol_populate(struct tree *syntax);
 
 enum type {
 	INT_T,
@@ -30,8 +28,6 @@ enum type {
 	VOID_T,
 	UNKNOWN_T
 };
-
-char *print_type(enum type t);
 
 struct typeinfo {
 	enum type base;
@@ -52,9 +48,5 @@ struct typeinfo {
 		} class;
 	};
 };
-
-struct typeinfo *typeinfo_new();
-void typeinfo_delete(struct typeinfo *n);
-void free_symbols(struct hash_node *n);
 
 #endif /* SYMBOL_H */

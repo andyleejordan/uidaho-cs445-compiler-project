@@ -29,7 +29,7 @@ int yyparse();
 bool print_tree(struct tree *t, int d);
 
 /* from symbol */
-struct hasht *build_symbols(struct tree *syntax);
+struct hasht *symbol_populate(struct tree *syntax);
 
 /* shared with lexer and parser */
 struct tree *yyprogram = NULL;
@@ -99,7 +99,7 @@ int main(int argc, char **argv)
 		tree_preorder(yyprogram, 0, &print_tree);
 
 		/* build the symbol tables */
-		struct hasht *global = build_symbols(yyprogram);
+		struct hasht *global = symbol_populate(yyprogram);
 		printf("global symbol table had %zu entries\n", hasht_used(global));
 
 		/* clean up */

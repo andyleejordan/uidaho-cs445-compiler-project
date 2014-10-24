@@ -39,29 +39,56 @@ struct list *yyscopes;
 #define get_rule(n) *(enum rule *)n->data
 #define get_token(n, i) ((struct token *)tree_index(n, i)->data)
 
-/*
- * Given a type enum, returns its name as a static string.
- */
-#define R(rule) case rule: return #rule
-char *print_basetype(struct typeinfo *t)
-{
-	switch (t->base) {
-		R(INT_T);
-		R(DOUBLE_T);
-		R(CHAR_T);
-		R(BOOL_T);
-		R(ARRAY_T);
-		R(VOID_T);
-		R(UNKNOWN_T);
-	case FUNCTION_T:
-		return print_basetype(t->function.type);
-	case CLASS_T:
-		return t->class.type;
-	}
+/* local functions */
+struct hasht *get_scope(struct hasht *s, char *k);
 
-	return NULL; /* error */
+enum type get_type(enum yytokentype t);
+char *print_basetype(struct typeinfo *t);
+void print_typeinfo(FILE *stream, char *k, struct typeinfo *v);
+
+struct hasht *symbol_populate(struct tree *syntax);
+void *symbol_search(char *k);
+void symbol_insert(char *k, struct typeinfo *v, struct tree *n, struct hasht *l);
+void symbol_free(struct hash_node *n);
+
+struct token *get_category(struct tree *n, int target, int before);
+struct token *get_category_(struct tree *n, int target, int before);
+char *get_identifier(struct tree *n);
+bool get_pointer(struct tree *n);
+int get_array(struct tree *n);
+char *get_class(struct tree *n);
+
+struct typeinfo *typeinfo_new();
+void typeinfo_delete(struct typeinfo *t);
+bool typeinfo_compare(struct typeinfo *a, struct typeinfo *b);
+bool typeinfo_list_compare(struct list *a, struct list *b);
+
+bool handle_node(struct tree *n, int d);
+void handle_init(struct typeinfo *v, struct tree *n);
+void handle_init_list(struct typeinfo *v, struct tree *n);
+void handle_param(struct typeinfo *v, struct tree *n, struct hasht *s, struct list *l);
+void handle_param_list(struct tree *n, struct hasht *s, struct list *l);
+
+void semantic_error(char *s, struct tree *n);
+
+/*
+ * Given a scope and key, get the nested scope for the key.
+ */
+struct hasht *get_scope(struct hasht *s, char *k)
+{
+	struct typeinfo *t = hasht_search(s, k);
+	if (t == NULL)
+		return NULL;
+
+	switch (t->base) {
+	case FUNCTION_T:
+		return t->function.symbols;
+	case CLASS_T:
+		return t->class.symbols;
+	default:
+		return NULL; /* error */
+	}
 }
-#undef R
 
 /*
  * Maps a Bison type to a 120++ type.
@@ -88,34 +115,29 @@ enum type get_type(enum yytokentype t)
 		return UNKNOWN_T;
 	}
 }
-
 /*
- * Follow a node to a token, emit error, exit with 3.
+ * Given a type enum, returns its name as a static string.
  */
-void semantic_error(char *s, struct tree *n)
+#define R(rule) case rule: return #rule
+char *print_basetype(struct typeinfo *t)
 {
-	while (tree_size(n) > 1)
-		n = list_front(n->children);
-	struct token *t = n->data;
-	fprintf(stderr, "Semantic error: file %s, line %d, token %s: %s\n",
-	        t->filename, t->lineno, t->text, s);
-	exit(3);
-}
-
-/*
- * Search the stack of scopes for a given identifier.
- */
-void *find_declared(char *k)
-{
-	struct list_node *iter = list_tail(yyscopes);
-	while (!list_end(iter)) {
-		struct typeinfo *t = hasht_search(iter->data, k);
-		if (t)
-			return t;
-		iter = iter->prev;
+	switch (t->base) {
+		R(INT_T);
+		R(DOUBLE_T);
+		R(CHAR_T);
+		R(BOOL_T);
+		R(ARRAY_T);
+		R(VOID_T);
+		R(UNKNOWN_T);
+	case FUNCTION_T:
+		return print_basetype(t->function.type);
+	case CLASS_T:
+		return t->class.type;
 	}
-	return NULL;
+
+	return NULL; /* error */
 }
+#undef R
 
 void print_typeinfo(FILE *stream, char *k, struct typeinfo *v)
 {
@@ -170,7 +192,61 @@ void print_typeinfo(FILE *stream, char *k, struct typeinfo *v)
 		fprintf(stream, " %s%s\n", (v->pointer) ? "*" : "", k);
 }
 
-bool prototype_compare(struct list *a, struct list *b);
+struct hasht *symbol_populate(struct tree *syntax)
+{
+	struct hasht *global = hasht_new(32, true, NULL, NULL, &symbol_free);
+
+	/* initialize scope stack */
+	yyscopes = list_new(NULL, NULL);
+	list_push_back(yyscopes, global);
+
+	/* handle standard libraries */
+	/* if (usingstd) { */
+	/* 	if (fstream) { */
+	/* 		hasht_insert(global, "ifstream", */
+	/* 		             typeinfo_new(CLASS_T, 2, false, */
+	/* 		                          hasht_search(typenames, "ifstream"), NULL)); */
+	/* 		hasht_insert(global, "ofstream", */
+	/* 		             typeinfo_new(CLASS_T, 2, false, */
+	/* 		                          hasht_search(typenames, "ifstream"), NULL)); */
+	/* 	} */
+	/* 	if (iostream) { */
+	/* 		hasht_insert(global, "cin", */
+	/* 		             typeinfo_new(CLASS_T, 2, false, "istream", NULL)); */
+	/* 		hasht_insert(global, "cout", */
+	/* 		             typeinfo_new(CLASS_T, 2, false, "istream", NULL)); */
+	/* 		hasht_insert(global, "endl", */
+	/* 		             typeinfo_new(CLASS_T, 2, false, "istream", NULL)); */
+	/* 	} */
+	/* 	if (string) { */
+	/* 		hasht_insert(global, "string", */
+	/* 		             typeinfo_new(CLASS_T, 2, false, */
+	/* 		                          hasht_search(typenames, "string"), NULL)); */
+	/* 	} */
+	/* } */
+
+	/* do a top-down pre-order traversal to populate symbol tables */
+	tree_preorder(syntax, 0, &handle_node);
+
+	list_free(yyscopes);
+
+	return global;
+}
+
+/*
+ * Search the stack of scopes for a given identifier.
+ */
+void *symbol_search(char *k)
+{
+	struct list_node *iter = list_tail(yyscopes);
+	while (!list_end(iter)) {
+		struct typeinfo *t = hasht_search(iter->data, k);
+		if (t)
+			return t;
+		iter = iter->prev;
+	}
+	return NULL;
+}
 
 /*
  * Insert symbol as ident/typeinfo pair.
@@ -180,15 +256,16 @@ bool prototype_compare(struct list *a, struct list *b);
  * will define the function with the given symbol table. Will error
  * for duplicate symbols or mismatched function declarations.
  */
-void insert_symbol(char *k, struct typeinfo *v, struct tree *n, struct hasht *l)
+
+void symbol_insert(char *k, struct typeinfo *v, struct tree *n, struct hasht *l)
 {
-	struct typeinfo *e = find_declared(k);
+	struct typeinfo *e = symbol_search(k);
 	if (e == NULL) {
 		fprintf(stderr, "inserting ");
 		print_typeinfo(stderr, k, v);
 		hasht_insert(current_scope(), k, v);
 	} else if (e->base == FUNCTION_T && v->base == FUNCTION_T) {
-		if (!prototype_compare(e->function.parameters, v->function.parameters)) {
+		if (!typeinfo_list_compare(e->function.parameters, v->function.parameters)) {
 			semantic_error("function prototypes mismatched", n);
 		} else if (l) {
 			if (e->function.symbols == NULL)
@@ -204,25 +281,13 @@ void insert_symbol(char *k, struct typeinfo *v, struct tree *n, struct hasht *l)
 }
 
 /*
- * Given a scope and key, get the nested scope for the key.
+ * Frees key and deletes value.
  */
-struct hasht *get_scope(struct hasht *s, char *k)
+void symbol_free(struct hash_node *n)
 {
-	struct typeinfo *t = hasht_search(s, k);
-	if (t == NULL)
-		return NULL;
-
-	switch (t->base) {
-	case FUNCTION_T:
-		return t->function.symbols;
-	case CLASS_T:
-		return t->class.symbols;
-	default:
-		return NULL; /* error */
-	}
+	free(n->key);
+	typeinfo_delete(n->value);
 }
-
-struct token *get_category_(struct tree *n, int target, int before);
 
 /*
  * Wrapper to return null if token not found, else return token.
@@ -370,7 +435,7 @@ bool typeinfo_compare(struct typeinfo *a, struct typeinfo *b)
 		if (!typeinfo_compare(a->function.type, b->function.type))
 			return false;
 
-		if (!prototype_compare(a->function.parameters, b->function.parameters))
+		if (!typeinfo_list_compare(a->function.parameters, b->function.parameters))
 			return false;
 
 		return true;
@@ -386,7 +451,7 @@ bool typeinfo_compare(struct typeinfo *a, struct typeinfo *b)
 /*
  * Compares each type of two lists of types (for functions).
  */
-bool prototype_compare(struct list *a, struct list *b)
+bool typeinfo_list_compare(struct list *a, struct list *b)
 {
 	struct list_node *a_iter = list_head(a);
 	struct list_node *b_iter = list_head(b);
@@ -402,58 +467,58 @@ bool prototype_compare(struct list *a, struct list *b)
 }
 
 /*
- * Handles a PARAM_DECL1 or a PARAM_DECL3 rules.
- *
- * Works for basic types, pointers, and arrays. If given a scope hash
- * table and able to find an indentifier, inserts into the scope. If
- * given a parameters list, will insert into the list.
+ * Recursively handles nodes, processing SIMPLE_DECL1 and
+ * FUNCTION_DEF2 for symbols.
  */
-void handle_param(struct typeinfo *v, struct tree *n,
-                  struct hasht *s, struct list *l)
+bool handle_node(struct tree *n, int d)
 {
-	char *k = get_identifier(n);
-
-	if (tree_size(n) > 3) { /* not a simple type */
-		struct tree *m = tree_index(n, 1);
-		enum rule r = get_rule(m);
-
-		/* array (with possible size) */
-		if (r == DIRECT_ABSTRACT_DECL4 || r == DIRECT_DECL6) {
-			struct typeinfo *array = typeinfo_new();
-			array->base = ARRAY_T;
-			array->array.type = v;
-			array->array.size = get_array(m);
-			v = array;
-		}
-	}
-
-	if (l && v)
-		list_push_back(l, v);
-	else if (s && k && v)
-		hasht_insert(s, k, v);
-	else
-		semantic_error("unsupported parameter declaration", n);
-}
-
-/*
- * Handles an arbitrarily nested list of parameters recursively.
- */
-void handle_param_list(struct tree *n, struct hasht *s, struct list *l)
-{
-	enum rule r = get_rule(n);
-	if (r == PARAM_DECL1 || r == PARAM_DECL3) {
+	switch (get_rule(n)) {
+	case SIMPLE_DECL1: {
+		/* this may need to be synthesized */
 		struct typeinfo *v = typeinfo_new();
 		v->base = get_type(get_token(n, 0)->category);
-		v->pointer = get_pointer(n);
 		if (v->base == CLASS_T)
 			v->class.type = get_class(n);
-		handle_param(v, n, s, l);
-	} else {
-		struct list_node *iter = list_head(n->children);
-		while (!list_end(iter)) {
-			handle_param_list(iter->data, s, l);
-			iter = iter->next;
-		}
+
+		struct tree *m = tree_index(n, 1);
+		handle_init_list(v, m);
+
+		return false;
+	}
+	case FUNCTION_DEF2: {
+		char *k = get_identifier(n);
+		struct hasht *local = hasht_new(32, true, NULL, NULL, &symbol_free);
+		struct list *params = list_new(NULL, NULL);
+
+		struct tree *m = tree_index(n, 1);
+
+		/* add parameters (if they exist) to local symbol table */
+		if (tree_size(m) > 2)
+			handle_param_list(tree_index(m, 1), local, params);
+
+		struct typeinfo *v = typeinfo_new();
+		v->base = FUNCTION_T;
+		v->function.type = typeinfo_new();
+		v->function.type->base = get_type(get_token(n, 0)->category);
+		if (v->function.type->base == CLASS_T)
+			v->function.type->class.type = get_class(n);
+		v->function.type->pointer = get_pointer(n);
+		v->function.parameters = params;
+		v->function.symbols = local;
+
+		symbol_insert(k, v, n, local);
+
+		/* recurse on children while in subscope */
+		list_push_back(yyscopes, local);
+		tree_preorder(tree_index(n, 2), d, &handle_node);
+		pop_scope();
+
+		return false;
+	}
+	case CLASS_SPEC: {
+	}
+	default: /* rule did not provide a symbol, so recurse on children */
+		return true;
 	}
 }
 
@@ -514,7 +579,7 @@ void handle_init(struct typeinfo *v, struct tree *n)
 		semantic_error("unsupported init declaration", n);
 	}
 	if (k && v)
-		insert_symbol(k, v, n, NULL);
+		symbol_insert(k, v, n, NULL);
 	else
 		semantic_error("failed to get init declarator symbol", n);
 }
@@ -536,105 +601,69 @@ void handle_init_list(struct typeinfo *v, struct tree *n)
 }
 
 /*
- * Recursively handles nodes, processing SIMPLE_DECL1 and
- * FUNCTION_DEF2 for symbols.
+ * Handles a PARAM_DECL1 or a PARAM_DECL3 rules.
+ *
+ * Works for basic types, pointers, and arrays. If given a scope hash
+ * table and able to find an indentifier, inserts into the scope. If
+ * given a parameters list, will insert into the list.
  */
-bool handle_node(struct tree *n, int d)
+void handle_param(struct typeinfo *v, struct tree *n, struct hasht *s, struct list *l)
 {
-	switch (get_rule(n)) {
-	case SIMPLE_DECL1: {
-		/* this may need to be synthesized */
+	char *k = get_identifier(n);
+
+	if (tree_size(n) > 3) { /* not a simple type */
+		struct tree *m = tree_index(n, 1);
+		enum rule r = get_rule(m);
+
+		/* array (with possible size) */
+		if (r == DIRECT_ABSTRACT_DECL4 || r == DIRECT_DECL6) {
+			struct typeinfo *array = typeinfo_new();
+			array->base = ARRAY_T;
+			array->array.type = v;
+			array->array.size = get_array(m);
+			v = array;
+		}
+	}
+
+	if (l && v)
+		list_push_back(l, v);
+	else if (s && k && v)
+		hasht_insert(s, k, v);
+	else
+		semantic_error("unsupported parameter declaration", n);
+}
+
+/*
+ * Handles an arbitrarily nested list of parameters recursively.
+ */
+void handle_param_list(struct tree *n, struct hasht *s, struct list *l)
+{
+	enum rule r = get_rule(n);
+	if (r == PARAM_DECL1 || r == PARAM_DECL3) {
 		struct typeinfo *v = typeinfo_new();
 		v->base = get_type(get_token(n, 0)->category);
+		v->pointer = get_pointer(n);
 		if (v->base == CLASS_T)
 			v->class.type = get_class(n);
-
-		struct tree *m = tree_index(n, 1);
-		handle_init_list(v, m);
-
-		return false;
-	}
-	case FUNCTION_DEF2: {
-		char *k = get_identifier(n);
-		struct hasht *local = hasht_new(32, true, NULL, NULL, &free_symbols);
-		struct list *params = list_new(NULL, NULL);
-
-		struct tree *m = tree_index(n, 1);
-
-		/* add parameters (if they exist) to local symbol table */
-		if (tree_size(m) > 2)
-			handle_param_list(tree_index(m, 1), local, params);
-
-		struct typeinfo *v = typeinfo_new();
-		v->base = FUNCTION_T;
-		v->function.type = typeinfo_new();
-		v->function.type->base = get_type(get_token(n, 0)->category);
-		if (v->function.type->base == CLASS_T)
-			v->function.type->class.type = get_class(n);
-		v->function.type->pointer = get_pointer(n);
-		v->function.parameters = params;
-		v->function.symbols = local;
-
-		insert_symbol(k, v, n, local);
-
-		/* recurse on children while in subscope */
-		list_push_back(yyscopes, local);
-		tree_preorder(tree_index(n, 2), d, &handle_node);
-		pop_scope();
-
-		return false;
-	}
-	case CLASS_SPEC: {
-	}
-	default: /* rule did not provide a symbol, so recurse on children */
-		return true;
+		handle_param(v, n, s, l);
+	} else {
+		struct list_node *iter = list_head(n->children);
+		while (!list_end(iter)) {
+			handle_param_list(iter->data, s, l);
+			iter = iter->next;
+		}
 	}
 }
 
-
-struct hasht *build_symbols(struct tree *syntax)
+/*
+ * Follow a node to a token, emit error, exit with 3.
+ */
+void semantic_error(char *s, struct tree *n)
 {
-	struct hasht *global = hasht_new(32, true, NULL, NULL, &free_symbols);
-
-	/* initialize scope stack */
-	yyscopes = list_new(NULL, NULL);
-	list_push_back(yyscopes, global);
-
-	/* handle standard libraries */
-	/* if (usingstd) { */
-	/* 	if (fstream) { */
-	/* 		hasht_insert(global, "ifstream", */
-	/* 		             typeinfo_new(CLASS_T, 2, false, */
-	/* 		                          hasht_search(typenames, "ifstream"), NULL)); */
-	/* 		hasht_insert(global, "ofstream", */
-	/* 		             typeinfo_new(CLASS_T, 2, false, */
-	/* 		                          hasht_search(typenames, "ifstream"), NULL)); */
-	/* 	} */
-	/* 	if (iostream) { */
-	/* 		hasht_insert(global, "cin", */
-	/* 		             typeinfo_new(CLASS_T, 2, false, "istream", NULL)); */
-	/* 		hasht_insert(global, "cout", */
-	/* 		             typeinfo_new(CLASS_T, 2, false, "istream", NULL)); */
-	/* 		hasht_insert(global, "endl", */
-	/* 		             typeinfo_new(CLASS_T, 2, false, "istream", NULL)); */
-	/* 	} */
-	/* 	if (string) { */
-	/* 		hasht_insert(global, "string", */
-	/* 		             typeinfo_new(CLASS_T, 2, false, */
-	/* 		                          hasht_search(typenames, "string"), NULL)); */
-	/* 	} */
-	/* } */
-
-	/* do a top-down pre-order traversal to populate symbol tables */
-	tree_preorder(syntax, 0, &handle_node);
-
-	list_free(yyscopes);
-
-	return global;
-}
-
-void free_symbols(struct hash_node *n)
-{
-	free(n->key);
-	typeinfo_delete(n->value);
+	while (tree_size(n) > 1)
+		n = list_front(n->children);
+	struct token *t = n->data;
+	fprintf(stderr, "Semantic error: file %s, line %d, token %s: %s\n",
+	        t->filename, t->lineno, t->text, s);
+	exit(3);
 }
