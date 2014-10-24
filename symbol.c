@@ -43,7 +43,7 @@ struct list *yyscopes;
 /* local functions */
 struct hasht *get_scope(struct hasht *s, char *k);
 
-enum type get_type(enum yytokentype t);
+enum type map_type(enum yytokentype t);
 char *print_basetype(struct typeinfo *t);
 void print_typeinfo(FILE *stream, char *k, struct typeinfo *v);
 
@@ -96,7 +96,7 @@ struct hasht *get_scope(struct hasht *s, char *k)
 /*
  * Maps a Bison type to a 120++ type.
  */
-enum type get_type(enum yytokentype t)
+enum type map_type(enum yytokentype t)
 {
 	switch (t) {
 	case INT:
@@ -384,7 +384,7 @@ char *get_class(struct tree *n)
 struct typeinfo *typeinfo_new(struct tree *n)
 {
 	struct typeinfo *t = calloc(1, sizeof(*t));
-	t->base = get_type(get_token(n, 0)->category);
+	t->base = map_type(get_token(n, 0)->category);
 	t->pointer = get_pointer(n);
 	if (t->base == CLASS_T)
 		t->class.type = get_class(n);
