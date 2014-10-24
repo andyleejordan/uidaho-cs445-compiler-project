@@ -60,6 +60,7 @@ char *get_class(struct tree *n);
 
 struct typeinfo *typeinfo_new(struct tree *n);
 struct typeinfo *typeinfo_new_array(struct tree *n, struct typeinfo *t);
+struct typeinfo *typeinfo_new_function(struct tree *n, struct typeinfo *t, bool define);
 void typeinfo_delete(struct typeinfo *t);
 bool typeinfo_compare(struct typeinfo *a, struct typeinfo *b);
 bool typeinfo_list_compare(struct list *a, struct list *b);
@@ -403,6 +404,34 @@ struct typeinfo *typeinfo_new_array(struct tree *n, struct typeinfo *t)
 }
 
 /*
+ * Constructs a typeinfo for a function.
+ */
+struct typeinfo *typeinfo_new_function(struct tree *n, struct typeinfo *t, bool define)
+{
+	/* make new symbol table if defining */
+	struct hasht *local = (define)
+		? hasht_new(8, true, NULL, NULL, &symbol_free)
+		: NULL;
+
+	struct list *params = list_new(NULL, NULL);
+	struct tree *m = tree_index(n, 1);
+
+	/* add parameters (if they exist) to local symbol table */
+	if (define && tree_size(m) > 2) /* definition */
+		handle_param_list(tree_index(m, 1), local, params);
+	if (!define && tree_size(n) >2) /* declaration */
+		handle_param_list(tree_index(n, 1), local, params);
+
+	struct typeinfo *function = typeinfo_new(n);
+	function->base = FUNCTION_T;
+	function->function.type = t;
+	function->function.parameters = params;
+	function->function.symbols = local;
+
+	return function;
+}
+
+/*
  * Frees types for arrays and functions, and parameter lists.
  */
 void typeinfo_delete(struct typeinfo *t)
@@ -497,34 +526,20 @@ bool handle_node(struct tree *n, int d)
 	switch (get_rule(n)) {
 	case SIMPLE_DECL1: {
 		/* this may need to be synthesized */
-		struct typeinfo *v = typeinfo_new(n);
-
 		struct tree *m = tree_index(n, 1);
-		handle_init_list(v, m);
+		handle_init_list(typeinfo_new(n), m);
 
 		return false;
 	}
 	case FUNCTION_DEF2: {
 		char *k = get_identifier(n);
-		struct hasht *local = hasht_new(32, true, NULL, NULL, &symbol_free);
-		struct list *params = list_new(NULL, NULL);
 
-		struct tree *m = tree_index(n, 1);
+		struct typeinfo *v = typeinfo_new_function(n, typeinfo_new(n), true);
 
-		/* add parameters (if they exist) to local symbol table */
-		if (tree_size(m) > 2)
-			handle_param_list(tree_index(m, 1), local, params);
-
-		struct typeinfo *v = typeinfo_new(n);
-		v->base = FUNCTION_T;
-		v->function.type = typeinfo_new(n);
-		v->function.parameters = params;
-		v->function.symbols = local;
-
-		symbol_insert(k, v, n, local);
+		symbol_insert(k, v, n, v->function.symbols);
 
 		/* recurse on children while in subscope */
-		list_push_back(yyscopes, local);
+		list_push_back(yyscopes, v->function.symbols);
 		tree_preorder(tree_index(n, 2), d, &handle_node);
 		pop_scope();
 
@@ -565,18 +580,7 @@ void handle_init(struct typeinfo *v, struct tree *n)
 		break;
 	}
 	case DIRECT_DECL2: { /* function declaration */
-		struct typeinfo *function = typeinfo_new(n);
-
-		struct list *params = list_new(NULL, NULL);
-		if (tree_size(n) > 2)
-			handle_param_list(tree_index(n, 1), NULL, params);
-
-		function->base = FUNCTION_T;
-		function->pointer = get_pointer(n);
-		function->function.type = v;
-		function->function.parameters = params;
-		function->function.symbols = NULL;
-		v = function;
+		v = typeinfo_new_function(n, v, false);
 		break;
 	}
 	default:
