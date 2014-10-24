@@ -32,8 +32,9 @@ extern bool string;
 struct list *yyscopes;
 
 #define current_scope() (struct hasht *)list_back(yyscopes)
-#define push_scope(k) list_push_back(yyscopes, get_scope(current_scope(), k))
+#define push_scope(s) list_push_back(yyscopes, s)
 #define pop_scope() list_pop_back(yyscopes)
+#define search_scope(k) list_push_back(yyscopes, get_scope(current_scope(), k))
 
 /* syntax tree helpers */
 #define get_rule(n) *(enum rule *)n->data
@@ -209,7 +210,7 @@ struct hasht *symbol_populate(struct tree *syntax)
 
 	/* initialize scope stack */
 	yyscopes = list_new(NULL, NULL);
-	list_push_back(yyscopes, global);
+	push_scope(global);
 
 	/* handle standard libraries */
 	/* if (usingstd) { */
@@ -533,13 +534,11 @@ bool handle_node(struct tree *n, int d)
 	}
 	case FUNCTION_DEF2: {
 		char *k = get_identifier(n);
-
 		struct typeinfo *v = typeinfo_new_function(n, typeinfo_new(n), true);
-
 		symbol_insert(k, v, n, v->function.symbols);
 
 		/* recurse on children while in subscope */
-		list_push_back(yyscopes, v->function.symbols);
+		push_scope(v->function.symbols);
 		tree_preorder(tree_index(n, 2), d, &handle_node);
 		pop_scope();
 
