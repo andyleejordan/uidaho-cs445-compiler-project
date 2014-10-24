@@ -139,6 +139,11 @@ char *print_basetype(struct typeinfo *t)
 }
 #undef R
 
+/*
+ * Prints a realistic reprensentation of a symbol to the stream.
+ *
+ * Example: DOUBLE_T foobar(INT_T *, AClass)
+ */
 void print_typeinfo(FILE *stream, char *k, struct typeinfo *v)
 {
 	switch (v->base) {
@@ -192,6 +197,9 @@ void print_typeinfo(FILE *stream, char *k, struct typeinfo *v)
 		fprintf(stream, " %s%s\n", (v->pointer) ? "*" : "", k);
 }
 
+/*
+ * Populate a global symbol table given the root of a syntax tree.
+ */
 struct hasht *symbol_populate(struct tree *syntax)
 {
 	struct hasht *global = hasht_new(32, true, NULL, NULL, &symbol_free);
@@ -256,7 +264,6 @@ void *symbol_search(char *k)
  * will define the function with the given symbol table. Will error
  * for duplicate symbols or mismatched function declarations.
  */
-
 void symbol_insert(char *k, struct typeinfo *v, struct tree *n, struct hasht *l)
 {
 	struct typeinfo *e = symbol_search(k);
@@ -324,7 +331,7 @@ struct token *get_category_(struct tree *n, int target, int before)
 }
 
 /*
- * Returns identifier if found, else null.
+ * Returns true identifier if found, else null.
  */
 char *get_identifier(struct tree *n)
 {
