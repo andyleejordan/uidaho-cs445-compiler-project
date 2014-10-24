@@ -31,10 +31,10 @@ extern bool string;
 /* stack of scopes */
 struct list *yyscopes;
 
-#define current_scope() (struct hasht *)list_back(yyscopes)
-#define push_scope(s) list_push_back(yyscopes, s)
-#define pop_scope() list_pop_back(yyscopes)
-#define search_scope(k) list_push_back(yyscopes, get_scope(current_scope(), k))
+#define scope_current() (struct hasht *)list_back(yyscopes)
+#define scope_push(s) list_push_back(yyscopes, s)
+#define scope_pop() list_pop_back(yyscopes)
+#define scope_search(k) list_push_back(yyscopes, get_scope(scope_current(), k))
 
 /* syntax tree helpers */
 #define get_rule(n) *(enum rule *)n->data
@@ -210,7 +210,7 @@ struct hasht *symbol_populate(struct tree *syntax)
 
 	/* initialize scope stack */
 	yyscopes = list_new(NULL, NULL);
-	push_scope(global);
+	scope_push(global);
 
 	/* handle standard libraries */
 	/* if (usingstd) { */
@@ -274,7 +274,7 @@ void symbol_insert(char *k, struct typeinfo *v, struct tree *n, struct hasht *l)
 	if (e == NULL) {
 		fprintf(stderr, "inserting ");
 		print_typeinfo(stderr, k, v);
-		hasht_insert(current_scope(), k, v);
+		hasht_insert(scope_current(), k, v);
 	} else if (e->base == FUNCTION_T && v->base == FUNCTION_T) {
 		if (!typeinfo_list_compare(e->function.parameters, v->function.parameters)) {
 			semantic_error("function prototypes mismatched", n);
@@ -538,9 +538,9 @@ bool handle_node(struct tree *n, int d)
 		symbol_insert(k, v, n, v->function.symbols);
 
 		/* recurse on children while in subscope */
-		push_scope(v->function.symbols);
+		scope_push(v->function.symbols);
 		tree_preorder(tree_index(n, 2), d, &handle_node);
-		pop_scope();
+		scope_pop();
 
 		return false;
 	}
