@@ -58,7 +58,7 @@ bool get_pointer(struct tree *n);
 int get_array(struct tree *n);
 char *get_class(struct tree *n);
 
-struct typeinfo *typeinfo_new();
+struct typeinfo *typeinfo_new(struct tree *n);
 struct typeinfo *typeinfo_new_array(struct tree *n, struct typeinfo *t);
 void typeinfo_delete(struct typeinfo *t);
 bool typeinfo_compare(struct typeinfo *a, struct typeinfo *b);
@@ -378,13 +378,14 @@ char *get_class(struct tree *n)
 
 /*
  * Constructs new empty typeinfo.
- *
  */
-struct typeinfo *typeinfo_new()
+struct typeinfo *typeinfo_new(struct tree *n)
 {
 	struct typeinfo *t = calloc(1, sizeof(*t));
-	t->base = UNKNOWN_T;
-	t->pointer = false;
+	t->base = get_type(get_token(n, 0)->category);
+	t->pointer = get_pointer(n);
+	if (t->base == CLASS_T)
+		t->class.type = get_class(n);
 
 	return t;
 }
@@ -394,9 +395,8 @@ struct typeinfo *typeinfo_new()
  */
 struct typeinfo *typeinfo_new_array(struct tree *n, struct typeinfo *t)
 {
-	struct typeinfo *array = typeinfo_new();
+	struct typeinfo *array = typeinfo_new(n);
 	array->base = ARRAY_T;
-	array->pointer = get_pointer(n);
 	array->array.type = t;
 	array->array.size = get_array(n);
 	return array;
@@ -497,10 +497,7 @@ bool handle_node(struct tree *n, int d)
 	switch (get_rule(n)) {
 	case SIMPLE_DECL1: {
 		/* this may need to be synthesized */
-		struct typeinfo *v = typeinfo_new();
-		v->base = get_type(get_token(n, 0)->category);
-		if (v->base == CLASS_T)
-			v->class.type = get_class(n);
+		struct typeinfo *v = typeinfo_new(n);
 
 		struct tree *m = tree_index(n, 1);
 		handle_init_list(v, m);
@@ -518,13 +515,9 @@ bool handle_node(struct tree *n, int d)
 		if (tree_size(m) > 2)
 			handle_param_list(tree_index(m, 1), local, params);
 
-		struct typeinfo *v = typeinfo_new();
+		struct typeinfo *v = typeinfo_new(n);
 		v->base = FUNCTION_T;
-		v->function.type = typeinfo_new();
-		v->function.type->base = get_type(get_token(n, 0)->category);
-		if (v->function.type->base == CLASS_T)
-			v->function.type->class.type = get_class(n);
-		v->function.type->pointer = get_pointer(n);
+		v->function.type = typeinfo_new(n);
 		v->function.parameters = params;
 		v->function.symbols = local;
 
@@ -554,7 +547,9 @@ void handle_init(struct typeinfo *v, struct tree *n)
 	char *k = get_identifier(n);
 
 	switch (get_rule(n)) {
-	case INIT_DECL: { /* simple variable, possibly with initializer */
+	case INIT_DECL:
+	case UNARY_EXPR4:
+	case DECL2: {
 		struct list_node *iter = list_head(n->children);
 		while (!list_end(iter)) {
 			if (tree_size(iter->data) != 1) {
@@ -563,14 +558,6 @@ void handle_init(struct typeinfo *v, struct tree *n)
 			}
 			iter = iter->next;
 		}
-		v->pointer = get_pointer(n);
-		break;
-	}
-	case UNARY_EXPR4: {
-		break;
-	}
-	case DECL2: { /* simple pointer variable */
-		v->pointer = get_pointer(n);
 		break;
 	}
 	case DIRECT_DECL6: { /* simple array with size */
@@ -578,7 +565,7 @@ void handle_init(struct typeinfo *v, struct tree *n)
 		break;
 	}
 	case DIRECT_DECL2: { /* function declaration */
-		struct typeinfo *function = typeinfo_new();
+		struct typeinfo *function = typeinfo_new(n);
 
 		struct list *params = list_new(NULL, NULL);
 		if (tree_size(n) > 2)
@@ -607,6 +594,7 @@ void handle_init(struct typeinfo *v, struct tree *n)
 void handle_init_list(struct typeinfo *v, struct tree *n)
 {
 	if (get_rule(n) != INIT_DECL_LIST2) {
+		v->pointer = get_pointer(n); /* for pointers in lists */
 		handle_init(v, n);
 	} else {
 		struct list_node *iter = list_head(n->children);
@@ -633,9 +621,8 @@ void handle_param(struct typeinfo *v, struct tree *n, struct hasht *s, struct li
 		enum rule r = get_rule(m);
 
 		/* array (with possible size) */
-		if (r == DIRECT_ABSTRACT_DECL4 || r == DIRECT_DECL6) {
+		if (r == DIRECT_ABSTRACT_DECL4 || r == DIRECT_DECL6)
 			v = typeinfo_new_array(m, v);
-		}
 	}
 
 	if (l && v)
@@ -653,11 +640,8 @@ void handle_param_list(struct tree *n, struct hasht *s, struct list *l)
 {
 	enum rule r = get_rule(n);
 	if (r == PARAM_DECL1 || r == PARAM_DECL3) {
-		struct typeinfo *v = typeinfo_new();
-		v->base = get_type(get_token(n, 0)->category);
-		v->pointer = get_pointer(n);
-		if (v->base == CLASS_T)
-			v->class.type = get_class(n);
+		struct typeinfo *v = typeinfo_new(n);
+		v->pointer = get_pointer(n); /* for pointers in list */
 		handle_param(v, n, s, l);
 	} else {
 		struct list_node *iter = list_head(n->children);
