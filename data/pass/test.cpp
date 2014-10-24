@@ -35,15 +35,12 @@ int main(int argc, char *argv[])
 	bool is = false;
 	char character = 'A';
 	short quick = 2;
-	short int small = 4;
 	long big = 123234;
-	long long huge = 1000000000;
 	double pi = 3.14159;
 	double zero = .0000000001;
 	float one = 1.;
 
 	string empty = "";
-
 
 	TestClass *tmpclass = new TestClass;
 	cout << tmpclass->data << endl;

@@ -9,9 +9,9 @@
 - =list_sort=
 ** TODO Assignment #3
 *** TODO Handle classes
-*** TODO Handle declarations in for loops
-*** TODO Handle undeclared variables
 *** TODO Type checking
+**** TODO Postfix expressions
+**** TODO Handle undeclared variables
 **** TODO Require and check types everywhere at compile-time
 **** TODO Check that function call signatures match
 **** TODO Check that operators' operands are compatible
