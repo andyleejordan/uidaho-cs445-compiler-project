@@ -59,6 +59,7 @@ int get_array(struct tree *n);
 char *get_class(struct tree *n);
 
 struct typeinfo *typeinfo_new();
+struct typeinfo *typeinfo_new_array(struct tree *n, struct typeinfo *t);
 void typeinfo_delete(struct typeinfo *t);
 bool typeinfo_compare(struct typeinfo *a, struct typeinfo *b);
 bool typeinfo_list_compare(struct list *a, struct list *b);
@@ -158,7 +159,8 @@ void print_typeinfo(FILE *stream, char *k, struct typeinfo *v)
 	case ARRAY_T: {
 		print_typeinfo(stream, NULL, v->array.type);
 		if (k)
-			fprintf(stream, " %s%s", (v->pointer) ? "*" : "", k);
+			fprintf(stream, " %s%s",
+			        (v->array.type->pointer) ? "*" : "", k);
 		if (v->array.size)
 			fprintf(stream, "[%zu]", v->array.size);
 		else
@@ -375,7 +377,7 @@ char *get_class(struct tree *n)
 }
 
 /*
- * Constructs new typeinfo.
+ * Constructs new empty typeinfo.
  *
  */
 struct typeinfo *typeinfo_new()
@@ -385,6 +387,19 @@ struct typeinfo *typeinfo_new()
 	t->pointer = false;
 
 	return t;
+}
+
+/*
+ * Constructs a typeinfo for an array.
+ */
+struct typeinfo *typeinfo_new_array(struct tree *n, struct typeinfo *t)
+{
+	struct typeinfo *array = typeinfo_new();
+	array->base = ARRAY_T;
+	array->pointer = get_pointer(n);
+	array->array.type = t;
+	array->array.size = get_array(n);
+	return array;
 }
 
 /*
@@ -559,12 +574,7 @@ void handle_init(struct typeinfo *v, struct tree *n)
 		break;
 	}
 	case DIRECT_DECL6: { /* simple array with size */
-		struct typeinfo *array = typeinfo_new();
-		array->base = ARRAY_T;
-		array->pointer = get_pointer(n);
-		array->array.type = v;
-		array->array.size = get_array(n);
-		v = array;
+		v = typeinfo_new_array(n, v);
 		break;
 	}
 	case DIRECT_DECL2: { /* function declaration */
@@ -624,11 +634,7 @@ void handle_param(struct typeinfo *v, struct tree *n, struct hasht *s, struct li
 
 		/* array (with possible size) */
 		if (r == DIRECT_ABSTRACT_DECL4 || r == DIRECT_DECL6) {
-			struct typeinfo *array = typeinfo_new();
-			array->base = ARRAY_T;
-			array->array.type = v;
-			array->array.size = get_array(m);
-			v = array;
+			v = typeinfo_new_array(m, v);
 		}
 	}
 
