@@ -321,7 +321,7 @@ logical_or_expression:
 
 conditional_expression:
         logical_or_expression                                            { $$ = $1; }
-        | logical_or_expression '?' expression ':' assignment_expression { $$ = P(COND_EXPR2, 5, $1, $2, $3, $4, $5); }
+        | logical_or_expression '?' expression ':' assignment_expression { $$ = P(COND_EXPR2, 3, $1, $3, $5); }
         ;
 
 assignment_expression:
@@ -367,8 +367,8 @@ statement:
         ;
 
 labeled_statement:
-        CASE constant_expression ':' statement { $$ = P(LABELED_STATEMENT1, 4, $1, $2, $3, $4); }
-        | DEFAULT ':' statement                { $$ = P(LABELED_STATEMENT2, 3, $1, $2, $3); }
+        CASE constant_expression ':' statement { $$ = P(LABELED_STATEMENT1, 3, $1, $2, $4); }
+        | DEFAULT ':' statement                { $$ = P(LABELED_STATEMENT2, 2, $1, $3); }
         ;
 
 expression_statement:
@@ -599,7 +599,7 @@ class_key:
 
 member_specification:
         member_declaration member_specification_opt     { $$ = P(MEMBER_SPEC1, 2, $1, $2); }
-        | access_specifier ':' member_specification_opt { $$ = P(MEMBER_SPEC2, 3, $1, $2, $3); }
+        | access_specifier ':' member_specification_opt { $$ = P(MEMBER_SPEC2, 2, $1, $3); }
         ;
 
 member_declaration:
@@ -619,7 +619,7 @@ member_declarator_list:
 member_declarator:
         declarator                           { $$ = $1; }
         | declarator constant_initializer    { $$ = P(MEMBER_DECLARATOR2, 2, $1, $2); }
-        | IDENTIFIER ':' constant_expression { $$ = P(MEMBER_DECLARATOR3, 3, $1, $2, $3); }
+        | IDENTIFIER ':' constant_expression { $$ = P(MEMBER_DECLARATOR3, 2, $1, $3); }
         ;
 
 constant_initializer:
@@ -637,7 +637,7 @@ access_specifier:
  *----------------------------------------------------------------------*/
 
 ctor_initializer:
-        ':' mem_initializer_list { $$ = P(CTOR_INIT, 2, $1, $2); }
+        ':' mem_initializer_list { $$ = P(CTOR_INIT, 1, $2); }
         ;
 
 mem_initializer_list:
