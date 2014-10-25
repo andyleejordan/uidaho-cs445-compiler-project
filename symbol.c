@@ -441,19 +441,8 @@ struct typeinfo *typeinfo_new_function(struct tree *n, struct typeinfo *t, bool 
 		: NULL;
 
 	struct list *params = list_new(NULL, NULL);
-	struct tree *m = tree_index(n, 1);
 
-	/* add parameters (if they exist) to local symbol table */
-	if (define && tree_size(m) > 2) {
-		enum rule r = get_rule(m);
-		if (r == DIRECT_DECL2) /* function definition */
-			handle_param_list(tree_index(m, 1), local, params);
-		else if (r == DIRECT_DECL4) /* method definition */
-			handle_param_list(tree_index(m, 2), local, params);
-		else
-			semantic_error("function definition unsupported", n);
-	} else if (!define && tree_size(n) > 2) /* declaration */
-		handle_param_list(tree_index(n, 1), local, params);
+	handle_param_list(n, local, params);
 
 	struct typeinfo *function = typeinfo_new(n);
 	function->base = FUNCTION_T;
@@ -721,16 +710,18 @@ void handle_param(struct typeinfo *v, struct tree *n, struct hasht *s, struct li
  */
 void handle_param_list(struct tree *n, struct hasht *s, struct list *l)
 {
-	enum rule r = get_rule(n);
-	if (r == PARAM_DECL1 || r == PARAM_DECL3) {
-		struct typeinfo *v = typeinfo_new(n);
-		v->pointer = get_pointer(n); /* for pointers in list */
-		handle_param(v, n, s, l);
-	} else {
-		struct list_node *iter = list_head(n->children);
-		while (!list_end(iter)) {
-			handle_param_list(iter->data, s, l);
-			iter = iter->next;
+	if (tree_size(n) != 1) { /* recurse on list */
+		enum rule r = get_rule(n);
+		if (r == PARAM_DECL1 || r == PARAM_DECL3) {
+			struct typeinfo *v = typeinfo_new(n);
+			v->pointer = get_pointer(n); /* for pointers in list */
+			handle_param(v, n, s, l);
+		} else {
+			struct list_node *iter = list_head(n->children);
+			while (!list_end(iter)) {
+				handle_param_list(iter->data, s, l);
+				iter = iter->next;
+			}
 		}
 	}
 }
