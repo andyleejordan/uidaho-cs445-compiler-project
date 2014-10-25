@@ -265,6 +265,9 @@ struct hasht *symbol_populate(struct tree *syntax)
  */
 void *symbol_search(char *k)
 {
+	if (k == NULL)
+		return NULL;
+
 	struct list_node *iter = list_tail(yyscopes);
 	while (!list_end(iter)) {
 		struct typeinfo *t = hasht_search(iter->data, k);
@@ -287,7 +290,7 @@ void symbol_insert(char *k, struct typeinfo *v, struct tree *n, struct hasht *l)
 {
 	struct typeinfo *e = symbol_search(k);
 	if (e == NULL) {
-		fprintf(stderr, "inserting ");
+		fprintf(stderr, "insert at depth %zu: ", list_size(yyscopes));
 		print_typeinfo(stderr, k, v);
 		hasht_insert(scope_current(), k, v);
 	} else if (e->base == FUNCTION_T && v->base == FUNCTION_T) {
@@ -299,8 +302,6 @@ void symbol_insert(char *k, struct typeinfo *v, struct tree *n, struct hasht *l)
 			else
 				semantic_error("function already defined", n);
 		}
-	} else if (e->base == CLASS_T && v->base == CLASS_T) {
-		fprintf(stderr, "classes not implemented yet\n");
 	} else {
 		semantic_error("identifier already declared", n);
 	}
@@ -443,9 +444,15 @@ struct typeinfo *typeinfo_new_function(struct tree *n, struct typeinfo *t, bool 
 	struct tree *m = tree_index(n, 1);
 
 	/* add parameters (if they exist) to local symbol table */
-	if (define && tree_size(m) > 2) /* definition */
-		handle_param_list(tree_index(m, 1), local, params);
-	if (!define && tree_size(n) > 2) /* declaration */
+	if (define && tree_size(m) > 2) {
+		enum rule r = get_rule(m);
+		if (r == DIRECT_DECL2) /* function definition */
+			handle_param_list(tree_index(m, 1), local, params);
+		else if (r == DIRECT_DECL4) /* method definition */
+			handle_param_list(tree_index(m, 2), local, params);
+		else
+			semantic_error("function definition unsupported", n);
+	} else if (!define && tree_size(n) > 2) /* declaration */
 		handle_param_list(tree_index(n, 1), local, params);
 
 	struct typeinfo *function = typeinfo_new(n);
@@ -662,12 +669,23 @@ void handle_function(struct typeinfo *t, struct tree *n)
 {
 	char *k = get_identifier(n);
 	struct typeinfo *v = typeinfo_new_function(n, t, true);
+
+	size_t scopes = list_size(yyscopes);
+	struct typeinfo *class = symbol_search(get_class(n));
+	if (class) {
+		scope_push(class->class.public);
+		scope_push(class->class.private);
+	}
+
 	symbol_insert(k, v, n, v->function.symbols);
 
 	/* recurse on children while in subscope */
 	scope_push(v->function.symbols);
 	tree_preorder(tree_index(n, 2), 0, &handle_node);
-	scope_pop();
+
+	/* pop newly pushed scopes */
+	while (list_size(yyscopes) != scopes)
+		scope_pop();
 }
 
 /*
