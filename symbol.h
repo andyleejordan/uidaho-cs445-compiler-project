@@ -44,7 +44,8 @@ struct typeinfo {
 		} function;
 		struct classinfo {
 			char *type; /* from typenames table */
-			struct hasht *symbols; /* NULL until defined */
+			struct hasht *public;
+			struct hasht *private;
 		} class;
 	};
 };

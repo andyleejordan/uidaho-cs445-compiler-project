@@ -607,7 +607,7 @@ member_declaration:
         | decl_specifier_seq ';'                      { $$ = $1; }
         | member_declarator_list ';'                  { $$ = $1; }
         | ';'                                         { $$ = E(); }
-        | function_definition SEMICOLON_opt           { $$ = P(MEMBER_DECL5, 2, $1, $2); }
+        | function_definition SEMICOLON_opt           { $$ = $1; }
         | qualified_id ';'                            { $$ = $1; }
         ;
 
@@ -617,7 +617,7 @@ member_declarator_list:
         ;
 
 member_declarator:
-        declarator                           { $$ = $1; }
+        declarator                           { $$ = P(MEMBER_DECLARATOR1, 1, $1); }
         | declarator constant_initializer    { $$ = P(MEMBER_DECLARATOR2, 2, $1, $2); }
         | IDENTIFIER ':' constant_expression { $$ = P(MEMBER_DECLARATOR3, 2, $1, $3); }
         ;

@@ -41,7 +41,7 @@ struct list *yyscopes;
 #define get_token(n, i) ((struct token *)tree_index(n, i)->data)
 
 /* local functions */
-struct hasht *get_scope(struct hasht *s, char *k);
+struct hasht *get_scope(struct hasht *s, char *k, bool private);
 
 enum type map_type(enum yytokentype t);
 char *print_basetype(struct typeinfo *t);
@@ -58,6 +58,8 @@ char *get_identifier(struct tree *n);
 bool get_pointer(struct tree *n);
 int get_array(struct tree *n);
 char *get_class(struct tree *n);
+bool get_public(struct tree *n);
+bool get_private(struct tree *n);
 
 struct typeinfo *typeinfo_new(struct tree *n);
 struct typeinfo *typeinfo_new_array(struct tree *n, struct typeinfo *t);
@@ -72,13 +74,14 @@ void handle_init_list(struct typeinfo *v, struct tree *n);
 void handle_function(struct typeinfo *t, struct tree *n);
 void handle_param(struct typeinfo *v, struct tree *n, struct hasht *s, struct list *l);
 void handle_param_list(struct tree *n, struct hasht *s, struct list *l);
+void handle_class(struct typeinfo *t, struct tree *n);
 
 void semantic_error(char *s, struct tree *n);
 
 /*
  * Given a scope and key, get the nested scope for the key.
  */
-struct hasht *get_scope(struct hasht *s, char *k)
+struct hasht *get_scope(struct hasht *s, char *k, bool private)
 {
 	struct typeinfo *t = hasht_search(s, k);
 	if (t == NULL)
@@ -88,7 +91,7 @@ struct hasht *get_scope(struct hasht *s, char *k)
 	case FUNCTION_T:
 		return t->function.symbols;
 	case CLASS_T:
-		return t->class.symbols;
+		return (private) ? t->class.private : t->class.public;
 	default:
 		return NULL; /* error */
 	}
@@ -136,7 +139,7 @@ char *print_basetype(struct typeinfo *t)
 	case FUNCTION_T:
 		return print_basetype(t->function.type);
 	case CLASS_T:
-		return t->class.type;
+		return (t->class.type) ? t->class.type : "CLASS_T";
 	}
 
 	return NULL; /* error */
@@ -190,7 +193,7 @@ void print_typeinfo(FILE *stream, char *k, struct typeinfo *v)
 		return;
 	}
 	case CLASS_T: {
-		fprintf(stream, "%s", v->class.type);
+		fprintf(stream, "%s", print_basetype(v));
 		break;
 	}
 	case UNKNOWN_T: {
@@ -379,6 +382,16 @@ char *get_class(struct tree *n)
 		return NULL;
 }
 
+bool get_public(struct tree *n)
+{
+	return get_category(n, PUBLIC, PRIVATE);
+}
+
+bool get_private(struct tree *n)
+{
+	return get_category(n, PRIVATE, PUBLIC);
+}
+
 /*
  * Constructs new empty typeinfo.
  */
@@ -421,7 +434,7 @@ struct typeinfo *typeinfo_new_function(struct tree *n, struct typeinfo *t, bool 
 	/* add parameters (if they exist) to local symbol table */
 	if (define && tree_size(m) > 2) /* definition */
 		handle_param_list(tree_index(m, 1), local, params);
-	if (!define && tree_size(n) >2) /* declaration */
+	if (!define && tree_size(n) > 2) /* declaration */
 		handle_param_list(tree_index(n, 1), local, params);
 
 	struct typeinfo *function = typeinfo_new(n);
@@ -536,6 +549,8 @@ bool handle_node(struct tree *n, int d)
 		return false;
 	}
 	case CLASS_SPEC: {
+		handle_class(typeinfo_new(n), n);
+		return false;
 	}
 	default: /* rule did not provide a symbol, so recurse on children */
 		return true;
@@ -554,7 +569,9 @@ void handle_init(struct typeinfo *v, struct tree *n)
 	switch (get_rule(n)) {
 	case INIT_DECL:
 	case UNARY_EXPR4:
-	case DECL2: {
+	case DECL2:
+	case MEMBER_DECL1:
+	case MEMBER_DECLARATOR1: {
 		/* recurse if necessary (for pointers) */
 		struct list_node *iter = list_head(n->children);
 		while (!list_end(iter)) {
@@ -589,15 +606,34 @@ void handle_init(struct typeinfo *v, struct tree *n)
  */
 void handle_init_list(struct typeinfo *v, struct tree *n)
 {
-	if (get_rule(n) != INIT_DECL_LIST2) {
-		v->pointer = get_pointer(n); /* for pointers in lists */
-		handle_init(v, n);
-	} else {
+	enum rule r = get_rule(n);
+	if (r == INIT_DECL_LIST2 || r == MEMBER_SPEC1 || r == MEMBER_DECL_LIST2) {
+		/* recurse through lists of declarators */
 		struct list_node *iter = list_head(n->children);
 		while (!list_end(iter)) {
 			handle_init_list(v, iter->data);
 			iter = iter->next;
 		}
+	} else if (r == MEMBER_SPEC2) {
+		/* begining of class access specifier tree */
+		if (get_public(n)) {
+			v->class.public = hasht_new(8, true, NULL, NULL, &symbol_free);
+			scope_push(v->class.public);
+		} else if (get_private(n)) {
+			v->class.private = hasht_new(8, true, NULL, NULL, &symbol_free);
+			scope_push(v->class.private);
+		} else {
+			semantic_error("unrecognized class access specifier", n);
+		}
+		handle_init_list(typeinfo_new(n), tree_index(n, 1));
+		scope_pop();
+	} else if (r == MEMBER_DECL1) {
+		/* recurse to end of class declaration */
+		handle_init_list(typeinfo_new(n), tree_index(n, 1));
+	} else {
+		/* process a single declaration */
+		v->pointer = get_pointer(n); /* for pointers in lists */
+		handle_init(v, n);
 	}
 }
 
@@ -661,6 +697,17 @@ void handle_param_list(struct tree *n, struct hasht *s, struct list *l)
 			iter = iter->next;
 		}
 	}
+}
+
+/*
+ * Handles a class declaration with public and/or private scopes.
+ */
+void handle_class(struct typeinfo *t, struct tree *n)
+{
+	char *k = get_identifier(n);
+	t->base = CLASS_T; /* class definition is still a class */
+	symbol_insert(k, t, n, NULL);
+	handle_init_list(t, tree_index(n, 1));
 }
 
 /*
