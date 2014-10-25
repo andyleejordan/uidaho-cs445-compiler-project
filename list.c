@@ -56,6 +56,9 @@ struct list *list_new(bool (*compare)(void *a, void *b),
  */
 struct list_node *list_insert(struct list *self, int pos, void *data)
 {
+	if (data == NULL) /* ignore empty inserts */
+		return NULL;
+
 	struct list_node *b = list_node_new(data);
 	struct list_node *c = list_index(self, pos);
 
