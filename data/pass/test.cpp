@@ -7,6 +7,7 @@
  *
  */
 
+#include <fstream>
 #include <iostream>
 #include <string>
 
@@ -15,7 +16,7 @@ using namespace std;
 class TestClass {
 public:
 	TestClass();
-	TestClass(string data);
+	void writeMethod(ifstream file);
 	string data;
 };
 
@@ -51,8 +52,3 @@ int main(int argc, char *argv[])
 
 TestClass::TestClass(): data("Hello world!\n")
 {}
-
-TestClass::TestClass(string data): data(data)
-{
-	cout << "TestClass \"ctor\" received data!" << endl;
-}
