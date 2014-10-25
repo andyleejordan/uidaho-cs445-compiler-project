@@ -221,28 +221,27 @@ struct hasht *symbol_populate(struct tree *syntax)
 		if (fstream) {
 			struct typeinfo *ifstream = malloc(sizeof(*ifstream));
 			ifstream->base = CLASS_T;
-			ifstream->class.type = "std::basic_ifstream";
+			ifstream->class.type = "std::ifstream";
 			symbol_insert("ifstream", ifstream, NULL, NULL);
 
 			struct typeinfo *ofstream = malloc(sizeof(*ofstream));
 			ofstream->base = CLASS_T;
-			ofstream->class.type = "std::basic_ofstream";
+			ofstream->class.type = "std::ofstream";
 			symbol_insert("ofstream", ofstream, NULL, NULL);
 		}
 		if (iostream) {
 			struct typeinfo *cin = malloc(sizeof(*cin));
 			cin->base = CLASS_T;
-			cin->class.type = "std::basic_istream";
+			cin->class.type = "std::ifstream";
 			symbol_insert("cin", cin, NULL, NULL);
 
 			struct typeinfo *cout = malloc(sizeof(*cout));
 			cout->base = CLASS_T;
-			cout->class.type = "std::basic_ostream";
+			cout->class.type = "std::ofstream";
 			symbol_insert("cout", cout, NULL, NULL);
 
 			struct typeinfo *endl = malloc(sizeof(*endl));
-			endl->base = CLASS_T;
-			endl->class.type = "std::basic_ostream";
+			endl->base = CHAR_T;
 			symbol_insert("endl", endl, NULL, NULL);
 		}
 		if (string) {
