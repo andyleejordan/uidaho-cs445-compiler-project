@@ -604,6 +604,13 @@ void handle_init(struct typeinfo *v, struct tree *n)
 		v = typeinfo_new_function(n, v, false);
 		break;
 	}
+	case DIRECT_DECL3: { /* class constructor */
+		asprintf(&k, "%s_ctor", get_class(n));
+		v->base = CLASS_T;
+		v->class.type = get_class(n);
+		v = typeinfo_new_function(n, v, false);
+		break;
+	}
 	default:
 		semantic_error("unsupported init declaration", n);
 	}

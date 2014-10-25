@@ -8,8 +8,6 @@
 - =list_split=
 - =list_sort=
 ** TODO Assignment #3
-*** TODO Handle class constructors
-*** TODO Handle class destructors
 *** TODO Handle class member function definitions
 *** TODO Type checking
 **** TODO Postfix expressions
@@ -18,3 +16,5 @@
 **** TODO Check that function call signatures match
 **** TODO Check that operators' operands are compatible
 *** TODO Print out syntax tree on --syntax only
+*** TODO Add default class constructor if none provided
+*** TODO Handle class destructors (?)
