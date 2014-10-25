@@ -600,7 +600,11 @@ void handle_init(struct typeinfo *v, struct tree *n)
 		break;
 	}
 	case DIRECT_DECL3: { /* class constructor */
-		asprintf(&k, "%s_ctor", get_class(n));
+		char *c = get_class(n);
+		size_t len = strlen(c) + strlen("_ctor") + 1;
+		k = realloc(k, len);
+		snprintf(k, len, "%s_ctor", get_class(n));
+
 		v->base = CLASS_T;
 		v->class.type = get_class(n);
 		v = typeinfo_new_function(n, v, false);
