@@ -217,29 +217,41 @@ struct hasht *symbol_populate(struct tree *syntax)
 	scope_push(global);
 
 	/* handle standard libraries */
-	/* if (usingstd) { */
-	/* 	if (fstream) { */
-	/* 		hasht_insert(global, "ifstream", */
-	/* 		             typeinfo_new(CLASS_T, 2, false, */
-	/* 		                          hasht_search(typenames, "ifstream"), NULL)); */
-	/* 		hasht_insert(global, "ofstream", */
-	/* 		             typeinfo_new(CLASS_T, 2, false, */
-	/* 		                          hasht_search(typenames, "ifstream"), NULL)); */
-	/* 	} */
-	/* 	if (iostream) { */
-	/* 		hasht_insert(global, "cin", */
-	/* 		             typeinfo_new(CLASS_T, 2, false, "istream", NULL)); */
-	/* 		hasht_insert(global, "cout", */
-	/* 		             typeinfo_new(CLASS_T, 2, false, "istream", NULL)); */
-	/* 		hasht_insert(global, "endl", */
-	/* 		             typeinfo_new(CLASS_T, 2, false, "istream", NULL)); */
-	/* 	} */
-	/* 	if (string) { */
-	/* 		hasht_insert(global, "string", */
-	/* 		             typeinfo_new(CLASS_T, 2, false, */
-	/* 		                          hasht_search(typenames, "string"), NULL)); */
-	/* 	} */
-	/* } */
+	if (usingstd) {
+		if (fstream) {
+			struct typeinfo *ifstream = malloc(sizeof(*ifstream));
+			ifstream->base = CLASS_T;
+			ifstream->class.type = "std::basic_ifstream";
+			symbol_insert("ifstream", ifstream, NULL, NULL);
+
+			struct typeinfo *ofstream = malloc(sizeof(*ofstream));
+			ofstream->base = CLASS_T;
+			ofstream->class.type = "std::basic_ofstream";
+			symbol_insert("ofstream", ofstream, NULL, NULL);
+		}
+		if (iostream) {
+			struct typeinfo *cin = malloc(sizeof(*cin));
+			cin->base = CLASS_T;
+			cin->class.type = "std::basic_istream";
+			symbol_insert("cin", cin, NULL, NULL);
+
+			struct typeinfo *cout = malloc(sizeof(*cout));
+			cout->base = CLASS_T;
+			cout->class.type = "std::basic_ostream";
+			symbol_insert("cout", cout, NULL, NULL);
+
+			struct typeinfo *endl = malloc(sizeof(*endl));
+			endl->base = CLASS_T;
+			endl->class.type = "std::basic_ostream";
+			symbol_insert("endl", endl, NULL, NULL);
+		}
+		if (string) {
+			struct typeinfo *string = malloc(sizeof(*string));
+			string->base = CLASS_T;
+			string->class.type = "std::string";
+			symbol_insert("string", string, NULL, NULL);
+		}
+	}
 
 	/* do a top-down pre-order traversal to populate symbol tables */
 	tree_preorder(syntax, 0, &handle_node);
