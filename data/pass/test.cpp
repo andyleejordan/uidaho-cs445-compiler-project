@@ -15,9 +15,11 @@ using namespace std;
 
 class TestClass {
 public:
-	TestClass();
-	void writeMethod(ifstream file);
+	TestClass(int, double);
+	void writeMethod(ofstream file, char *message);
 	string data;
+private:
+	double *hiddenData();
 };
 
 int main(int argc, char *argv[])
@@ -31,7 +33,7 @@ int main(int argc, char *argv[])
 	 * comment
 	 */
 
-	TestClass myclass;
+	TestClass *myclass = new TestClass(2, 23.2);
 
 	bool is = false;
 	char character = 'A';
@@ -43,12 +45,29 @@ int main(int argc, char *argv[])
 
 	string empty = "";
 
-	TestClass *tmpclass = new TestClass;
-	cout << tmpclass->data << endl;
-	delete tmpclass;
+	delete myclass;
 
 	return 0;
 }
 
-TestClass::TestClass(): data("Hello world!\n")
-{}
+void TestClass::writeMethod(ofstream file, char *message)
+{
+	// file << message;
+	bool empty = false;
+	return;
+}
+
+double *TestClass::hiddenData()
+{
+	for (int i = 0; i < 2; ++i)
+		bool ha = true;
+
+	double *pi = new double;
+
+	return pi;
+}
+
+TestClass::TestClass(int lkaja, double oiud): data("Hello world!\n")
+{
+	bool definingctor = true;
+}
