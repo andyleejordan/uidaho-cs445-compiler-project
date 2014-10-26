@@ -48,7 +48,7 @@ char *print_basetype(struct typeinfo *t);
 void print_typeinfo(FILE *stream, char *k, struct typeinfo *v);
 
 struct hasht *symbol_populate(struct tree *syntax);
-void *symbol_search(char *k);
+struct typeinfo *symbol_search(char *k);
 void symbol_insert(char *k, struct typeinfo *v, struct tree *n, struct hasht *l);
 void symbol_free(struct hash_node *n);
 
@@ -263,7 +263,7 @@ struct hasht *symbol_populate(struct tree *syntax)
 /*
  * Search the stack of scopes for a given identifier.
  */
-void *symbol_search(char *k)
+struct typeinfo *symbol_search(char *k)
 {
 	if (k == NULL)
 		return NULL;
