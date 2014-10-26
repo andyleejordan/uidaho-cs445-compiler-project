@@ -563,9 +563,9 @@ function_body:
         compound_statement { $$ = $1; }
         ;
 
-initializer:
-        '=' initializer_clause    { $$ = $2; }
-        | '(' expression_list ')' { $$ = $2; }
+initializer: /* maybe add rule name*/
+        '=' initializer_clause    { $$ = P(INITIALIZER, 1, $2); }
+	| '(' expression_list ')' { $$ = P(INITIALIZER, 1, $2); }
         ;
 
 initializer_clause:

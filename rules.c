@@ -115,6 +115,7 @@ char *print_rule(int rule)
 		R(PARAM_DECL4);
 		R(FUNCTION_DEF1);
 		R(FUNCTION_DEF2);
+		R(INITIALIZER);
 		R(INIT1);
 		R(INIT_CLAUSE2);
 		R(INIT_LIST2);
