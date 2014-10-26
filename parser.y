@@ -771,9 +771,8 @@ bool print_tree(struct tree *t, int d)
                        (char *)((struct token *)t->data)->text,
                        (int)((struct token *)t->data)->category);
 	else /* holds a production rule name */
-		printf("%*s %s: %zu\n", d*2, " ",
-                       print_rule(*(int *)t->data),
-                       list_size(t->children));
+		printf("%*s %s\n", d*2, " ",
+                       print_rule(*(int *)t->data));
 	return true;
 }
 
