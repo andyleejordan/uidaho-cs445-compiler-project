@@ -64,6 +64,8 @@ bool get_private(struct tree *n);
 struct typeinfo *typeinfo_new(struct tree *n);
 struct typeinfo *typeinfo_new_array(struct tree *n, struct typeinfo *t);
 struct typeinfo *typeinfo_new_function(struct tree *n, struct typeinfo *t, bool define);
+struct typeinfo *typeinfo_return(struct typeinfo *t);
+struct typeinfo *typeinfo_expr(struct tree *n);
 void typeinfo_delete(struct typeinfo *t);
 bool typeinfo_compare(struct typeinfo *a, struct typeinfo *b);
 bool typeinfo_list_compare(struct list *a, struct list *b);
@@ -454,6 +456,79 @@ struct typeinfo *typeinfo_new_function(struct tree *n, struct typeinfo *t, bool 
 }
 
 /*
+ * Returns the actual type for a typeinfo.
+ *
+ * For primitives and classes returns itself.
+ */
+struct typeinfo *typeinfo_return(struct typeinfo *t)
+{
+	if (t->base == FUNCTION_T)
+		return t->function.type;
+	else
+		return t;
+}
+
+struct typeinfo *typeinfo_expr(struct tree *n)
+{
+	if (tree_size(n) == 1) {
+		char *k = get_identifier(n);
+		if (k) {
+			struct typeinfo *t = symbol_search(k);
+			if (t)
+				return t;
+			else
+				semantic_error("variable undeclared", n);
+		} else {
+			/* return global basic typeinfo for literal */
+			return NULL;
+		}
+	}
+
+	switch (get_rule(n)) {
+	case INIT_LIST2: {
+		/* arrays get lists of initializers, check that each
+		   member's type matches the array's element type */
+
+		/* struct list_node *iter = list_head(n->children); */
+		/* while (!list_end(iter)) { */
+		/* } */
+
+		return NULL;
+	}
+	case NEW_EXPR1: {
+		/* new: recurse on leaf of n1; if class, check constructor */
+		return NULL;
+	}
+	case POSTFIX_EXPR2: {
+		/* array calls: check n0 (ident) is array, n2 is an int */
+		return NULL;
+	}
+	case POSTFIX_EXPR3: {
+		/* seems to be function calls: check function return
+		   type against v; build typeinfo list from EXPR_LIST2
+		   if it exists, recursing on each child */
+
+		/* char *id = get_identifier(n); */
+		return NULL;
+	}
+	case POSTFIX_EXPR6: {
+		/* seems to be class.calls: ensure n0 is a class and
+		   not a pointer, and n1 is in class's public scope
+		   (or private if v belongs to the class) */
+		return NULL;
+	}
+	case POSTFIX_EXPR8: {
+		/* seems to be class->calls: ensure n0 is a class and
+		   a pointer, and n1 is in class's public scope (or
+		   private if v belongs to class). */
+		return NULL;
+	}
+	default:
+		semantic_error("expression type not supported", n);
+	}
+	return NULL;
+}
+/*
  * Frees types for arrays and functions, and parameter lists.
  */
 void typeinfo_delete(struct typeinfo *t)
@@ -609,6 +684,12 @@ void handle_init(struct typeinfo *v, struct tree *n)
 		v->class.type = get_class(n);
 		v = typeinfo_new_function(n, v, false);
 		break;
+	}
+	case INITIALIZER: {
+		/* semantic error when working properly */
+		if (!typeinfo_compare(v, typeinfo_expr(tree_index(n, 0))))
+			fprintf(stderr, "initalizer type mismatched!\n");
+		return;
 	}
 	default:
 		semantic_error("unsupported init declaration", n);
