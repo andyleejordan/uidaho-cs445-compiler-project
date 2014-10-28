@@ -127,6 +127,8 @@ char *print_category(enum yytokentype t)
 		R(VOID);
 		R(WHILE);
 	}
+
+	return NULL; /* error */
 }
 #undef R
 
