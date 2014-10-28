@@ -61,11 +61,11 @@ char *get_class(struct tree *n);
 bool get_public(struct tree *n);
 bool get_private(struct tree *n);
 
+struct typeinfo *type_check(struct tree *n);
 struct typeinfo *typeinfo_new(struct tree *n);
 struct typeinfo *typeinfo_new_array(struct tree *n, struct typeinfo *t);
 struct typeinfo *typeinfo_new_function(struct tree *n, struct typeinfo *t, bool define);
 struct typeinfo *typeinfo_return(struct typeinfo *t);
-struct typeinfo *typeinfo_expr(struct tree *n);
 void typeinfo_delete(struct typeinfo *t);
 bool typeinfo_compare(struct typeinfo *a, struct typeinfo *b);
 bool typeinfo_list_compare(struct list *a, struct list *b);
@@ -477,7 +477,7 @@ struct typeinfo *typeinfo_return(struct typeinfo *t)
 		return t;
 }
 
-struct typeinfo *typeinfo_expr(struct tree *n)
+struct typeinfo *type_check(struct tree *n)
 {
 	if (tree_size(n) == 1) {
 		char *k = get_identifier(n);
@@ -696,7 +696,7 @@ void handle_init(struct typeinfo *v, struct tree *n)
 	}
 	case INITIALIZER: {
 		/* semantic error when working properly */
-		if (!typeinfo_compare(v, typeinfo_expr(tree_index(n, 0))))
+		if (!typeinfo_compare(v, type_check(tree_index(n, 0))))
 			fprintf(stderr, "initalizer type mismatched!\n");
 		return;
 	}
