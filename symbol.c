@@ -80,6 +80,14 @@ void handle_class(struct typeinfo *t, struct tree *n);
 
 void semantic_error(char *s, struct tree *n);
 
+/* basic type comparators */
+struct typeinfo int_type;
+struct typeinfo double_type;
+struct typeinfo char_type;
+struct typeinfo string_type;
+struct typeinfo bool_type;
+struct typeinfo void_type;
+
 /*
  * Given a scope and key, get the nested scope for the key.
  */
@@ -226,6 +234,15 @@ struct hasht *symbol_populate(struct tree *syntax)
 	/* initialize scope stack */
 	yyscopes = list_new(NULL, NULL);
 	scope_push(global);
+
+	/* initalize base type comparators */
+	int_type.base = INT_T;
+	double_type.base = DOUBLE_T;
+	char_type.base = CHAR_T;
+	string_type.base = CHAR_T;
+	string_type.pointer = true;
+	bool_type.base = BOOL_T;
+	void_type.base = VOID_T;
 
 	/* handle standard libraries */
 	if (usingstd) {
@@ -488,8 +505,32 @@ struct typeinfo *type_check(struct tree *n)
 			else
 				semantic_error("variable undeclared", n);
 		} else {
+			struct token *token = n->data;
+			enum type type = map_type(token->category);
 			/* return global basic typeinfo for literal */
-			return NULL;
+			switch (type) {
+			case INT_T: {
+				return &int_type;
+			}
+			case DOUBLE_T: {
+				return &double_type;
+			}
+			case CHAR_T: {
+				return &char_type;
+			}
+			case ARRAY_T: {
+				return &string_type;
+			}
+			case BOOL_T: {
+				return &bool_type;
+			}
+			case VOID_T: {
+				return &void_type;
+			}
+			default: {
+				semantic_error("literal type not simple", n);
+			}
+			}
 		}
 	}
 
