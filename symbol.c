@@ -105,18 +105,27 @@ struct hasht *get_scope(struct hasht *s, char *k, bool private)
 enum type map_type(enum yytokentype t)
 {
 	switch (t) {
+	case INTEGER:
 	case INT:
 	case SHORT:
 	case LONG:
 		return INT_T;
+	case FLOATING:
 	case FLOAT:
 	case DOUBLE:
 		return DOUBLE_T;
+	case CHARACTER:
 	case CHAR:
 		return CHAR_T;
+	case STRING:
+		return ARRAY_T;
+	case TRUE:
+	case FALSE:
 	case BOOL:
 		return BOOL_T;
 	case CLASS_NAME:
+	case CLASS:
+	case STRUCT:
 		return CLASS_T;
 	case VOID:
 		return VOID_T;
