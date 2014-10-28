@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <libgen.h>
 
 #include "token.h"
 #include "parser.tab.h"
@@ -58,6 +59,102 @@ void token_free(struct token *t)
 	if (t->category == STRING)
 		free(t->sval);
 	free(t);
+}
+
+#define R(rule) case rule: return #rule
+char *print_category(enum yytokentype t)
+{
+	switch(t) {
+		R(IDENTIFIER);
+		R(INTEGER);
+		R(FLOATING);
+		R(CHARACTER);
+		R(STRING);
+		R(CLASS_NAME);
+		R(COLONCOLON);
+		R(DOTSTAR);
+		R(ADDEQ);
+		R(SUBEQ);
+		R(MULEQ);
+		R(DIVEQ);
+		R(MODEQ);
+		R(XOREQ);
+		R(ANDEQ);
+		R(OREQ);
+		R(SL);
+		R(SR);
+		R(SREQ);
+		R(SLEQ);
+		R(EQ);
+		R(NOTEQ);
+		R(LTEQ);
+		R(GTEQ);
+		R(ANDAND);
+		R(OROR);
+		R(PLUSPLUS);
+		R(MINUSMINUS);
+		R(ARROWSTAR);
+		R(ARROW);
+		R(BOOL);
+		R(BREAK);
+		R(CASE);
+		R(CHAR);
+		R(CLASS);
+		R(CONTINUE);
+		R(DEFAULT);
+		R(DELETE);
+		R(DO);
+		R(DOUBLE);
+		R(ELSE);
+		R(FALSE);
+		R(FLOAT);
+		R(FOR);
+		R(IF);
+		R(INT);
+		R(LONG);
+		R(NEW);
+		R(PRIVATE);
+		R(PROTECTED);
+		R(PUBLIC);
+		R(RETURN);
+		R(SHORT);
+		R(SIGNED);
+		R(SIZEOF);
+		R(STRUCT);
+		R(SWITCH);
+		R(TRUE);
+		R(UNSIGNED);
+		R(VOID);
+		R(WHILE);
+	}
+}
+#undef R
+
+/* print a token */
+void token_print(struct token *t)
+{
+		char *filename = strdup(t->filename);
+		if (filename == NULL)
+			handle_error("token_print()");
+
+		printf("%-5d%-12s%-12s%s ",
+		       t->lineno,
+		       basename(filename),
+		       print_category(t->category),
+		       t->text);
+
+		free(filename);
+
+		if (t->category == INTEGER)
+			printf("-> %d", t->ival);
+		else if (t->category == FLOATING)
+			printf("-> %f", t->fval);
+		else if (t->category == CHARACTER)
+			printf("-> %c", t->ival);
+		else if (t->category == STRING)
+			printf("-> %s", t->sval);
+
+		printf("\n");
 }
 
 /*
