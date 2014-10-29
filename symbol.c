@@ -322,7 +322,7 @@ void symbol_insert(char *k, struct typeinfo *v, struct tree *n, struct hasht *l)
 		print_typeinfo(stderr, k, v);
 		hasht_insert(scope_current(), k, v);
 	} else if (e->base == FUNCTION_T && v->base == FUNCTION_T) {
-		if (!typeinfo_list_compare(e->function.parameters, v->function.parameters)) {
+		if (!typeinfo_compare(e, v)) {
 			semantic_error("function prototypes mismatched", n);
 		} else if (l) {
 			if (e->function.symbols == NULL)
@@ -474,6 +474,7 @@ struct typeinfo *typeinfo_new_function(struct tree *n, struct typeinfo *t, bool 
 
 	struct typeinfo *function = typeinfo_new(n);
 	function->base = FUNCTION_T;
+	function->pointer = false; /* 120++ does not have function pointers */
 	function->function.type = t;
 	function->function.parameters = params;
 	function->function.symbols = local;
