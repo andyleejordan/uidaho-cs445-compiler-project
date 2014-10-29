@@ -14,7 +14,6 @@
  * version of the rule (a static string literal).
  */
 #define R(rule) case rule: return #rule
-
 char *print_rule(int rule)
 {
 	switch (rule) {
@@ -139,5 +138,4 @@ char *print_rule(int rule)
 		return "Rule not found";
 	}
 }
-
 #undef R
