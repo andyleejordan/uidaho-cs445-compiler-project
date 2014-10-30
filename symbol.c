@@ -88,6 +88,7 @@ struct typeinfo char_type;
 struct typeinfo string_type;
 struct typeinfo bool_type;
 struct typeinfo void_type;
+struct typeinfo class_type;
 struct typeinfo unknown_type;
 
 /*
@@ -236,16 +237,6 @@ struct hasht *symbol_populate(struct tree *syntax)
 	/* initialize scope stack */
 	yyscopes = list_new(NULL, NULL);
 	scope_push(global);
-
-	/* initalize base type comparators */
-	int_type.base = INT_T;
-	double_type.base = DOUBLE_T;
-	char_type.base = CHAR_T;
-	string_type.base = CHAR_T;
-	string_type.pointer = true; /* a C string is a char* */
-	bool_type.base = BOOL_T;
-	void_type.base = VOID_T;
-	unknown_type.base = UNKNOWN_T;
 
 	/* handle standard libraries */
 	if (usingstd) {
@@ -505,12 +496,46 @@ struct typeinfo *typeinfo_return(struct typeinfo *t)
  * Get typeinfo for identifier or literal value.
  */
 struct typeinfo *get_typeinfo(struct tree *n) {
+	/* initalize base type comparators */
+	int_type.base = INT_T;
+	int_type.pointer = false;
+
+	double_type.base = DOUBLE_T;
+	double_type.pointer = false;
+
+	char_type.base = CHAR_T;
+	char_type.pointer = false;
+
+	string_type.base = CHAR_T;
+	string_type.pointer = true; /* a C string is a char* */
+
+	bool_type.base = BOOL_T;
+	bool_type.pointer = false;
+
+	void_type.base = VOID_T;
+	void_type.pointer = false;
+
+	class_type.base = CLASS_T;
+	class_type.pointer = false;
+
+	unknown_type.base = UNKNOWN_T;
+	unknown_type.pointer = false;
+
+	/* attempt to get identifier or class */
 	char *k = get_identifier(n);
+	char *c = get_class(n);
+
 	if (k) {
+		/* return function typeinfo */
 		return symbol_search(k);
+	} else if (c) {
+		/* return class typeinfo comparator */
+		class_type.class.type = c;
+		return &class_type;
 	} else {
-		struct token *token = n->data;
 		/* return global basic typeinfo for literal */
+		struct token *token = n->data;
+
 		switch (map_type(token->category)) {
 		case INT_T: {
 			return &int_type;
