@@ -30,7 +30,7 @@ char *print_rule(int rule)
 		R(POSTFIX_EXPR8);
 		R(POSTFIX_EXPR9);
 		R(POSTFIX_EXPR10);
-		R(EXPR_LIST2);
+		R(EXPR_LIST);
 		R(UNARY_EXPR2);
 		R(UNARY_EXPR3);
 		R(UNARY_EXPR4);

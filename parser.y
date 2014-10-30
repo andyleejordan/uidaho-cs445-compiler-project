@@ -197,8 +197,8 @@ postfix_expression:
         ;
 
 expression_list:
-        assignment_expression                       { $$ = $1; }
-        | expression_list ',' assignment_expression { $$ = P(EXPR_LIST2, 2, $1, $3); }
+        assignment_expression                       { $$ = P(EXPR_LIST, 1, $1); }
+        | expression_list ',' assignment_expression { $$ = P(EXPR_LIST, 2, $1, $3); }
         ;
 
 unary_expression:

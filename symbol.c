@@ -146,6 +146,7 @@ enum type map_type(enum yytokentype t)
 		return UNKNOWN_T;
 	}
 }
+
 /*
  * Given a type enum, returns its name as a static string.
  */
@@ -554,7 +555,7 @@ struct typeinfo *typeinfo_return(struct typeinfo *t)
  * Get typeinfo for identifier or literal value.
  */
 struct typeinfo *get_typeinfo(struct tree *n) {
-	/* initalize base type comparators */
+	/* initalize/reset base type comparators */
 	int_type.base = INT_T;
 	int_type.pointer = false;
 
@@ -722,9 +723,8 @@ struct typeinfo *type_check(struct tree *n)
 	}
 	case POSTFIX_EXPR3: {
 		/* seems to be function calls: check function return
-		   type against v; build typeinfo list from EXPR_LIST2
+		   type against v; build typeinfo list from EXPR_LIST
 		   if it exists, recursing on each child */
-
 		char *k = get_identifier(n);
 		fprintf(stderr, "case function %s invocation\n", k);
 
@@ -736,7 +736,7 @@ struct typeinfo *type_check(struct tree *n)
 		struct typeinfo *r = typeinfo_copy(l);
 
 		r->function.parameters = list_new(NULL, NULL);
-		struct tree *expr_list = get_production(n, EXPR_LIST2);
+		struct tree *expr_list = get_production(n, EXPR_LIST);
 		if (expr_list) {
 			struct list_node *iter = list_head(expr_list->children);
 			while (!list_end(iter)) {
@@ -800,9 +800,9 @@ struct typeinfo *type_check(struct tree *n)
 		return copy;
 	}
 	case FUNCTION_DEF2: {
-		fprintf(stderr, "case function definition, recurse!\n");
+		/* manage scopes for function recursion */
 		size_t scopes = list_size(yyscopes);
-		struct typeinfo *class = symbol_search(get_class(n));
+		struct typeinfo *class = symbol_search(get_class(tree_index(n, 1)));
 		if (class) {
 			scope_push(class->class.public);
 			scope_push(class->class.private);
@@ -810,9 +810,9 @@ struct typeinfo *type_check(struct tree *n)
 
 		struct typeinfo *function = symbol_search(get_identifier(n));
 		if (function == NULL)
-			semantic_error("function not defined", n);
+			semantic_error("undeclared function", n);
 
-		/* recurse on children while in subscope */
+		/* recursive type check of children while in subscope(s) */
 		scope_push(function->function.symbols);
 		struct list_node *iter = list_head(n->children);
 		while (!list_end(iter)) {
@@ -825,11 +825,13 @@ struct typeinfo *type_check(struct tree *n)
 			scope_pop();
 
 		return function;
-
+	}
+	case EXPR_LIST: {
+		/* recurse into expression lists */
+		return type_check(tree_index(n, 0));
 	}
 	default: {
-		/* fprintf(stderr, "default case, recurse!\n"); */
-		/* recurse serch on non-expressions */
+		/* recursive search for non-expressions */
 		struct list_node *iter = list_head(n->children);
 		while (!list_end(iter)) {
 			type_check(iter->data);
