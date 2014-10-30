@@ -278,7 +278,7 @@ struct hasht *symbol_populate(struct tree *syntax)
 
 	/* do a top-down pre-order traversal to populate symbol tables */
 	tree_preorder(syntax, 0, &handle_node);
-	print_typeinfo(stderr, "program", type_check(syntax));
+	type_check(syntax);
 
 	list_free(yyscopes);
 
@@ -699,9 +699,26 @@ struct typeinfo *type_check(struct tree *n)
 		return type;
 	}
 	case POSTFIX_EXPR2: {
-		fprintf(stderr, "case array[index]\n");
 		/* array calls: check n0 (ident) is array, n2 is an int */
-		return NULL;
+		char *k = get_identifier(n);
+		fprintf(stderr, "case %s[index]\n", k);
+
+		struct typeinfo *l = symbol_search(k);
+		if (l == NULL) {
+			sprintf(error_buf, "array %s not declared", k);
+			semantic_error(error_buf, n);
+		}
+		if (l->base != ARRAY_T) {
+			semantic_error("trying to index non array type", n);
+		}
+
+		struct typeinfo *r = type_check(tree_index(n, 2));
+		if (r == NULL)
+			semantic_error("couldn't get index for array", n);
+		if (!typeinfo_compare(&int_type, r))
+			semantic_error("array index not an integer", n);
+
+		return l->array.type;
 	}
 	case POSTFIX_EXPR3: {
 		/* seems to be function calls: check function return
