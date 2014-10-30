@@ -613,6 +613,11 @@ struct typeinfo *type_check(struct tree *n)
 		if (typeinfo_compare(l, r)) {
 			fprintf(stderr, "initializer matched\n");
 			return l;
+		} else if (l->base == CLASS_T
+		           && strcmp(l->class.type, "std::string")
+		           && r->base == CHAR_T && r->pointer) {
+			fprintf(stderr, "std:string initialized with string literal\n");
+			return l;
 		} else {
 			print_typeinfo(stderr, k, l);
 			print_typeinfo(stderr, k, r);
