@@ -30,6 +30,7 @@ extern bool string;
 
 /* stack of scopes */
 struct list *yyscopes;
+char error_buf[256];
 
 #define scope_current() (struct hasht *)list_back(yyscopes)
 #define scope_push(s) list_push_back(yyscopes, s)
@@ -327,13 +328,16 @@ void symbol_insert(char *k, struct typeinfo *v, struct tree *n, struct hasht *l)
 		if (!typeinfo_compare(e, v)) {
 			semantic_error("function prototypes mismatched", n);
 		} else if (l) {
-			if (e->function.symbols == NULL)
+			if (e->function.symbols == NULL) {
 				e->function.symbols = l;
-			else
-				semantic_error("function already defined", n);
+			} else {
+				sprintf(error_buf, "function %s already defined", k);
+				semantic_error(error_buf, n);
+			}
 		}
 	} else {
-		semantic_error("identifier already declared", n);
+		sprintf(error_buf, "identifier %s already declared", k);
+		semantic_error(error_buf, n);
 	}
 }
 
@@ -535,6 +539,11 @@ struct typeinfo *get_typeinfo(struct tree *n) {
 	}
 	return NULL;
 }
+
+/*
+ * Recursively perform type checking on the relevant expression
+ * production rules for the given syntax tree.
+ */
 struct typeinfo *type_check(struct tree *n)
 {
 	if (tree_size(n) == 1)
