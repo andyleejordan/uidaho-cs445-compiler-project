@@ -704,13 +704,41 @@ struct typeinfo *type_check(struct tree *n)
 		return NULL;
 	}
 	case POSTFIX_EXPR3: {
-		fprintf(stderr, "case function invocation\n");
 		/* seems to be function calls: check function return
 		   type against v; build typeinfo list from EXPR_LIST2
 		   if it exists, recursing on each child */
 
-		/* char *id = get_identifier(n); */
-		return NULL;
+		char *k = get_identifier(n);
+		fprintf(stderr, "case function %s invocation\n", k);
+
+		struct typeinfo *l = symbol_search(k);
+		if (l == NULL) {
+			sprintf(error_buf, "function %s not declared", k);
+			semantic_error(error_buf, n);
+		}
+		struct typeinfo *r = typeinfo_copy(l);
+
+		r->function.parameters = list_new(NULL, NULL);
+		struct tree *expr_list = get_production(n, EXPR_LIST2);
+		if (expr_list) {
+			struct list_node *iter = list_head(expr_list->children);
+			while (!list_end(iter)) {
+				struct typeinfo *t = type_check(iter->data);
+				list_push_back(r->function.parameters, t);
+				iter = iter->next;
+			}
+		}
+
+		if (!typeinfo_compare(l, r)) {
+			print_typeinfo(stderr, k, l);
+			print_typeinfo(stderr, k, r);
+			semantic_error("function call did not match signature", n);
+		}
+
+		list_free(r->function.parameters);
+		free(r);
+
+		return typeinfo_return(l);
 	}
 	case POSTFIX_EXPR6: {
 		fprintf(stderr, "case class.call\n");
