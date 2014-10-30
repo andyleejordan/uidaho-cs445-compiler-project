@@ -277,6 +277,7 @@ struct hasht *symbol_populate(struct tree *syntax)
 
 	/* do a top-down pre-order traversal to populate symbol tables */
 	tree_preorder(syntax, 0, &handle_node);
+	print_typeinfo(stderr, "program", type_check(syntax));
 
 	list_free(yyscopes);
 
@@ -593,30 +594,74 @@ struct typeinfo *type_check(struct tree *n)
 	if (tree_size(n) == 1)
 		return get_typeinfo(n);
 
+	switch (get_rule(n)) {
+	case INITIALIZER: {
+		fprintf(stderr, "case inititalizer at depth %zu\n", list_size(yyscopes));
+		char *k = get_identifier(n->parent);
+		fprintf(stderr, "init identifier is %s\n", k);
+		if (k == NULL)
+			semantic_error("couldn't get identifier in init", n);
+
+		struct typeinfo *l = symbol_search(k);
+		if (l == NULL)
+			semantic_error("couldn't get type for identifier in init", n);
+
+		struct typeinfo *r = type_check(tree_index(n, 0));
+		if (r == NULL)
+			semantic_error("variable undeclared", n);
+
+		if (typeinfo_compare(l, r)) {
+			fprintf(stderr, "initializer matched\n");
+			return l;
 		} else {
+			print_typeinfo(stderr, k, l);
+			print_typeinfo(stderr, k, r);
+			semantic_error("type error in initializer", n);
 		}
 	}
-
-	switch (get_rule(n)) {
 	case INIT_LIST2: {
+		fprintf(stderr, "case init list for array\n");
 		/* arrays get lists of initializers, check that each
 		   member's type matches the array's element type */
+		char *k = get_identifier(n->parent->parent);
+		if (k == NULL)
+			semantic_error("couldn't get ident for init list", n);
 
-		/* struct list_node *iter = list_head(n->children); */
-		/* while (!list_end(iter)) { */
-		/* } */
+		struct typeinfo *l = symbol_search(k);
+		if (l == NULL)
+			semantic_error("couldn't get type for init list", n);
 
-		return NULL;
+		if (l->base != ARRAY_T)
+			semantic_error("init list type was not an array", n);
+
+		struct list_node *iter = list_head(n->children);
+		while (!list_end(iter)) {
+			struct typeinfo *elem = type_check(iter->data);
+			if (!typeinfo_compare(l->array.type, elem)) {
+				semantic_error("init list item didn't match array type", n);
+			iter = iter->next;
+			}
+		fprintf(stderr, "init list matched\n");
+		return l;
+		}
 	}
 	case NEW_EXPR1: {
+		fprintf(stderr, "case new\n");
 		/* new: recurse on leaf of n1; if class, check constructor */
-		return NULL;
+		struct tree *type_spec = get_production(n, TYPE_SPEC_SEQ);
+		if (type_spec == NULL)
+			semantic_error("couldn't get type_spec for new", n);
+		struct typeinfo *type = get_typeinfo(tree_index(type_spec, 0));
+		type->pointer = true;
+		return type;
 	}
 	case POSTFIX_EXPR2: {
+		fprintf(stderr, "case array[index]\n");
 		/* array calls: check n0 (ident) is array, n2 is an int */
 		return NULL;
 	}
 	case POSTFIX_EXPR3: {
+		fprintf(stderr, "case function invocation\n");
 		/* seems to be function calls: check function return
 		   type against v; build typeinfo list from EXPR_LIST2
 		   if it exists, recursing on each child */
@@ -625,22 +670,61 @@ struct typeinfo *type_check(struct tree *n)
 		return NULL;
 	}
 	case POSTFIX_EXPR6: {
+		fprintf(stderr, "case class.call\n");
 		/* seems to be class.calls: ensure n0 is a class and
 		   not a pointer, and n1 is in class's public scope
 		   (or private if v belongs to the class) */
 		return NULL;
 	}
 	case POSTFIX_EXPR8: {
+		fprintf(stderr, "case class->call\n");
 		/* seems to be class->calls: ensure n0 is a class and
 		   a pointer, and n1 is in class's public scope (or
 		   private if v belongs to class). */
 		return NULL;
 	}
-	default:
-		semantic_error("expression type not supported", n);
+	case FUNCTION_DEF2: {
+		fprintf(stderr, "case function definition, recurse!\n");
+		size_t scopes = list_size(yyscopes);
+		struct typeinfo *class = symbol_search(get_class(n));
+		if (class) {
+			scope_push(class->class.public);
+			scope_push(class->class.private);
+		}
+
+		struct typeinfo *function = symbol_search(get_identifier(n));
+		if (function == NULL)
+			semantic_error("function not defined", n);
+
+		/* recurse on children while in subscope */
+		scope_push(function->function.symbols);
+		struct list_node *iter = list_head(n->children);
+		while (!list_end(iter)) {
+			type_check(iter->data);
+			iter = iter->next;
+		}
+
+		/* pop newly pushed scopes */
+		while (list_size(yyscopes) != scopes)
+			scope_pop();
+
+		return function;
+
+	}
+	default: {
+		/* fprintf(stderr, "default case, recurse!\n"); */
+		/* recurse serch on non-expressions */
+		struct list_node *iter = list_head(n->children);
+		while (!list_end(iter)) {
+			type_check(iter->data);
+			iter = iter->next;
+		}
+
+	}
 	}
 	return NULL;
 }
+
 /*
  * Frees types for arrays and functions, and parameter lists.
  */
@@ -770,7 +854,8 @@ void handle_init(struct typeinfo *v, struct tree *n)
 		/* recurse if necessary (for pointers) */
 		struct list_node *iter = list_head(n->children);
 		while (!list_end(iter)) {
-			if (tree_size(iter->data) != 1) {
+			if (tree_size(iter->data) != 1
+			    && (get_rule(iter->data) != INITIALIZER)) {
 				handle_init(v, iter->data);
 				return;
 			}
