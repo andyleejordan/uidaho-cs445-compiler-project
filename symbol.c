@@ -986,7 +986,7 @@ void handle_function(struct typeinfo *t, struct tree *n)
 	struct typeinfo *v = typeinfo_new_function(n, t, true);
 
 	size_t scopes = list_size(yyscopes);
-	struct typeinfo *class = symbol_search(get_class(n));
+	struct typeinfo *class = symbol_search(get_class(tree_index(n, 1)));
 	if (class) {
 		scope_push(class->class.public);
 		scope_push(class->class.private);
