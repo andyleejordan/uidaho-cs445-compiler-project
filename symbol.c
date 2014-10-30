@@ -318,7 +318,7 @@ struct typeinfo *symbol_search(char *k)
  */
 void symbol_insert(char *k, struct typeinfo *v, struct tree *n, struct hasht *l)
 {
-	struct typeinfo *e = symbol_search(k);
+	struct typeinfo *e = hasht_search(list_tail(yyscopes)->data, k);
 	if (e == NULL) {
 		fprintf(stderr, "insert at depth %zu: ", list_size(yyscopes));
 		print_typeinfo(stderr, k, v);
