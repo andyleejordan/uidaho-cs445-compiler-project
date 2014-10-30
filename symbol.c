@@ -1081,10 +1081,8 @@ void handle_param(struct typeinfo *v, struct tree *n, struct hasht *s, struct li
 
 	if (l && v)
 		list_push_back(l, v);
-	else if (s && k && v)
+	if (s && k && v)
 		hasht_insert(s, k, v);
-	else
-		semantic_error("unsupported parameter declaration", n);
 }
 
 /*
