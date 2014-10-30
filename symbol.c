@@ -87,6 +87,7 @@ struct typeinfo char_type;
 struct typeinfo string_type;
 struct typeinfo bool_type;
 struct typeinfo void_type;
+struct typeinfo unknown_type;
 
 /*
  * Given a scope and key, get the nested scope for the key.
@@ -240,9 +241,10 @@ struct hasht *symbol_populate(struct tree *syntax)
 	double_type.base = DOUBLE_T;
 	char_type.base = CHAR_T;
 	string_type.base = CHAR_T;
-	string_type.pointer = true;
+	string_type.pointer = true; /* a C string is a char* */
 	bool_type.base = BOOL_T;
 	void_type.base = VOID_T;
+	unknown_type.base = UNKNOWN_T;
 
 	/* handle standard libraries */
 	if (usingstd) {
