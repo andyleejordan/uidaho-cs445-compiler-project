@@ -67,6 +67,7 @@ struct typeinfo *type_check(struct tree *n);
 struct typeinfo *typeinfo_new(struct tree *n);
 struct typeinfo *typeinfo_new_array(struct tree *n, struct typeinfo *t);
 struct typeinfo *typeinfo_new_function(struct tree *n, struct typeinfo *t, bool define);
+struct typeinfo *typeinfo_copy(struct typeinfo *t);
 struct typeinfo *typeinfo_return(struct typeinfo *t);
 void typeinfo_delete(struct typeinfo *t);
 bool typeinfo_compare(struct typeinfo *a, struct typeinfo *b);
@@ -497,6 +498,43 @@ struct typeinfo *typeinfo_new_function(struct tree *n, struct typeinfo *t, bool 
 	function->function.symbols = local;
 
 	return function;
+}
+
+/*
+ * Returns a copy of a typeinfo object.
+ */
+struct typeinfo *typeinfo_copy(struct typeinfo *t)
+{
+	if (t == NULL)
+		return NULL;
+
+	struct typeinfo *n = malloc(sizeof(*n));
+	n->base = t->base;
+	n->pointer = t->pointer;
+
+	switch(n->base) {
+	case ARRAY_T: {
+		n->array.type = t->array.type;
+		n->array.size = t->array.size;
+		break;
+	}
+	case FUNCTION_T: {
+		n->function.type = t->function.type;
+		n->function.parameters = t->function.parameters;
+		n->function.symbols = t->function.symbols;
+		break;
+	}
+	case CLASS_T: {
+		n->class.type = t->class.type;
+		n->class.public = t->class.public;
+		n->class.private = t->class.private;
+		break;
+	}
+	default:
+		break;
+	}
+
+	return n;
 }
 
 /*
