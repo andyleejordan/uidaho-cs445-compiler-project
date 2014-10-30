@@ -497,43 +497,50 @@ struct typeinfo *typeinfo_return(struct typeinfo *t)
 		return t;
 }
 
+/*
+ * Get typeinfo for identifier or literal value.
+ */
+struct typeinfo *get_typeinfo(struct tree *n) {
+	char *k = get_identifier(n);
+	if (k) {
+		return symbol_search(k);
+	} else {
+		struct token *token = n->data;
+		/* return global basic typeinfo for literal */
+		switch (map_type(token->category)) {
+		case INT_T: {
+			return &int_type;
+		}
+		case DOUBLE_T: {
+			return &double_type;
+		}
+		case CHAR_T: {
+			return &char_type;
+		}
+		case ARRAY_T: {
+			return &string_type;
+		}
+		case BOOL_T: {
+			return &bool_type;
+		}
+		case VOID_T: {
+			return &void_type;
+		}
+		case FUNCTION_T:
+		case CLASS_T:
+		case UNKNOWN_T: {
+			return &unknown_type;
+		}
+		}
+	}
+	return NULL;
+}
 struct typeinfo *type_check(struct tree *n)
 {
-	if (tree_size(n) == 1) {
-		char *k = get_identifier(n);
-		if (k) {
-			struct typeinfo *t = symbol_search(k);
-			if (t)
-				return t;
-			else
-				semantic_error("variable undeclared", n);
+	if (tree_size(n) == 1)
+		return get_typeinfo(n);
+
 		} else {
-			struct token *token = n->data;
-			enum type type = map_type(token->category);
-			/* return global basic typeinfo for literal */
-			switch (type) {
-			case INT_T: {
-				return &int_type;
-			}
-			case DOUBLE_T: {
-				return &double_type;
-			}
-			case CHAR_T: {
-				return &char_type;
-			}
-			case ARRAY_T: {
-				return &string_type;
-			}
-			case BOOL_T: {
-				return &bool_type;
-			}
-			case VOID_T: {
-				return &void_type;
-			}
-			default: {
-				semantic_error("literal type not simple", n);
-			}
-			}
 		}
 	}
 
