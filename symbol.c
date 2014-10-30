@@ -37,7 +37,7 @@ struct list *yyscopes;
 #define scope_search(k) list_push_back(yyscopes, get_scope(scope_current(), k))
 
 /* syntax tree helpers */
-#define get_rule(n) *(enum rule *)n->data
+#define get_rule(n) *(enum rule *)((struct tree *)n)->data
 #define get_token(n, i) ((struct token *)tree_index(n, i)->data)
 
 /* local functions */
