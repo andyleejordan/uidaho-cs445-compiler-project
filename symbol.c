@@ -738,19 +738,15 @@ void handle_init(struct typeinfo *v, struct tree *n)
 		v = typeinfo_new_function(n, v, false);
 		break;
 	}
-	case INITIALIZER: {
-		/* semantic error when working properly */
-		if (!typeinfo_compare(v, type_check(tree_index(n, 0))))
-			fprintf(stderr, "initalizer type mismatched!\n");
-		return;
-	}
 	default:
 		semantic_error("unsupported init declaration", n);
 	}
-	if (k && v)
+
+	if (k && v) {
 		symbol_insert(k, v, n, NULL);
-	else
+	} else {
 		semantic_error("failed to get init declarator symbol", n);
+	}
 }
 
 /*
