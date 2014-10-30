@@ -53,6 +53,7 @@ struct typeinfo *symbol_search(char *k);
 void symbol_insert(char *k, struct typeinfo *v, struct tree *n, struct hasht *l);
 void symbol_free(struct hash_node *n);
 
+struct tree *get_production(struct tree *n, enum rule r);
 struct token *get_category(struct tree *n, int target, int before);
 struct token *get_category_(struct tree *n, int target, int before);
 char *get_identifier(struct tree *n);
@@ -339,6 +340,24 @@ void symbol_free(struct hash_node *n)
 {
 	free(n->key);
 	typeinfo_delete(n->value);
+}
+
+/*
+ * Given a tree node, get the first subtree with the production rule.
+ */
+struct tree *get_production(struct tree *n, enum rule r)
+{
+	if (tree_size(n) != 1 && get_rule(n) == r)
+		return n;
+
+	struct list_node *iter = list_head(n->children);
+	while (!list_end(iter)) {
+		struct tree *t = get_production(iter->data, r);
+		if (t)
+			return t;
+		iter = iter->next;
+	}
+	return NULL;
 }
 
 /*
