@@ -875,7 +875,11 @@ void handle_init(struct typeinfo *v, struct tree *n)
 	case DIRECT_DECL3: { /* class constructor */
 		char *c = get_class(n);
 		size_t len = strlen(c) + strlen("_ctor") + 1;
-		k = realloc(k, len);
+		char *tmp = realloc(k, len);
+		if (tmp == NULL)
+			free(k);
+		else
+			k = tmp;
 		snprintf(k, len, "%s_ctor", get_class(n));
 
 		v->base = CLASS_T;
