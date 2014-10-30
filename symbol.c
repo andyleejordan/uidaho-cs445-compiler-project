@@ -814,7 +814,7 @@ bool typeinfo_compare(struct typeinfo *a, struct typeinfo *b)
 		if (!typeinfo_compare(a->array.type, b->array.type))
 			return false;
 
-		if (a->array.size != b->array.size)
+		if (a->array.size != 0 && a->array.size != b->array.size)
 			return false;
 
 		return true;
