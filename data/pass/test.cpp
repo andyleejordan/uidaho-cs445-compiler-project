@@ -11,6 +11,8 @@
 #include <iostream>
 #include <string>
 
+#include "./test.h"
+
 using namespace std;
 
 class TestClass {
@@ -24,6 +26,12 @@ private:
 
 int main(int argc, char *argv[])
 {
+	do {
+		/* skip first argument */
+		--argc;
+		++argv;
+	} while (argc > 0);
+
 	/*
 	 * This
 	 * is
@@ -33,10 +41,28 @@ int main(int argc, char *argv[])
 	 * comment
 	 */
 
+	test mytest;
+	mytest.data = 42;
+
 	TestClass *myclass = new TestClass(2, 23.2);
 
+	// the /* c */ is a char
+	char c = 'C';
+	char newline = '\n';
+	char backslash = '\\';
+	char tick = '\'';
+	char *loremipsum = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque tincidunt id velit nec laoreet. Maecenas feugiat cursus finibus. Ut convallis volutpat urna, nec cursus nisl. Nullam malesuada sapien et maximus ultricies. Suspendisse ut justo dui. Nulla bibendum id turpis sed lobortis. Sed vitae turpis vitae arcu pulvinar aliquet. Nam a faucibus mi. Integer rutrum mattis nisl, facilisis pharetra lorem dapibus finibus. Aenean eget lacus non augue faucibus lobortis et a sapien. Duis eleifend maximus cras amet.";
+	char *nullsucks = "A string with \0 i.e. escaped null (\0) a couple times";
+
+	switch (c) {
+	case 'C': {
+		break;
+	}
+	default:
+		break;
+	}
+
 	bool is = false;
-	char character = 'A';
 	short quick = 2;
 	long big = 123234;
 	double pi = 3.14159;

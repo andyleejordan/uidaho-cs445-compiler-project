@@ -1,6 +1,8 @@
 #include "other/stuff.h"
 
-struct simple {
-	/* thing to be included */
-	int uselessdata;
+struct test
+{
+	test *next;
+	test *prev;
+	int data;
 };

@@ -31,7 +31,7 @@ SRCS = main.c symbol.c token.c rules.c \
 	list.c tree.c hasht.c lookup3.c \
 	lex.yy.c parser.tab.c
 OBJS = $(SRCS:.c=.o)
-TEST_DATA = data/pass/test.c data/pass/test.cpp
+TEST_DATA = data/pass/test.cpp
 
 # targets
 .PHONY: all test smoke dist clean distclean
