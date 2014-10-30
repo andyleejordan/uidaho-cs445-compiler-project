@@ -754,6 +754,34 @@ struct typeinfo *type_check(struct tree *n)
 		   private if v belongs to class). */
 		return NULL;
 	}
+	case UNARY_EXPR4: {
+		fprintf(stderr, "case dereference operator\n");
+		char *k = get_identifier(n);
+
+		struct typeinfo *type = symbol_search(k);
+		if (type == NULL)
+			semantic_error("undeclared variable", n);
+		if (!type->pointer)
+			semantic_error("can't dereference non-pointer", n);
+
+		struct typeinfo *copy = typeinfo_copy(type);
+		copy->pointer = false;
+		return copy;
+	}
+	case UNARY_EXPR5: {
+		fprintf(stderr, "case address operator\n");
+		char *k = get_identifier(n);
+		struct typeinfo *type = symbol_search(k);
+
+		if (type == NULL)
+			semantic_error("undeclared variable", n);
+		if (type->pointer)
+			semantic_error("double pointers unsupported in 120++", n);
+
+		struct typeinfo *copy = typeinfo_copy(type);
+		copy->pointer = true;
+		return copy;
+	}
 	case FUNCTION_DEF2: {
 		fprintf(stderr, "case function definition, recurse!\n");
 		size_t scopes = list_size(yyscopes);
