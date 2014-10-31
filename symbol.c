@@ -243,7 +243,7 @@ struct hasht *symbol_populate(struct tree *syntax)
 
 	/* handle standard libraries */
 	if (usingstd) {
-		if (fstream) {
+		if (fstream || iostream) { /* iostream includes fstream */
 			struct typeinfo *ifstream = malloc(sizeof(*ifstream));
 			ifstream->base = CLASS_T;
 			ifstream->class.type = "std::ifstream";
@@ -652,7 +652,7 @@ struct typeinfo *type_check(struct tree *n)
 			fprintf(stderr, "CHECK: initializer %s at depth %zu\n", k, list_size(yyscopes));
 			return l;
 		} else if (l->base == CLASS_T
-		           && strcmp(l->class.type, "std::string")
+		           && (strcmp(l->class.type, "string") == 0)
 		           && r->base == CHAR_T && r->pointer) {
 			fprintf(stderr, "CHECK: std::string initialized with string literal\n");
 			return l;
