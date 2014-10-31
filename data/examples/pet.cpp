@@ -40,14 +40,15 @@ void pet::save(){
     string filename;
     // create a filename from the name and type of pet
     // creates a unique filename for 'each' pet
-    filename = name+type_of_pet+".pet";
-    outfile.open(filename.c_str());
-    outfile << name << " ";
-    outfile << type_of_pet << " ";
-    outfile << health << " ";
-    outfile << happy  << " ";
-    outfile << hunger << " ";
-    outfile.close();
+
+    // filename = name+type_of_pet+".pet";
+    // outfile.open(filename.c_str());
+    // outfile << name << " ";
+    // outfile << type_of_pet << " ";
+    // outfile << health << " ";
+    // outfile << happy  << " ";
+    // outfile << hunger << " ";
+    // outfile.close();
 }
 
 void pet::load(){
@@ -55,14 +56,14 @@ void pet::load(){
     string filename;
     cout << "Please enter the filename.";
     cout << "(Format is NameType.pet)";
-    cin >> filename;
-    inputfile.open(filename.c_str());
-    inputfile >> name;
-    inputfile >> type_of_pet;
-    inputfile >> health;
-    inputfile >> happy;
-    inputfile >> hunger;
-    inputfile.close();
+    // cin >> filename;
+    // inputfile.open(filename.c_str());
+    // inputfile >> name;
+    // inputfile >> type_of_pet;
+    // inputfile >> health;
+    // inputfile >> happy;
+    // inputfile >> hunger;
+    // inputfile.close();
 }
 
 void pet::play_fetch(){
@@ -92,10 +93,3 @@ pet::pet() {
     health = 50;
     name = "John Doe";
 }
-
-pet::pet(const pet& orig) {
-}
-
-pet::~pet() {
-}
-

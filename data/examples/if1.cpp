@@ -3,7 +3,7 @@ using namespace std;
 
 int main()
 {
-   double d = 0.0;
+   int d = 0;
    d++;
    cout << d << endl;
 }

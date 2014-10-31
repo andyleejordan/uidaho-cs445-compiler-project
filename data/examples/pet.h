@@ -10,8 +10,6 @@ using namespace std;
 class pet {
 public:
     pet();
-    pet(const pet& orig);
-    ~pet();
     void print(int);
     void set_type(string);
     void set_name(string);
