@@ -301,6 +301,15 @@ void symbol_insert(char *k, struct typeinfo *v, struct tree *n, struct hasht *l)
 		fprintf(stderr, "symbol_insert(): type for %s was null\n", k);
 		return;
 	}
+
+	struct typeinfo *e = NULL;
+	if (l != NULL && v->base == FUNCTION_T)
+		/* search for function declaration to define */
+		e = symbol_search(k);
+	else
+		/* search just current scope */
+		e = hasht_search(list_tail(yyscopes)->data, k);
+
 	if (e == NULL) {
 		fprintf(stderr, "insert at depth %zu: ", list_size(yyscopes));
 		print_typeinfo(stderr, k, v);
