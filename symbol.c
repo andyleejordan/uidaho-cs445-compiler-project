@@ -1116,8 +1116,12 @@ struct typeinfo *type_check(struct tree *n)
 			/* recurse on return value */
 			ret = type_check(tree_index(jump, 1));
 
-		if (!typeinfo_compare(ret, typeinfo_return(function)))
+		if (!typeinfo_compare(ret, typeinfo_return(function))
+		    /* accept void return for 0 if expecting int */
+		    && (typeinfo_compare(ret, &int_type)
+		        && typeinfo_compare(typeinfo_return(function), &void_type))) {
 			semantic_error("return value of wrong type for function", n);
+		}
 
 		fprintf(stderr, "CHECK: function %s return\n", k);
 
