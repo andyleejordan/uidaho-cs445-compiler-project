@@ -990,6 +990,36 @@ struct typeinfo *type_check(struct tree *n)
 		}
 		}
 	}
+	case SHIFT_EXPR2: {
+		/* << only used for puts-to IO */
+		if (!(usingstd && (fstream || iostream)))
+			semantic_error("<< can only be used with std streams in 120++", n);
+
+		/* recurse on items of shift expression */
+		struct list_node *iter = list_head(n->children);
+		while (!list_end(iter)) {
+			struct typeinfo *t = type_check(iter->data);
+
+			/* ensure leftmost child is of type std::ofstream */
+			if (iter == list_head(n->children)) {
+				if (!(t->base == CLASS_T && (strcmp(t->class.type, "std::ofstream") == 0))) {
+					semantic_error("leftmost << operand not a std::ofstream", iter->data);
+				}
+			} else if (!(typeinfo_compare(t, &int_type)
+			             || typeinfo_compare(t, &double_type)
+			             || typeinfo_compare(t, &bool_type)
+			             || typeinfo_compare(t, &char_type)
+			             || typeinfo_compare(t, &string_type)
+			             || (t->base == CLASS_T && (strcmp(t->class.type, "string") == 0)))) {
+				semantic_error("a << operand is not an appropriate type", iter->data);
+			}
+			iter = iter->next;
+		}
+
+		/* shift expression itself returns ofstream */
+		fprintf(stderr, "CHECK: <<\n");
+		return symbol_search("ofstream");
+	}
 	case FUNCTION_DEF2: {
 		/* manage scopes for function recursion */
 		size_t scopes = list_size(yyscopes);

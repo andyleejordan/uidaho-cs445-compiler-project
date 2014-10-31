@@ -276,8 +276,8 @@ additive_expression:
 
 shift_expression:
         additive_expression                       { $$ = $1; }
-        | shift_expression SL additive_expression { $$ = P(SHIFT_EXPR2, 3, $1, $2, $3); }
-        | shift_expression SR additive_expression { $$ = P(SHIFT_EXPR3, 3, $1, $2, $3); }
+        | shift_expression SL additive_expression { $$ = P(SHIFT_EXPR2, 2, $1, $3); }
+        | shift_expression SR additive_expression { $$ = P(SHIFT_EXPR3, 2, $1, $3); }
         ;
 
 relational_expression:
