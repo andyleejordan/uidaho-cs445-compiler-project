@@ -713,7 +713,6 @@ struct typeinfo *type_check(struct tree *n)
 	}
 	case NEW_EXPR1: {
 		/* new operator */
-		/* TODO: if class, check constructor */
 		struct tree *type_spec = get_production(n, TYPE_SPEC_SEQ);
 		if (type_spec == NULL)
 			semantic_error("couldn't get type_spec for new", n);
@@ -1350,7 +1349,7 @@ void handle_init_list(struct typeinfo *v, struct tree *n)
 		} else {
 			semantic_error("unrecognized class access specifier", n);
 		}
-		handle_init_list(typeinfo_new(n), tree_index(n, 1));
+		handle_init_list(v, tree_index(n, 1));
 		scope_pop();
 	} else if (r == MEMBER_DECL1) {
 		/* recurse to end of class declaration */
