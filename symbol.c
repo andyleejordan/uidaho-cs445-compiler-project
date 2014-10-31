@@ -676,15 +676,18 @@ struct typeinfo *type_check(struct tree *n)
 			semantic_error("initializer list type was not an array", n);
 
 		struct list_node *iter = list_head(n->children);
+		size_t items = 0;
 		while (!list_end(iter)) {
+			++items;
 			struct typeinfo *elem = type_check(iter->data);
-			if (!typeinfo_compare(l->array.type, elem)) {
+			if (!typeinfo_compare(l->array.type, elem))
 				semantic_error("initializer item type was not array type", n);
+			if (items > l->array.size)
+				semantic_error("too many items in initializer list", n);
 			iter = iter->next;
-			}
+		}
 		fprintf(stderr, "CHECK: initializer list matched\n");
 		return l;
-		}
 	}
 	case NEW_EXPR1: {
 		/* new operator */
