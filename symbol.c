@@ -62,6 +62,7 @@ int get_array(struct tree *n);
 char *get_class(struct tree *n);
 bool get_public(struct tree *n);
 bool get_private(struct tree *n);
+char *class_member(struct tree *n);
 
 struct typeinfo *type_check(struct tree *n);
 struct typeinfo *typeinfo_new(struct tree *n);
@@ -449,6 +450,18 @@ bool get_public(struct tree *n)
 bool get_private(struct tree *n)
 {
 	return get_category(n, PRIVATE, PUBLIC);
+}
+
+/*
+ * Returns class name only if like class::something
+ */
+char *class_member(struct tree *n)
+{
+	struct tree *prod = NULL;
+	if ((prod = get_production(n, DIRECT_DECL4))     /* class::ident */
+	    || (prod = get_production(n, DIRECT_DECL5))) /* class::class */
+		return get_class(prod);
+	return NULL;
 }
 
 /*
@@ -1068,7 +1081,7 @@ struct typeinfo *type_check(struct tree *n)
 		size_t scopes = list_size(yyscopes);
 
 		/* retrieve class scopes */
-		struct typeinfo *class = symbol_search(get_class(tree_index(n, 1)));
+		struct typeinfo *class = symbol_search(class_member(n));
 		if (class) {
 			scope_push(class->class.public);
 			scope_push(class->class.private);
@@ -1347,7 +1360,8 @@ void handle_function(struct typeinfo *t, struct tree *n)
 	struct typeinfo *v = typeinfo_new_function(n, t, true);
 
 	size_t scopes = list_size(yyscopes);
-	struct typeinfo *class = symbol_search(get_class(tree_index(n, 1)));
+
+	struct typeinfo *class = symbol_search(class_member(n));
 	if (class) {
 		scope_push(class->class.public);
 		scope_push(class->class.private);
