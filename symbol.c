@@ -907,18 +907,37 @@ struct typeinfo *type_check(struct tree *n)
 	case FUNCTION_DEF2: {
 		/* manage scopes for function recursion */
 		size_t scopes = list_size(yyscopes);
+
+		/* retrieve class scopes */
 		struct typeinfo *class = symbol_search(get_class(tree_index(n, 1)));
 		if (class) {
 			scope_push(class->class.public);
 			scope_push(class->class.private);
 		}
 
-		struct typeinfo *function = symbol_search(get_identifier(n));
+		/* retrieve function scope */
+		char *k = get_identifier(n);
+		struct typeinfo *function = symbol_search(k);
 		if (function == NULL)
 			semantic_error("undeclared function", n);
+		scope_push(function->function.symbols);
+
+		/* check return type of function */
+		struct tree *jump = get_production(n, JUMP3);
+		struct typeinfo *ret = NULL;
+		if (jump == NULL || tree_size(jump) == 2) /* no or empty return */
+			ret = &void_type;
+		else
+			ret = type_check(tree_index(jump, 1));
+		if (ret == NULL)
+			semantic_error("couldn't get return type for function", n);
+
+		if (!typeinfo_compare(ret, typeinfo_return(function)))
+			semantic_error("return value of wrong type for function", n);
+
+		fprintf(stderr, "CHECK: function %s return\n", k);
 
 		/* recursive type check of children while in subscope(s) */
-		scope_push(function->function.symbols);
 		struct list_node *iter = list_head(n->children);
 		while (!list_end(iter)) {
 			type_check(iter->data);
