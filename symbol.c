@@ -725,14 +725,28 @@ struct typeinfo *type_check(struct tree *n)
 		fprintf(stderr, "CHECK: equality\n");
 		return &bool_type;
 	}
+	case REL_EXPR2: /* < */
+	case REL_EXPR3: /* > */
+	case REL_EXPR4: /* <= */
+	case REL_EXPR5: /* >= */ {
+		struct typeinfo *l = type_check(tree_index(n, 0));
+		if (!(typeinfo_compare(l, &int_type) || !typeinfo_compare(l, &double_type)))
+			semantic_error("left operand not an int or double", n);
+
+		struct typeinfo *r = type_check(tree_index(n, 2));
+		if (!(typeinfo_compare(r, &int_type) || !typeinfo_compare(r, &double_type)))
+			semantic_error("right operand not an int or double", n);
+
+		if (!typeinfo_compare(l, r))
+			semantic_error("operands don't match", n);
+
+		fprintf(stderr, "CHECK: comparison\n");
+		return &bool_type;
+	}
 	case ADD_EXPR2:  /* + */
 	case ADD_EXPR3:  /* - */
 	case MULT_EXPR2: /* * */
-	case MULT_EXPR3: /* / */
-	case REL_EXPR2:  /* < */
-	case REL_EXPR3:  /* > */
-	case REL_EXPR4:  /* <= */
-	case REL_EXPR5:  /* >= */ {
+	case MULT_EXPR3: /* / */ {
 		struct typeinfo *l = type_check(tree_index(n, 0));
 		if (!(typeinfo_compare(l, &int_type) || !typeinfo_compare(l, &double_type)))
 			semantic_error("left operand not an int or double", n);
