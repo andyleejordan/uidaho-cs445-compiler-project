@@ -26,12 +26,6 @@ private:
 
 int main(int argc, char *argv[])
 {
-	do {
-		/* skip first argument */
-		--argc;
-		++argv;
-	} while (argc > 0);
-
 	/*
 	 * This
 	 * is

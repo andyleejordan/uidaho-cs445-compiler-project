@@ -1,7 +1,8 @@
 #include "other/stuff.h"
 
-struct test
+class test
 {
+public:
 	test *next;
 	test *prev;
 	int data;
