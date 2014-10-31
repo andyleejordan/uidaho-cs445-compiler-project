@@ -771,6 +771,11 @@ struct typeinfo *type_check(struct tree *n)
 		fprintf(stderr, "CHECK: modulo arithmetic\n");
 		return l;
 	}
+	case AND_EXPR2:
+	case XOR_EXPR2:
+	case OR_EXPR2: {
+		semantic_error("unsupported bitwise operator", n);
+	}
 	case POSTFIX_EXPR2: {
 		/* array indexing: check identifier is an array and index is an int */
 		char *k = get_identifier(n);
