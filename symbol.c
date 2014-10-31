@@ -712,6 +712,32 @@ struct typeinfo *type_check(struct tree *n)
 		if (!typeinfo_compare(l, r))
 			semantic_error("assignment types don't match", n);
 
+		switch (get_token(n, 1)->category) {
+		case ADDEQ:
+		case SUBEQ:
+		case MULEQ:
+		case DIVEQ: {
+			if (!(typeinfo_compare(l, &int_type) || typeinfo_compare(l, &double_type)))
+				semantic_error("left operand not an int or double", n);
+
+			if (!(typeinfo_compare(r, &int_type) || typeinfo_compare(r, &double_type)))
+				semantic_error("right operand not an int or double", n);
+			break;
+		}
+		case MODEQ: {
+			if (!typeinfo_compare(l, &int_type) || !typeinfo_compare(r, &int_type))
+				semantic_error("modulo operand not an integer", n);
+			break;
+		}
+		case SREQ:
+		case SLEQ:
+		case ANDEQ:
+		case XOREQ:
+		case OREQ: {
+			semantic_error("compound bitwise equality operator unsupported", n);
+		}
+		}
+
 		fprintf(stderr, "CHECK: assignment to %s\n", k);
 		return l;
 	}
