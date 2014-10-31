@@ -423,7 +423,7 @@ bool get_pointer(struct tree *n)
 int get_array(struct tree *n)
 {
 	if (get_category(n, '[', INTEGER)) {
-		struct token *t = get_category(n, INTEGER, -1);
+		struct token *t = get_category(n, INTEGER, ']');
 		return t ? t->ival : 0;
 	}
 	return -1;
@@ -1016,6 +1016,8 @@ void handle_init(struct typeinfo *v, struct tree *n)
 	}
 	case DIRECT_DECL6: { /* array with size */
 		v = typeinfo_new_array(n, v);
+		if (v->array.size < 1)
+			semantic_error("bad array initializer size", n);
 		break;
 	}
 	case DIRECT_DECL2: { /* function declaration */
