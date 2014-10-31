@@ -42,6 +42,7 @@ char error_buf[256];
 
 /* local functions */
 enum type map_type(enum yytokentype t);
+void set_type_comparators();
 char *print_basetype(struct typeinfo *t);
 void print_typeinfo(FILE *stream, char *k, struct typeinfo *v);
 
@@ -90,6 +91,36 @@ struct typeinfo bool_type;
 struct typeinfo void_type;
 struct typeinfo class_type;
 struct typeinfo unknown_type;
+
+/*
+ * Initialize comparator types
+ */
+void set_type_comparators()
+{
+	int_type.base = INT_T;
+	int_type.pointer = false;
+
+	double_type.base = DOUBLE_T;
+	double_type.pointer = false;
+
+	char_type.base = CHAR_T;
+	char_type.pointer = false;
+
+	string_type.base = CHAR_T;
+	string_type.pointer = true; /* a C string is a char* */
+
+	bool_type.base = BOOL_T;
+	bool_type.pointer = false;
+
+	void_type.base = VOID_T;
+	void_type.pointer = false;
+
+	class_type.base = CLASS_T;
+	class_type.pointer = false;
+
+	unknown_type.base = UNKNOWN_T;
+	unknown_type.pointer = false;
+}
 
 /*
  * Maps a Bison type to a 120++ type.
@@ -218,6 +249,8 @@ void print_typeinfo(FILE *stream, char *k, struct typeinfo *v)
  */
 struct hasht *symbol_populate(struct tree *syntax)
 {
+	set_type_comparators();
+
 	struct hasht *global = hasht_new(32, true, NULL, NULL, &symbol_free);
 
 	/* initialize scope stack */
@@ -571,30 +604,8 @@ struct typeinfo *typeinfo_return(struct typeinfo *t)
  * Get typeinfo for identifier or literal value.
  */
 struct typeinfo *get_typeinfo(struct tree *n) {
-	/* initalize/reset base type comparators */
-	int_type.base = INT_T;
-	int_type.pointer = false;
-
-	double_type.base = DOUBLE_T;
-	double_type.pointer = false;
-
-	char_type.base = CHAR_T;
-	char_type.pointer = false;
-
-	string_type.base = CHAR_T;
-	string_type.pointer = true; /* a C string is a char* */
-
-	bool_type.base = BOOL_T;
-	bool_type.pointer = false;
-
-	void_type.base = VOID_T;
-	void_type.pointer = false;
-
-	class_type.base = CLASS_T;
-	class_type.pointer = false;
-
-	unknown_type.base = UNKNOWN_T;
-	unknown_type.pointer = false;
+	/* reset base type comparators */
+	set_type_comparators();
 
 	/* attempt to get identifier or class */
 	char *k = get_identifier(n);
