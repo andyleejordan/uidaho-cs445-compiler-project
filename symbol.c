@@ -798,10 +798,11 @@ struct typeinfo *type_check(struct tree *n)
 
 		struct typeinfo *l = type_check(tree_index(n, 0));
 		struct typeinfo *r = type_check(tree_index(n, 2));
-		if (!typeinfo_compare(l, r))
-			semantic_error("assignment types don't match", n);
 
 		switch (get_token(n, 1)->category) {
+		case '=': {
+			break;
+		}
 		case ADDEQ:
 		case SUBEQ:
 		case MULEQ:
@@ -827,8 +828,17 @@ struct typeinfo *type_check(struct tree *n)
 		}
 		}
 
-		fprintf(stderr, "CHECK: assignment to %s\n", k);
-		return l;
+		if (typeinfo_compare(l, r)) {
+			fprintf(stderr, "CHECK: assignment to %s\n", k);
+			return l;
+		} else if (l->base == CLASS_T
+		           && (strcmp(l->class.type, "string") == 0)
+		           && r->base == CHAR_T && r->pointer) {
+			fprintf(stderr, "CHECK: std::string assigned with string literal\n");
+			return l;
+		} else {
+			semantic_error("assignment types don't match", n);
+		}
 	}
 	case EQUAL_EXPR2:
 	case EQUAL_EXPR3: {
