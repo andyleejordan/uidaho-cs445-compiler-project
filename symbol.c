@@ -696,8 +696,51 @@ struct typeinfo *type_check(struct tree *n)
 		if (type_spec == NULL)
 			semantic_error("couldn't get type_spec for new", n);
 
-		struct typeinfo *type = get_typeinfo(tree_index(type_spec, 0));
+		struct typeinfo *type = typeinfo_copy(get_typeinfo(tree_index(type_spec, 0)));
 		type->pointer = true;
+
+		if (type->base == CLASS_T) {
+			size_t scopes = list_size(yyscopes);
+
+			char *c = type->class.type;
+			struct typeinfo *class = symbol_search(c);
+			if (class) {
+				scope_push(class->class.public);
+				scope_push(class->class.private);
+			}
+
+			size_t len = strlen(c) + strlen("_ctor") + 1;
+			char *tmp = calloc(len, sizeof(*tmp));
+			snprintf(tmp, len, "%s_ctor", c);
+			struct typeinfo *l = symbol_search(tmp);
+			if (l == NULL)
+				semantic_error("couldn't find class constructor", n);
+
+			struct typeinfo *r = typeinfo_copy(l);
+			r->function.parameters = list_new(NULL, NULL);
+			struct tree *expr_list = get_production(n, EXPR_LIST);
+			if (expr_list) {
+				struct list_node *iter = list_head(expr_list->children);
+				while (!list_end(iter)) {
+					struct typeinfo *t = type_check(iter->data);
+					if (t == NULL)
+						semantic_error("couldn't get type for parameter", iter->data);
+					list_push_back(r->function.parameters, t);
+					iter = iter->next;
+				}
+			}
+
+			if (!typeinfo_compare(l, r))
+				semantic_error("ctor invocation did not match signature", n);
+
+			list_free(r->function.parameters);
+			free(r);
+
+			/* pop newly pushed scopes */
+			while (list_size(yyscopes) != scopes)
+				scope_pop();
+			fprintf(stderr, "CHECK: ctor invocation\n");
+		}
 
 		return type;
 	}
