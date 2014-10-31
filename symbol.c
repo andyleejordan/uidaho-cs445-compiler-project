@@ -635,74 +635,72 @@ struct typeinfo *type_check(struct tree *n)
 
 	switch (get_rule(n)) {
 	case INITIALIZER: {
-		fprintf(stderr, "case inititalizer at depth %zu\n", list_size(yyscopes));
+		/* initialization of simple variable */
 		char *k = get_identifier(n->parent);
-		fprintf(stderr, "init identifier is %s\n", k);
 		if (k == NULL)
 			semantic_error("couldn't get identifier in init", n);
 
 		struct typeinfo *l = symbol_search(k);
 		if (l == NULL)
-			semantic_error("couldn't get type for identifier in init", n);
+			semantic_error("couldn't get symbol for identifier in init", n);
 
 		struct typeinfo *r = type_check(tree_index(n, 0));
 		if (r == NULL)
 			semantic_error("variable undeclared", n);
 
 		if (typeinfo_compare(l, r)) {
-			fprintf(stderr, "initializer matched\n");
+			fprintf(stderr, "CHECK: initializer %s at depth %zu\n", k, list_size(yyscopes));
 			return l;
 		} else if (l->base == CLASS_T
 		           && strcmp(l->class.type, "std::string")
 		           && r->base == CHAR_T && r->pointer) {
-			fprintf(stderr, "std:string initialized with string literal\n");
+			fprintf(stderr, "CHECK: std::string initialized with string literal\n");
 			return l;
 		} else {
-			print_typeinfo(stderr, k, l);
-			print_typeinfo(stderr, k, r);
-			semantic_error("type error in initializer", n);
+			sprintf(error_buf, "could not initialize %s with given type", k);
+			semantic_error(error_buf, n);
 		}
 	}
 	case INIT_LIST2: {
-		fprintf(stderr, "case init list for array\n");
 		/* arrays get lists of initializers, check that each
-		   member's type matches the array's element type */
+		   type matches the array's element type */
 		char *k = get_identifier(n->parent->parent);
 		if (k == NULL)
-			semantic_error("couldn't get ident for init list", n);
+			semantic_error("couldn't get identifier in init list", n);
 
 		struct typeinfo *l = symbol_search(k);
 		if (l == NULL)
-			semantic_error("couldn't get type for init list", n);
+			semantic_error("couldn't get type in init list", n);
 
 		if (l->base != ARRAY_T)
-			semantic_error("init list type was not an array", n);
+			semantic_error("initializer list type was not an array", n);
 
 		struct list_node *iter = list_head(n->children);
 		while (!list_end(iter)) {
 			struct typeinfo *elem = type_check(iter->data);
 			if (!typeinfo_compare(l->array.type, elem)) {
-				semantic_error("init list item didn't match array type", n);
+				semantic_error("initializer item type was not array type", n);
 			iter = iter->next;
 			}
-		fprintf(stderr, "init list matched\n");
+		fprintf(stderr, "CHECK: initializer list matched\n");
 		return l;
 		}
 	}
 	case NEW_EXPR1: {
-		fprintf(stderr, "case new\n");
-		/* new: recurse on leaf of n1; if class, check constructor */
+		/* new operator */
+		/* TODO: if class, check constructor */
 		struct tree *type_spec = get_production(n, TYPE_SPEC_SEQ);
 		if (type_spec == NULL)
 			semantic_error("couldn't get type_spec for new", n);
+
 		struct typeinfo *type = get_typeinfo(tree_index(type_spec, 0));
 		type->pointer = true;
+
 		return type;
 	}
 	case POSTFIX_EXPR2: {
-		/* array calls: check n0 (ident) is array, n2 is an int */
+		/* array indexing: check identifier is an array and index is an int */
 		char *k = get_identifier(n);
-		fprintf(stderr, "case %s[index]\n", k);
 
 		struct typeinfo *l = symbol_search(k);
 		if (l == NULL) {
@@ -719,14 +717,13 @@ struct typeinfo *type_check(struct tree *n)
 		if (!typeinfo_compare(&int_type, r))
 			semantic_error("array index not an integer", n);
 
+		fprintf(stderr, "CHECK: %s[index]\n", k);
 		return l->array.type;
 	}
 	case POSTFIX_EXPR3: {
-		/* seems to be function calls: check function return
-		   type against v; build typeinfo list from EXPR_LIST
-		   if it exists, recursing on each child */
+		/* function invocation: build typeinfo list from
+		   EXPR_LIST, recursing on each item */
 		char *k = get_identifier(n);
-		fprintf(stderr, "case function %s invocation\n", k);
 
 		struct typeinfo *l = symbol_search(k);
 		if (l == NULL) {
@@ -741,6 +738,8 @@ struct typeinfo *type_check(struct tree *n)
 			struct list_node *iter = list_head(expr_list->children);
 			while (!list_end(iter)) {
 				struct typeinfo *t = type_check(iter->data);
+				if (t == NULL)
+					semantic_error("couldn't get type for parameter", iter->data);
 				list_push_back(r->function.parameters, t);
 				iter = iter->next;
 			}
@@ -749,12 +748,13 @@ struct typeinfo *type_check(struct tree *n)
 		if (!typeinfo_compare(l, r)) {
 			print_typeinfo(stderr, k, l);
 			print_typeinfo(stderr, k, r);
-			semantic_error("function call did not match signature", n);
+			semantic_error("function invocation did not match signature", n);
 		}
 
 		list_free(r->function.parameters);
 		free(r);
 
+		fprintf(stderr, "CHECK: function %s invocation\n", k);
 		return typeinfo_return(l);
 	}
 	case POSTFIX_EXPR6: {
@@ -772,31 +772,35 @@ struct typeinfo *type_check(struct tree *n)
 		return NULL;
 	}
 	case UNARY_EXPR4: {
-		fprintf(stderr, "case dereference operator\n");
+		/* dereference operator */
 		char *k = get_identifier(n);
 
 		struct typeinfo *type = symbol_search(k);
 		if (type == NULL)
 			semantic_error("undeclared variable", n);
+
 		if (!type->pointer)
 			semantic_error("can't dereference non-pointer", n);
 
 		struct typeinfo *copy = typeinfo_copy(type);
 		copy->pointer = false;
+
 		return copy;
 	}
 	case UNARY_EXPR5: {
-		fprintf(stderr, "case address operator\n");
+		/* address operator */
 		char *k = get_identifier(n);
-		struct typeinfo *type = symbol_search(k);
 
+		struct typeinfo *type = symbol_search(k);
 		if (type == NULL)
 			semantic_error("undeclared variable", n);
+
 		if (type->pointer)
 			semantic_error("double pointers unsupported in 120++", n);
 
 		struct typeinfo *copy = typeinfo_copy(type);
 		copy->pointer = true;
+
 		return copy;
 	}
 	case FUNCTION_DEF2: {
