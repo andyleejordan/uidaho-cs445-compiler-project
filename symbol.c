@@ -890,6 +890,24 @@ struct typeinfo *type_check(struct tree *n)
 		fprintf(stderr, "CHECK: %s->%s\n", k, f);
 		return typeinfo_return(r);
 	}
+	case POSTFIX_EXPR9:  /* i++ */
+	case POSTFIX_EXPR10: /* i-- */ {
+		struct typeinfo *t = type_check(tree_index(n, 0));
+		if (!typeinfo_compare(t, &int_type))
+			semantic_error("operand to postfix ++/-- not an int", n);
+
+		fprintf(stderr, "CHECK: postfix ++/--\n");
+		return t;
+	}
+	case UNARY_EXPR2: /* ++i */
+	case UNARY_EXPR3: /* --i */ {
+		struct typeinfo *t = type_check(tree_index(n, 1));
+		if (!typeinfo_compare(t, &int_type))
+			semantic_error("operand to prefix ++/-- not an int", n);
+
+		fprintf(stderr, "CHECK: prefix ++/--\n");
+		return t;
+	}
 	case UNARY_EXPR4: {
 		/* dereference operator */
 		char *k = get_identifier(n);
