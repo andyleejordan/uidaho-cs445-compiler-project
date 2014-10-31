@@ -1443,8 +1443,22 @@ void handle_class(struct typeinfo *t, struct tree *n)
 {
 	char *k = get_identifier(n);
 	t->base = CLASS_T; /* class definition is still a class */
-	symbol_insert(k, t, n, NULL);
 	handle_init_list(t, tree_index(n, 1));
+
+	if (t->class.public == NULL)
+		t->class.public = hasht_new(2, true, NULL, NULL, &symbol_free);
+
+	if (hasht_search(t->class.public, k) == NULL) {
+		struct typeinfo *ret = typeinfo_new(n);
+		ret->base = CLASS_T;
+		ret->class.type = k;
+		struct typeinfo *ctor = typeinfo_new_function(n, ret, false);
+		scope_push(t->class.public);
+		symbol_insert(k, ctor, NULL, NULL);
+		scope_pop();
+	}
+
+	symbol_insert(k, t, n, NULL);
 }
 
 /*
