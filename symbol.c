@@ -722,10 +722,7 @@ struct typeinfo *type_check(struct tree *n)
 				scope_push(class->class.private);
 			}
 
-			size_t len = strlen(c) + strlen("_ctor") + 1;
-			char *tmp = calloc(len, sizeof(*tmp));
-			snprintf(tmp, len, "%s_ctor", c);
-			struct typeinfo *l = symbol_search(tmp);
+			struct typeinfo *l = symbol_search(c);
 			if (l == NULL)
 				semantic_error("couldn't find class constructor", n);
 
@@ -1289,14 +1286,7 @@ void handle_init(struct typeinfo *v, struct tree *n)
 		break;
 	}
 	case DIRECT_DECL3: { /* class constructor */
-		char *c = get_class(n);
-		size_t len = strlen(c) + strlen("_ctor") + 1;
-		char *tmp = realloc(k, len);
-		if (tmp == NULL)
-			free(k);
-		else
-			k = tmp;
-		snprintf(k, len, "%s_ctor", get_class(n));
+		k = get_class(n);
 
 		v->base = CLASS_T;
 		v->class.type = get_class(n);
