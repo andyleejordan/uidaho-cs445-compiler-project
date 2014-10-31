@@ -1379,7 +1379,7 @@ void handle_function(struct typeinfo *t, struct tree *n, char *k)
 
 	/* recurse on children while in subscope */
 	scope_push(v->function.symbols);
-	tree_preorder(tree_index(n, 2), 0, &handle_node);
+	tree_preorder(get_production(n, COMPOUND_STATEMENT1), 0, &handle_node);
 
 	/* pop newly pushed scopes */
 	while (list_size(yyscopes) != scopes)
