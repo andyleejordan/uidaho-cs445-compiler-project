@@ -470,8 +470,11 @@ char *class_member(struct tree *n)
 struct typeinfo *typeinfo_new(struct tree *n)
 {
 	struct typeinfo *t = calloc(1, sizeof(*t));
-	t->base = map_type(get_token(n, 0)->category);
+	t->base = (get_rule(n) == FUNCTION_DEF1)
+		? CLASS_T /* constructor return type is always class */
+		: map_type(get_token(n, 0)->category); /* TODO: factor out dependency */
 	t->pointer = get_pointer(n);
+
 	if (t->base == CLASS_T)
 		t->class.type = get_class(n);
 
@@ -646,7 +649,8 @@ struct typeinfo *type_check(struct tree *n)
 	if (tree_size(n) == 1)
 		return get_typeinfo(n);
 
-	switch (get_rule(n)) {
+	enum rule production = get_rule(n);
+	switch (production) {
 	case INITIALIZER: {
 		/* initialization of simple variable */
 		char *k = get_identifier(n->parent);
@@ -1073,6 +1077,7 @@ struct typeinfo *type_check(struct tree *n)
 		fprintf(stderr, "CHECK: <<\n");
 		return symbol_search("ofstream");
 	}
+	case FUNCTION_DEF1:
 	case FUNCTION_DEF2: {
 		/* manage scopes for function recursion */
 		size_t scopes = list_size(yyscopes);
@@ -1085,7 +1090,9 @@ struct typeinfo *type_check(struct tree *n)
 		}
 
 		/* retrieve function scope */
-		char *k = get_identifier(n);
+		char *k = (production == FUNCTION_DEF1)
+			? get_class(n) /* ctor function name is class name */
+			: get_identifier(n);
 		struct typeinfo *function = symbol_search(k);
 		if (function == NULL)
 			semantic_error("undeclared function", n);
@@ -1094,12 +1101,15 @@ struct typeinfo *type_check(struct tree *n)
 		/* check return type of function */
 		struct tree *jump = get_production(n, JUMP3);
 		struct typeinfo *ret = NULL;
-		if (jump == NULL || tree_size(jump) == 2) /* no or empty return */
+		if (production == FUNCTION_DEF1)
+			/* constructor always returns class */
+			ret = typeinfo_return(function);
+		else if (jump == NULL || tree_size(jump) == 2)
+			/* no or empty return */
 			ret = &void_type;
 		else
+			/* recurse on return value */
 			ret = type_check(tree_index(jump, 1));
-		if (ret == NULL)
-			semantic_error("couldn't get return type for function", n);
 
 		if (!typeinfo_compare(ret, typeinfo_return(function)))
 			semantic_error("return value of wrong type for function", n);
