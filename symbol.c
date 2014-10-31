@@ -701,6 +701,19 @@ struct typeinfo *type_check(struct tree *n)
 
 		return type;
 	}
+	case ASSIGN_EXPR2: {
+		/* assignment left = right */
+		struct typeinfo *l = type_check(tree_index(n, 0)); /* TODO: ensure assignable */
+		struct typeinfo *r = type_check(tree_index(n, 2));
+		if (!typeinfo_compare(l, r)) {
+			print_typeinfo(stderr, "", l);
+			print_typeinfo(stderr, "", r);
+			semantic_error("assignment types don't match", n);
+		}
+
+		fprintf(stderr, "CHECK: assignment\n");
+		return l;
+	}
 	case POSTFIX_EXPR2: {
 		/* array indexing: check identifier is an array and index is an int */
 		char *k = get_identifier(n);
