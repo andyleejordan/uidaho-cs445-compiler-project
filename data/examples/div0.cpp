@@ -12,7 +12,7 @@ int main()
    int i, i2;
    cout << "enter a number: ";
    cin >> i;
-   i2 = 5.3 / i;
+   i2 = 5 / i;
    cout << i2 << endl;
    cout << "that's all folks" << endl;
 

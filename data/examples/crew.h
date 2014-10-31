@@ -4,10 +4,12 @@
 
 #include <string>
 
+using namespace std;
+
 class Crew {
 private:
   // properties
-  string name = "PlanetExpress";
+  string name;
   int thirst;			// Fry's thirst level
   int work;			// Leela's unfulfilled work orders
   int horde;			// Bender's horde of treasure

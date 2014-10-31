@@ -55,7 +55,7 @@ int main()
 //-------------- Functions -------------------
 double divide(double dividend, double divisor)
 {
-  if (divisor == 0)
+  if (divisor == 0.)
     return 0;			// avoids divide by zero errors
   else
     return (dividend / divisor);
