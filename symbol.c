@@ -1083,9 +1083,10 @@ void handle_init_list(struct typeinfo *v, struct tree *n)
 		/* recurse to end of class declaration */
 		handle_init_list(typeinfo_new(n), tree_index(n, 1));
 	} else {
-		/* process a single declaration */
-		v->pointer = get_pointer(n); /* for pointers in lists */
-		handle_init(v, n);
+		/* process a single declaration with copy of type */
+		struct typeinfo *c = typeinfo_copy(v);
+		c->pointer = get_pointer(n); /* for pointers in lists */
+		handle_init(c, n);
 	}
 }
 
