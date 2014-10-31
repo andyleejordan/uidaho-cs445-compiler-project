@@ -375,6 +375,9 @@ struct token *get_category(struct tree *n, int target, int before)
  */
 struct token *get_category_(struct tree *n, int target, int before)
 {
+	if (n == NULL)
+		return NULL;
+
 	if (tree_size(n) == 1) {
 		struct token *t = n->data;
 		if (t->category == target || t->category == before)
@@ -429,6 +432,9 @@ int get_array(struct tree *n)
  */
 char *get_class(struct tree *n)
 {
+	if (n == NULL)
+		return NULL;
+
 	struct token *t = get_category(n, CLASS_NAME, IDENTIFIER);
 	if (t)
 		return t->text;
@@ -640,6 +646,11 @@ struct typeinfo *get_typeinfo(struct tree *n) {
  */
 struct typeinfo *type_check(struct tree *n)
 {
+	if (n == NULL) {
+		fprintf(stderr, "type_check(): n was null\n");
+		return NULL;
+	}
+
 	if (tree_size(n) == 1)
 		return get_typeinfo(n);
 
