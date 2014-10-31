@@ -157,6 +157,10 @@ char *print_basetype(struct typeinfo *t)
  */
 void print_typeinfo(FILE *stream, char *k, struct typeinfo *v)
 {
+	if (v == NULL) {
+		fprintf(stderr, "print_typeinfo(): type for %s was null\n", k);
+		return;
+	}
 	switch (v->base) {
 	case INT_T:
 	case DOUBLE_T:
@@ -293,7 +297,10 @@ struct typeinfo *symbol_search(char *k)
  */
 void symbol_insert(char *k, struct typeinfo *v, struct tree *n, struct hasht *l)
 {
-	struct typeinfo *e = hasht_search(list_tail(yyscopes)->data, k);
+	if (v == NULL) {
+		fprintf(stderr, "symbol_insert(): type for %s was null\n", k);
+		return;
+	}
 	if (e == NULL) {
 		fprintf(stderr, "insert at depth %zu: ", list_size(yyscopes));
 		print_typeinfo(stderr, k, v);
