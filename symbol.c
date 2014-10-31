@@ -702,13 +702,17 @@ struct typeinfo *type_check(struct tree *n)
 		return type;
 	}
 	case ASSIGN_EXPR2: {
-		/* assignment left = right */
-		struct typeinfo *l = type_check(tree_index(n, 0)); /* TODO: ensure assignable */
+		/* assignment operator */
+		char *k = get_identifier(tree_index(n, 0));
+		if (k == NULL)
+			semantic_error("left assignment operand not assignable", n);
+
+		struct typeinfo *l = type_check(tree_index(n, 0));
 		struct typeinfo *r = type_check(tree_index(n, 2));
 		if (!typeinfo_compare(l, r))
 			semantic_error("assignment types don't match", n);
 
-		fprintf(stderr, "CHECK: assignment\n");
+		fprintf(stderr, "CHECK: assignment to %s\n", k);
 		return l;
 	}
 	case ADD_EXPR2:  /* + */
