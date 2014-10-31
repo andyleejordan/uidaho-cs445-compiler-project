@@ -776,6 +776,19 @@ struct typeinfo *type_check(struct tree *n)
 	case OR_EXPR2: {
 		semantic_error("unsupported bitwise operator", n);
 	}
+	case LOGICAL_AND_EXPR2: /* && */
+	case LOGICAL_OR_EXPR2:  /* || */ {
+		struct typeinfo *l = type_check(tree_index(n, 0));
+		if (!(typeinfo_compare(l, &int_type) || !typeinfo_compare(l, &bool_type)))
+			semantic_error("left operand not an int or bool", n);
+
+		struct typeinfo *r = type_check(tree_index(n, 2));
+		if (!(typeinfo_compare(r, &int_type) || !typeinfo_compare(r, &bool_type)))
+			semantic_error("right operand not an int or bool", n);
+
+		fprintf(stderr, "CHECK: logical operator\n");
+		return &bool_type;
+	}
 	case POSTFIX_EXPR2: {
 		/* array indexing: check identifier is an array and index is an int */
 		char *k = get_identifier(n);
