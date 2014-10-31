@@ -705,13 +705,42 @@ struct typeinfo *type_check(struct tree *n)
 		/* assignment left = right */
 		struct typeinfo *l = type_check(tree_index(n, 0)); /* TODO: ensure assignable */
 		struct typeinfo *r = type_check(tree_index(n, 2));
-		if (!typeinfo_compare(l, r)) {
-			print_typeinfo(stderr, "", l);
-			print_typeinfo(stderr, "", r);
+		if (!typeinfo_compare(l, r))
 			semantic_error("assignment types don't match", n);
-		}
 
 		fprintf(stderr, "CHECK: assignment\n");
+		return l;
+	}
+	case ADD_EXPR2:  /* + */
+	case ADD_EXPR3:  /* - */
+	case MULT_EXPR2: /* * */
+	case MULT_EXPR3: /* / */
+	case REL_EXPR2:  /* < */
+	case REL_EXPR3:  /* > */
+	case REL_EXPR4:  /* <= */
+	case REL_EXPR5:  /* >= */ {
+		struct typeinfo *l = type_check(tree_index(n, 0));
+		if (!(typeinfo_compare(l, &int_type) || !typeinfo_compare(l, &double_type)))
+			semantic_error("left operand not an int or double", n);
+
+		struct typeinfo *r = type_check(tree_index(n, 2));
+		if (!(typeinfo_compare(r, &int_type) || !typeinfo_compare(r, &double_type)))
+			semantic_error("right operand not an int or double", n);
+
+		if (!typeinfo_compare(l, r))
+			semantic_error("operands don't match", n);
+
+		fprintf(stderr, "CHECK: binary operators\n");
+		return l;
+	}
+	case MULT_EXPR4: {
+		/* modulo operator */
+		struct typeinfo *l = type_check(tree_index(n, 0));
+		struct typeinfo *r = type_check(tree_index(n, 2));
+		if (!typeinfo_compare(l, &int_type) || !typeinfo_compare(r, &int_type))
+			semantic_error("modulo operand not an integer", n);
+
+		fprintf(stderr, "CHECK: modulo arithmetic\n");
 		return l;
 	}
 	case POSTFIX_EXPR2: {
