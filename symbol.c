@@ -715,6 +715,16 @@ struct typeinfo *type_check(struct tree *n)
 		fprintf(stderr, "CHECK: assignment to %s\n", k);
 		return l;
 	}
+	case EQUAL_EXPR2:
+	case EQUAL_EXPR3: {
+		struct typeinfo *l = type_check(tree_index(n, 0));
+		struct typeinfo *r = type_check(tree_index(n, 2));
+		if (!typeinfo_compare(l, r))
+			semantic_error("equality operands don't match", n);
+
+		fprintf(stderr, "CHECK: equality\n");
+		return &bool_type;
+	}
 	case ADD_EXPR2:  /* + */
 	case ADD_EXPR3:  /* - */
 	case MULT_EXPR2: /* * */
