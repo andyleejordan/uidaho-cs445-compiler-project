@@ -388,8 +388,10 @@ void handle_include(const char *s)
  */
 void handle_fstream()
 {
-	insert_typename("ifstream", CLASS_NAME);
-	insert_typename("ofstream", CLASS_NAME);
+	if (!hasht_search(typenames, "ifstream")) {
+		insert_typename("ifstream", CLASS_NAME);
+		insert_typename("ofstream", CLASS_NAME);
+	}
 }
 
 /*
@@ -397,7 +399,8 @@ void handle_fstream()
  */
 void handle_string()
 {
-	insert_typename("string", CLASS_NAME);
+	if (!hasht_search(typenames, "string"))
+		insert_typename("string", CLASS_NAME);
 }
 
 /*
