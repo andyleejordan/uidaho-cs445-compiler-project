@@ -922,6 +922,30 @@ struct typeinfo *type_check(struct tree *n)
 
 		return copy;
 	}
+	case UNARY_EXPR6: {
+		struct typeinfo *t = type_check(tree_index(n, 1));
+
+		switch (get_token(n, 0)->category) {
+		case '+':
+		case '-': {
+			if (!typeinfo_compare(t, &int_type))
+				semantic_error("unary + or - operand not an int", n);
+
+			fprintf(stderr, "CHECK: unary + or -\n");
+			return t;
+		}
+		case '!': {
+			if (!(typeinfo_compare(t, &int_type) || typeinfo_compare(t, &bool_type)))
+				semantic_error("! operand not an int or bool", n);
+
+			fprintf(stderr, "CHECK: logical not\n");
+			return &bool_type;
+		}
+		case '~': {
+			semantic_error("destructors not yet supported", n);
+		}
+		}
+	}
 	case FUNCTION_DEF2: {
 		/* manage scopes for function recursion */
 		size_t scopes = list_size(yyscopes);
