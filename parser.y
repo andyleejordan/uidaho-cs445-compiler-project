@@ -376,7 +376,7 @@ expression_statement:
         ;
 
 compound_statement:
-        '{' statement_seq_opt '}' { $$ = P(COMPOUND_STATEMENT1, 1, $2); }
+        '{' statement_seq_opt '}' { $$ = P(COMPOUND_STATEMENT, 3, $1, $2, $3); }
         ;
 
 statement_seq:
