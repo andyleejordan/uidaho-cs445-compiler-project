@@ -116,22 +116,43 @@ void tree_preorder(struct tree *self, int d, bool (*f)(struct tree *t, int d))
 }
 
 /*
- * Initializes a child tree with self as parent and data
- * reference. Pushes the child tree as data to self's list of
- * children. Returns reference to child tree.
+ * Initializes a child tree with self as parent and data reference.
  */
-struct tree *tree_push_back(struct tree *self, void *data)
+struct tree *tree_leaf(struct tree *self, void *data)
 {
 	if (self == NULL) {
-		fprintf(stderr, "tree_push_back(): self was null\n");
+		fprintf(stderr, "tree_leaf(): self was null\n");
 		return NULL;
 	}
 
 	struct tree *child = tree_new(self, data, self->compare, self->delete);
 	if (child == NULL) {
-		perror("tree_push_back()");
+		perror("tree_leaf()");
 		return NULL;
 	}
+
+	return child;
+}
+
+/*
+ * Pushes child data to front. Returns reference to child leaf.
+ */
+struct tree *tree_push_front(struct tree *self, void *data)
+{
+
+	struct tree *child = tree_leaf(self, data);
+
+	list_push_front(self->children, child);
+
+	return child;
+}
+
+/*
+ * Pushes child data to back. Returns reference to child leaf.
+ */
+struct tree *tree_push_back(struct tree *self, void *data)
+{
+	struct tree *child = tree_leaf(self, data);
 
 	list_push_back(self->children, child);
 
@@ -139,7 +160,7 @@ struct tree *tree_push_back(struct tree *self, void *data)
 }
 
 /*
- * Given an initialized child, pushes it to the children list of self.
+ * Given an initialized child, pushes it to back of the children list.
  */
 struct tree *tree_push_child(struct tree *self, struct tree *child)
 {

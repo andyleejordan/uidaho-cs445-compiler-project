@@ -31,6 +31,7 @@ struct tree *tree_new_group(struct tree *parent, void *data,
                             void (*delete)(void *data, bool leaf),
                             int count, ...);
 
+struct tree *tree_push_front(struct tree *self, void *data);
 struct tree *tree_push_back(struct tree *self, void *data);
 struct tree *tree_push_child(struct tree *self, struct tree *child);
 

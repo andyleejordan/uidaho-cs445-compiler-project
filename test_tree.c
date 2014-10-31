@@ -29,8 +29,10 @@ int main()
 	struct tree *child1 = tree_push_back(root, b);
 	test_new(child1, root, b);
 	test_size(root, 2);
+
+	testing("push front depth 1");
 	char *c = strdup("*");
-	struct tree *child2 = tree_push_back(root, c);
+	struct tree *child2 = tree_push_front(root, c);
 	test_new(child2, root, c);
 	test_size(root, 3);
 
@@ -39,7 +41,9 @@ int main()
 	struct tree *child3 = tree_push_back(child2, d);
 	test_new(child3, child2, d);
 	char *e = strdup("3");
-	struct tree *child4 = tree_push_back(child2, e);
+
+	testing("push front depth 2");
+	struct tree *child4 = tree_push_front(child2, e);
 	test_new(child4, child2, e);
 	test_size(child2, 3);
 	test_size(root, 5);
@@ -68,7 +72,7 @@ int main()
 void test_size(struct tree *tree, size_t size)
 {
 	if (tree_size(tree) != size) {
-		sprintf(buffer, "size should have been %lu", size);
+		sprintf(buffer, "size should have been %zu", size);
 		failure(buffer);
 	}
 }
