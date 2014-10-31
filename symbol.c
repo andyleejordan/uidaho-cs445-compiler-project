@@ -288,12 +288,13 @@ struct hasht *symbol_populate(struct tree *syntax)
 		if (iostream) {
 			struct typeinfo *cin = malloc(sizeof(*cin));
 			cin->base = CLASS_T;
-			cin->class.type = "std::ifstream";
+			cin->class.type = "ifstream";
 			symbol_insert("cin", cin, NULL, NULL);
 
 			struct typeinfo *cout = malloc(sizeof(*cout));
 			cout->base = CLASS_T;
-			cout->class.type = "std::ofstream";
+			cout->pointer = false;
+			cout->class.type = "ofstream";
 			symbol_insert("cout", cout, NULL, NULL);
 
 			struct typeinfo *endl = malloc(sizeof(*endl));
@@ -303,6 +304,7 @@ struct hasht *symbol_populate(struct tree *syntax)
 		if (string) {
 			struct typeinfo *string = malloc(sizeof(*string));
 			string->base = CLASS_T;
+			string->pointer = false;
 			string->class.type = "std::string";
 			symbol_insert("string", string, NULL, NULL);
 		}
@@ -1080,14 +1082,18 @@ struct typeinfo *type_check(struct tree *n)
 
 		/* recurse on items of shift expression */
 		struct list_node *iter = list_head(n->children);
+		struct typeinfo *ret = NULL;
 		while (!list_end(iter)) {
 			struct typeinfo *t = type_check(iter->data);
 
 			/* ensure leftmost child is of type std::ofstream */
 			if (iter == list_head(n->children)) {
-				if (!(t->base == CLASS_T && (strcmp(t->class.type, "std::ofstream") == 0))) {
-					semantic_error("leftmost << operand not a std::ofstream", iter->data);
+				if (!(t->base == CLASS_T && (strcmp(t->class.type, "ofstream") == 0))) {
+					print_typeinfo(stderr, "t", t);
+					semantic_error("leftmost << operand not a ofstream", iter->data);
 				}
+				/* return leftmost type as result of << */
+				ret = t;
 			} else if (!(typeinfo_compare(t, &int_type)
 			             || typeinfo_compare(t, &double_type)
 			             || typeinfo_compare(t, &bool_type)
@@ -1099,9 +1105,8 @@ struct typeinfo *type_check(struct tree *n)
 			iter = iter->next;
 		}
 
-		/* shift expression itself returns ofstream */
 		fprintf(stderr, "CHECK: <<\n");
-		return symbol_search("ofstream");
+		return ret;
 	}
 	case FUNCTION_DEF1:
 	case FUNCTION_DEF2: {
