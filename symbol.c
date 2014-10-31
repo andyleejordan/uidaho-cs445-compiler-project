@@ -35,15 +35,12 @@ char error_buf[256];
 #define scope_current() (struct hasht *)list_back(yyscopes)
 #define scope_push(s) list_push_back(yyscopes, s)
 #define scope_pop() list_pop_back(yyscopes)
-#define scope_search(k) list_push_back(yyscopes, get_scope(scope_current(), k))
 
 /* syntax tree helpers */
 #define get_rule(n) *(enum rule *)((struct tree *)n)->data
 #define get_token(n, i) ((struct token *)tree_index(n, i)->data)
 
 /* local functions */
-struct hasht *get_scope(struct hasht *s, char *k, bool private);
-
 enum type map_type(enum yytokentype t);
 char *print_basetype(struct typeinfo *t);
 void print_typeinfo(FILE *stream, char *k, struct typeinfo *v);
@@ -93,25 +90,6 @@ struct typeinfo bool_type;
 struct typeinfo void_type;
 struct typeinfo class_type;
 struct typeinfo unknown_type;
-
-/*
- * Given a scope and key, get the nested scope for the key.
- */
-struct hasht *get_scope(struct hasht *s, char *k, bool private)
-{
-	struct typeinfo *t = hasht_search(s, k);
-	if (t == NULL)
-		return NULL;
-
-	switch (t->base) {
-	case FUNCTION_T:
-		return t->function.symbols;
-	case CLASS_T:
-		return (private) ? t->class.private : t->class.public;
-	default:
-		return NULL; /* error */
-	}
-}
 
 /*
  * Maps a Bison type to a 120++ type.
