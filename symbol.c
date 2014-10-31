@@ -730,11 +730,11 @@ struct typeinfo *type_check(struct tree *n)
 	case REL_EXPR4: /* <= */
 	case REL_EXPR5: /* >= */ {
 		struct typeinfo *l = type_check(tree_index(n, 0));
-		if (!(typeinfo_compare(l, &int_type) || !typeinfo_compare(l, &double_type)))
+		if (!(typeinfo_compare(l, &int_type) || typeinfo_compare(l, &double_type)))
 			semantic_error("left operand not an int or double", n);
 
 		struct typeinfo *r = type_check(tree_index(n, 2));
-		if (!(typeinfo_compare(r, &int_type) || !typeinfo_compare(r, &double_type)))
+		if (!(typeinfo_compare(r, &int_type) || typeinfo_compare(r, &double_type)))
 			semantic_error("right operand not an int or double", n);
 
 		if (!typeinfo_compare(l, r))
@@ -748,11 +748,11 @@ struct typeinfo *type_check(struct tree *n)
 	case MULT_EXPR2: /* * */
 	case MULT_EXPR3: /* / */ {
 		struct typeinfo *l = type_check(tree_index(n, 0));
-		if (!(typeinfo_compare(l, &int_type) || !typeinfo_compare(l, &double_type)))
+		if (!(typeinfo_compare(l, &int_type) || typeinfo_compare(l, &double_type)))
 			semantic_error("left operand not an int or double", n);
 
 		struct typeinfo *r = type_check(tree_index(n, 2));
-		if (!(typeinfo_compare(r, &int_type) || !typeinfo_compare(r, &double_type)))
+		if (!(typeinfo_compare(r, &int_type) || typeinfo_compare(r, &double_type)))
 			semantic_error("right operand not an int or double", n);
 
 		if (!typeinfo_compare(l, r))
@@ -779,11 +779,11 @@ struct typeinfo *type_check(struct tree *n)
 	case LOGICAL_AND_EXPR2: /* && */
 	case LOGICAL_OR_EXPR2:  /* || */ {
 		struct typeinfo *l = type_check(tree_index(n, 0));
-		if (!(typeinfo_compare(l, &int_type) || !typeinfo_compare(l, &bool_type)))
+		if (!(typeinfo_compare(l, &int_type) || typeinfo_compare(l, &bool_type)))
 			semantic_error("left operand not an int or bool", n);
 
 		struct typeinfo *r = type_check(tree_index(n, 2));
-		if (!(typeinfo_compare(r, &int_type) || !typeinfo_compare(r, &bool_type)))
+		if (!(typeinfo_compare(r, &int_type) || typeinfo_compare(r, &bool_type)))
 			semantic_error("right operand not an int or bool", n);
 
 		fprintf(stderr, "CHECK: logical operator\n");
