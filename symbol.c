@@ -757,19 +757,47 @@ struct typeinfo *type_check(struct tree *n)
 		fprintf(stderr, "CHECK: function %s invocation\n", k);
 		return typeinfo_return(l);
 	}
+	case POSTFIX_EXPR5:
 	case POSTFIX_EXPR6: {
-		fprintf(stderr, "case class.call\n");
-		/* seems to be class.calls: ensure n0 is a class and
-		   not a pointer, and n1 is in class's public scope
-		   (or private if v belongs to the class) */
-		return NULL;
+		/* class_instance.field access */
+		char *k = get_identifier(n);
+		char *f = get_identifier(tree_index(n, 2));
+
+		struct typeinfo *l = symbol_search(k);
+		if (l->base != CLASS_T || l->pointer)
+			semantic_error("expected class instance", n);
+
+		struct typeinfo *class = symbol_search(l->class.type);
+		if (class == NULL)
+			semantic_error("couldn't get class type", n);
+
+		struct typeinfo *r = hasht_search(class->class.public, f);
+		if (r == NULL)
+			semantic_error("requested field not in public scope", n);
+
+		fprintf(stderr, "CHECK: %s.%s\n", k, f);
+		return typeinfo_return(r);
 	}
+	case POSTFIX_EXPR7:
 	case POSTFIX_EXPR8: {
-		fprintf(stderr, "case class->call\n");
-		/* seems to be class->calls: ensure n0 is a class and
-		   a pointer, and n1 is in class's public scope (or
-		   private if v belongs to class). */
-		return NULL;
+		/* class_ptr->field access */
+		char *k = get_identifier(n);
+		char *f = get_identifier(tree_index(n, 2));
+
+		struct typeinfo *l = symbol_search(k);
+		if (l->base != CLASS_T || !l->pointer)
+			semantic_error("expected class pointer", n);
+
+		struct typeinfo *class = symbol_search(l->class.type);
+		if (class == NULL)
+			semantic_error("couldn't get class type", n);
+
+		struct typeinfo *r = hasht_search(class->class.public, f);
+		if (r == NULL)
+			semantic_error("requested field not in public scope", n);
+
+		fprintf(stderr, "CHECK: %s->%s\n", k, f);
+		return typeinfo_return(r);
 	}
 	case UNARY_EXPR4: {
 		/* dereference operator */
