@@ -901,11 +901,9 @@ struct typeinfo *type_check(struct tree *n)
 	case POSTFIX_EXPR3: {
 		/* function invocation: build typeinfo list from
 		   EXPR_LIST, recursing on each item */
-		char *k = get_identifier(n);
-
-		struct typeinfo *l = symbol_search(k);
+		struct typeinfo *l = type_check(tree_index(n, 0));
 		if (l == NULL) {
-			sprintf(error_buf, "function %s not declared", k);
+			sprintf(error_buf, "function not declared");
 			semantic_error(error_buf, n);
 		}
 		struct typeinfo *r = typeinfo_copy(l);
@@ -924,15 +922,13 @@ struct typeinfo *type_check(struct tree *n)
 		}
 
 		if (!typeinfo_compare(l, r)) {
-			print_typeinfo(stderr, k, l);
-			print_typeinfo(stderr, k, r);
 			semantic_error("function invocation did not match signature", n);
 		}
 
 		list_free(r->function.parameters);
 		free(r);
 
-		fprintf(stderr, "CHECK: function %s invocation\n", k);
+		fprintf(stderr, "CHECK: function invocation\n");
 		return typeinfo_return(l);
 	}
 	case POSTFIX_EXPR5:
