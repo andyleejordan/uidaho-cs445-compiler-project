@@ -1275,12 +1275,6 @@ void handle_init(struct typeinfo *v, struct tree *n)
 		/* might not recurse */
 		break;
 	}
-	case DIRECT_DECL6: { /* array with size */
-		v = typeinfo_new_array(n, v);
-		if (v->array.size < 1)
-			semantic_error("bad array initializer size", n);
-		break;
-	}
 	case DIRECT_DECL2: { /* function declaration */
 		v = typeinfo_new_function(n, v, false);
 		break;
@@ -1291,6 +1285,12 @@ void handle_init(struct typeinfo *v, struct tree *n)
 		v->base = CLASS_T;
 		v->class.type = get_class(n);
 		v = typeinfo_new_function(n, v, false);
+		break;
+	}
+	case DIRECT_DECL6: { /* array with size */
+		v = typeinfo_new_array(n, v);
+		if (v->array.size < 1)
+			semantic_error("bad array initializer size", n);
 		break;
 	}
 	default:
