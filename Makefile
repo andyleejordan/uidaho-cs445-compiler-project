@@ -16,7 +16,7 @@ BISON = bison
 # flags
 CDEBUG = -g
 CFLAGS = -O -Wall -Werror -std=gnu99
-LDFLAGS = -g
+LDFLAGS = -g -largp
 FLEXFLAGS =
 BISONFLAGS = -Wall -Werror
 
@@ -64,7 +64,7 @@ $(BIN): $(OBJS)
 .c.o:
 	$(CC) $(CFLAGS) $(CDEBUG) -o $@ -c $<
 
-main.c: token.h symbol.h list.h tree.h hasht.h lexer.h
+main.o: args.h logger.h libs.h lexer.h list.h tree.h hasht.h
 
 parser.tab.h parser.tab.c: parser.y
 	$(BISON) $(BISONFLAGS) $<

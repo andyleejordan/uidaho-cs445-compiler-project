@@ -13,6 +13,7 @@
 #include <stdarg.h>
 
 #include "symbol.h"
+#include "args.h"
 #include "logger.h"
 #include "token.h"
 #include "list.h"
@@ -361,9 +362,12 @@ void symbol_insert(char *k, struct typeinfo *v, struct tree *n, struct hasht *l)
 		e = hasht_search(list_tail(yyscopes)->data, k);
 
 	if (e == NULL) {
-		fprintf(stderr, "insert at depth %zu: ", list_size(yyscopes));
-		print_typeinfo(stderr, k, v);
 		hasht_insert(scope_current(), k, v);
+		if (arguments.symbols) {
+			fprintf(stderr, "Inserting at depth %zu: ",
+			        list_size(yyscopes));
+			print_typeinfo(stderr, k, v);
+		}
 	} else if (e->base == FUNCTION_T && v->base == FUNCTION_T) {
 		if (!typeinfo_compare(e, v)) {
 			log_semantic(n, "function signatures for %s mismatched", k);

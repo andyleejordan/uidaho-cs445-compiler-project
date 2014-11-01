@@ -13,6 +13,9 @@
 #include <string.h>
 #include <libgen.h>
 #include <unistd.h>
+#include <argp.h>
+
+#include "args.h"
 #include "logger.h"
 
 #include "list.h"
@@ -20,6 +23,29 @@
 #include "hasht.h"
 
 #include "lexer.h"
+/* argument parser */
+const char *argp_program_version = "120++ hw3-alpha";
+const char *argp_program_bug_address = "<andrew@schwartzmeyer.com>";
+static char doc[] = "University of Idaho CS 445 - Compiler and Translator design: 120++ compiler";
+static char args_doc[] = "120 [-tsc] infile...";
+
+static struct argp_option options[] = {
+	{ "debug",   'd', 0,      0, "Call perror() when crashing" },
+	{ "tree",    't', 0,      0, "Print the syntax tree" },
+	{ "symbols", 's', 0,      0, "Print the populated symbols" },
+	{ "checks",  'c', 0,      0, "Print the performed type checks" },
+	{ 0 }
+};
+
+static error_t parse_opt(int key, char *arg, struct argp_state *state);
+static struct argp argp = { options, parse_opt, args_doc, doc };
+
+/* shared with lexer and parser */
+struct tree *yyprogram = NULL;
+struct list *filenames = NULL;
+
+/* chdir to dirname of given filename safely */
+void chdirname(char *c);
 
 /* from lexer */
 extern struct hasht *typenames;
@@ -32,15 +58,15 @@ bool print_tree(struct tree *t, int d);
 /* from symbol */
 struct hasht *symbol_populate(struct tree *syntax);
 
-/* shared with lexer and parser */
-struct tree *yyprogram = NULL;
-struct list *filenames = NULL;
-
-/* chdir to dirname of given filename safely */
-void chdirname(char *c);
-
 int main(int argc, char **argv)
 {
+	arguments.debug = false;
+	arguments.tree = false;
+	arguments.symbols = false;
+	arguments.checks = false;
+
+	argp_parse(&argp, argc, argv, 0, 0, &arguments);
+
 	char *cwd = getcwd(NULL, 0);
 	if (cwd == NULL)
 		log_crash();
@@ -50,38 +76,31 @@ int main(int argc, char **argv)
 		log_crash();
 
 	/* setup lexer and parse each argument (or stdin) as a new 'program' */
-	for (int i = 1; i <= argc; ++i) {
-		typenames = hasht_new(2, true, NULL, NULL, &free_typename);
+	for (int i = 0; arguments.input_files[i]; ++i) {
+
+		/* reset directory for each input file */
+		if (chdir(cwd) != 0)
+			log_crash();
+
+		/* setup typenames table for lexer */
+		typenames = hasht_new(8, true, NULL, NULL, &free_typename);
 		if (typenames == NULL)
-			handle_error("main typenames");
+			log_crash();
 
-		char *filename = NULL;
-		if (argc == 1) {
-			printf("No CLI arguments, reading from stdin\n");
-			filename = "stdin";
-			yyin = stdin;
-		} else {
-			if (i == argc)
-				break;
-			printf("Reading from argument %d: %s\n", i, argv[i]);
+		/* resolve path to input file */
+		char *filename = realpath(arguments.input_files[i], NULL);
+		if (filename == NULL)
+			log_error("Could not find input file %s", arguments.input_files[i]);
 
-			/* get real path for argument */
-			if (chdir(cwd) != 0)
-				handle_error("Could not chdir to start dir");
-			filename = realpath(argv[i], NULL);
-			if (filename == NULL) {
-				sprintf(error_buf, "Could not resolve CLI argument '%s'", argv[i]);
-				handle_error(error_buf);
-			}
-			/* for relative path lookups */
-			chdirname(filename);
+		printf("Parsing file %s\n", filename);
 
-			/* open file and push buffer for flex */
-			if ((yyin = fopen(filename, "r")) == NULL) {
-				sprintf(error_buf, "Could not open CLI argument '%s'", argv[i]);
-				handle_error(error_buf);
-			}
-		}
+		/* chdir for relative path lookups */
+		chdirname(filename);
+
+		/* open file and push buffer for flex */
+		yyin = fopen(filename, "r");
+		if (yyin == NULL)
+			log_error("Could not open input file %s", filename);
 
 		/* push filename and buffer state for lexer */
 		list_push_back(filenames, filename);
@@ -93,7 +112,8 @@ int main(int argc, char **argv)
 			return 2;
 
 		/* print syntax tree */
-		tree_preorder(yyprogram, 0, &print_tree);
+		if (arguments.tree)
+			tree_preorder(yyprogram, 0, &print_tree);
 
 		/* build the symbol tables */
 		struct hasht *global = symbol_populate(yyprogram);
@@ -127,4 +147,36 @@ void chdirname(char *c)
 		log_error("Could not chdir to %s", dir);
 
 	free(filename);
+}
+
+static error_t parse_opt(int key, char *arg, struct argp_state *state)
+{
+	struct arguments *arguments = state->input;
+
+	switch (key) {
+	case 'd':
+		arguments->debug = true;
+		break;
+	case 't':
+		arguments->tree = true;
+		break;
+	case 's':
+		arguments->symbols = true;
+		break;
+	case 'c':
+		arguments->checks = true;
+		break;
+
+	case ARGP_KEY_NO_ARGS:
+		argp_usage(state);
+
+	case ARGP_KEY_ARGS:
+		arguments->input_files = &state->argv[state->next];
+		state->next = state->argc;
+		break;
+
+	default:
+		return ARGP_ERR_UNKNOWN;
+	}
+	return 0;
 }
