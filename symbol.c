@@ -203,6 +203,7 @@ struct hasht *symbol_populate(struct tree *syntax)
 		if (libs.iostream) {
 			struct typeinfo *cin = malloc(sizeof(*cin));
 			cin->base = CLASS_T;
+			cin->pointer = false;
 			cin->class.type = "ifstream";
 			symbol_insert("cin", cin, NULL, NULL);
 
