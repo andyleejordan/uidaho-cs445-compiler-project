@@ -212,8 +212,7 @@ struct hasht *symbol_populate(struct tree *syntax)
 			cout->class.type = "ofstream";
 			symbol_insert("cout", cout, NULL, NULL);
 
-			struct typeinfo *endl = malloc(sizeof(*endl));
-			endl->base = CHAR_T;
+			struct typeinfo *endl = typeinfo_copy(&char_type);
 			symbol_insert("endl", endl, NULL, NULL);
 		}
 		if (libs.string) {
