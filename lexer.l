@@ -28,12 +28,13 @@ IS       (u|U|l|L)*
 #include <libgen.h>
 
 #include "logger.h"
+#include "token.h"
 #include "libs.h"
+#include "parser.tab.h"
+
 #include "list.h"
 #include "tree.h"
 #include "hasht.h"
-#include "token.h"
-#include "parser.tab.h"
 
 /* syntactic action helpers */
 #define TOKEN(name) do { prepare_token(name); return name; } while(0)
@@ -48,21 +49,21 @@ void chdirname(char *c);
 void delete_tree(void *data, bool leaf);
 
 /* creation of tokens */
-struct token *yytoken = NULL;
-void prepare_token(int category);
+static struct token *yytoken;
+static void prepare_token(int category);
 
 /* handle #include libraries */
-void handle_fstream();
-void handle_string();
+static void handle_fstream();
+static void handle_string();
 
 /* handle #include files */
-void handle_include(const char *s);
+static void handle_include(const char *s);
 
 /* typenames data */
 struct hasht *typenames;
 void insert_typename(char *k, int c);
 void insert_typename_tree(struct tree *t, int category);
-int check_identifier(const char *s);
+static int check_identifier(const char *s);
 
 %}
 
@@ -316,12 +317,15 @@ void prepare_token(int category)
  */
 void handle_include(const char *s)
 {
-	/* get the include path */
-	size_t len = strlen(s) - 2; /* size without surrounding quotes */
-	char *include = calloc(len+1, sizeof(char));
+	/* size without surrounding quotes */
+	size_t len = strlen(s) - 2;
+
+	char *include = calloc(len + 1, sizeof(char));
 	if (include == NULL)
-	strncpy(include, s+1, len); /* copy substring */
 		log_crash();
+
+	/* copy substring */
+	strncpy(include, s + 1, len);
 	include[len] = '\0';
 
 	/* get the real path */
@@ -341,8 +345,6 @@ void handle_include(const char *s)
 
 	yylineno = 1;
 	yypush_buffer_state(yy_create_buffer(yyin, YY_BUF_SIZE));
-
-	return;
 }
 
 /*

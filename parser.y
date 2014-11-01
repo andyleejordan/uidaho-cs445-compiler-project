@@ -47,12 +47,14 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 #include "logger.h"
 #include "token.h"
+#include "rules.h"
+
 #include "list.h"
 #include "tree.h"
-#include "rules.h"
 
 /* from main */
 extern struct tree *yyprogram;
@@ -65,7 +67,7 @@ int yylex();
 void insert_typename_tree(struct tree *t, int category);
 
 /* syntax tree utilities */
-int *copy_int(int i);
+static int *copy_int(int i);
 bool print_tree(struct tree *t, int d);
 void delete_tree(void *data, bool leaf);
 
@@ -74,7 +76,7 @@ void delete_tree(void *data, bool leaf);
 #define E() NULL
 
 /* Bison's error function */
-void yyerror(const char *s);
+static void yyerror(const char *s);
 
 %}
 
@@ -785,7 +787,7 @@ void delete_tree(void *data, bool leaf)
  * Necessary because data structures take void *, but integers need to
  * be copied for this to work properly.
  */
-int *copy_int(int i)
+static int *copy_int(int i)
 {
 	int *p = malloc(sizeof(*p));
 	if (p == NULL)
@@ -799,7 +801,7 @@ int *copy_int(int i)
  * Prints relevant information for syntax errors and exits returning 2
  * per assignment requirements.
  */
-void yyerror(const char *s)
+static void yyerror(const char *s)
 {
 	fprintf(stderr, "SYNTAX ERROR: file %s, line %d, token %s: %s\n",
                 (const char *)list_back(filenames), yylineno, yytext, s);

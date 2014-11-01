@@ -43,8 +43,8 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state);
 static struct argp argp = { options, parse_opt, args_doc, doc };
 
 /* shared with lexer and parser */
-struct tree *yyprogram = NULL;
-struct list *filenames = NULL;
+struct tree *yyprogram;
+struct list *filenames;
 
 /* chdir to dirname of given filename safely */
 void chdirname(char *c);

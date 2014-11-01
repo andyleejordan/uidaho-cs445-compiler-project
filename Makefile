@@ -66,10 +66,6 @@ $(BIN): $(OBJS)
 
 main.o: args.h logger.h libs.h lexer.h list.h tree.h hasht.h
 
-parser.tab.h parser.tab.c: parser.y
-	$(BISON) $(BISONFLAGS) $<
-
-parser.y: token.h list.h tree.h rules.h
 logger.o: logger.h args.h token.h lexer.h list.h tree.h
 
 lexer.h: lex.yy.c
@@ -77,19 +73,25 @@ lexer.h: lex.yy.c
 lex.yy.c: lexer.l
 	$(FLEX) $(FLEXFLAGS) $<
 
-lexer.l: token.h list.h tree.h hasht.h parser.tab.h
+lexer.l: logger.h token.h libs.h parser.tab.h list.h tree.h hasht.h
 
-token.o: token.h
+parser.tab.h parser.tab.c: parser.y
+	$(BISON) $(BISONFLAGS) $<
 
-symbol.o: symbol.h
+parser.y: logger.h token.h rules.h list.h tree.h
+
+symbol.o: symbol.h args.h logger.h \
+	token.h libs.h lexer.h rules.h parser.tab.h list.h hasht.h tree.h
+
+token.o: token.h logger.h parser.tab.h
 
 list.o: list.h
 
 tree.o: tree.h list.h
 
-test.o: test.h
-
 hasht.o: hasht.h lookup3.o
+
+test.o: test.h
 
 BUILD_TEST = $(CC) $(CFLAGS) $(CDEBUG) -o $@ $^
 test-list: test_list.o list.o test.o

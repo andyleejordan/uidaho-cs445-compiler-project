@@ -131,6 +131,6 @@ enum rule {
 	MEM_INIT_ID3
 };
 
-char *print_rule(int rule);
+char *print_rule(enum rule r);
 
 #endif /* RULES_H */

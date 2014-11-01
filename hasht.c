@@ -18,7 +18,7 @@
 /* from lookup3.c */
 void hashlittle2(const void *key, size_t length, uint32_t *pc, uint32_t *pb);
 
-size_t hasht_hash(struct hasht *self, void *key, int perm);
+static size_t hasht_hash(struct hasht *self, void *key, int perm);
 uint32_t hasht_default_hash(char *key, int perm);
 bool hasht_default_compare(void *a, void *b);
 void hasht_default_delete(struct hash_node *n);
@@ -226,7 +226,7 @@ void hasht_free(struct hasht *self)
 /*
  * Maps key to table index.
  */
-size_t hasht_hash(struct hasht *self, void *key, int perm)
+static size_t hasht_hash(struct hasht *self, void *key, int perm)
 {
 	if (self == NULL) {
 		fprintf(stderr, "hasht_hash(): self was null\n");

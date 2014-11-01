@@ -14,9 +14,9 @@
  * version of the rule (a static string literal).
  */
 #define R(rule) case rule: return #rule
-char *print_rule(int rule)
+char *print_rule(enum rule r)
 {
-	switch (rule) {
+	switch (r) {
 		R(PROGRAM);
 		R(UNQUALID_2);
 		R(QUAL_ID);

@@ -10,19 +10,20 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
-#include <stdarg.h>
 
 #include "symbol.h"
 #include "args.h"
 #include "logger.h"
+
 #include "token.h"
 #include "libs.h"
+#include "lexer.h"
+#include "rules.h"
+#include "parser.tab.h"
+
 #include "list.h"
 #include "hasht.h"
 #include "tree.h"
-#include "rules.h"
-#include "lexer.h"
-#include "parser.tab.h"
 
 /* from lexer */
 extern struct hasht *typenames;
@@ -39,59 +40,58 @@ struct list *yyscopes;
 #define get_token(n, i) ((struct token *)tree_index(n, i)->data)
 
 /* local functions */
-enum type map_type(enum yytokentype t);
-void set_type_comparators();
-char *print_basetype(struct typeinfo *t);
-void print_typeinfo(FILE *stream, char *k, struct typeinfo *v);
+static enum type map_type(enum yytokentype t);
+static void set_type_comparators();
+static char *print_basetype(struct typeinfo *t);
+static void print_typeinfo(FILE *stream, char *k, struct typeinfo *v);
 
-struct hasht *symbol_populate(struct tree *syntax);
-struct typeinfo *symbol_search(char *k);
-void symbol_insert(char *k, struct typeinfo *v, struct tree *n, struct hasht *l);
-void symbol_free(struct hash_node *n);
+static struct typeinfo *symbol_search(char *k);
+static void symbol_insert(char *k, struct typeinfo *v, struct tree *n, struct hasht *l);
+static void symbol_free(struct hash_node *n);
 
-struct tree *get_production(struct tree *n, enum rule r);
-struct token *get_category(struct tree *n, int target, int before);
-struct token *get_category_(struct tree *n, int target, int before);
-char *get_identifier(struct tree *n);
-bool get_pointer(struct tree *n);
-int get_array(struct tree *n);
-char *get_class(struct tree *n);
-bool get_public(struct tree *n);
-bool get_private(struct tree *n);
-char *class_member(struct tree *n);
+static struct tree *get_production(struct tree *n, enum rule r);
+static struct token *get_category(struct tree *n, int target, int before);
+static struct token *get_category_(struct tree *n, int target, int before);
+static char *get_identifier(struct tree *n);
+static bool get_pointer(struct tree *n);
+static int get_array(struct tree *n);
+static char *get_class(struct tree *n);
+static bool get_public(struct tree *n);
+static bool get_private(struct tree *n);
+static char *class_member(struct tree *n);
 
-struct typeinfo *type_check(struct tree *n);
-struct typeinfo *typeinfo_new(struct tree *n);
-struct typeinfo *typeinfo_new_array(struct tree *n, struct typeinfo *t);
-struct typeinfo *typeinfo_new_function(struct tree *n, struct typeinfo *t, bool define);
-struct typeinfo *typeinfo_copy(struct typeinfo *t);
-struct typeinfo *typeinfo_return(struct typeinfo *t);
-void typeinfo_delete(struct typeinfo *t);
-bool typeinfo_compare(struct typeinfo *a, struct typeinfo *b);
-bool typeinfo_list_compare(struct list *a, struct list *b);
+static struct typeinfo *type_check(struct tree *n);
+static struct typeinfo *typeinfo_new(struct tree *n);
+static struct typeinfo *typeinfo_new_array(struct tree *n, struct typeinfo *t);
+static struct typeinfo *typeinfo_new_function(struct tree *n, struct typeinfo *t, bool define);
+static struct typeinfo *typeinfo_copy(struct typeinfo *t);
+static struct typeinfo *typeinfo_return(struct typeinfo *t);
+static void typeinfo_delete(struct typeinfo *t);
+static bool typeinfo_compare(struct typeinfo *a, struct typeinfo *b);
+static bool typeinfo_list_compare(struct list *a, struct list *b);
 
-bool handle_node(struct tree *n, int d);
-void handle_init(struct typeinfo *v, struct tree *n);
-void handle_init_list(struct typeinfo *v, struct tree *n);
-void handle_function(struct typeinfo *t, struct tree *n, char *k);
-void handle_param(struct typeinfo *v, struct tree *n, struct hasht *s, struct list *l);
-void handle_param_list(struct tree *n, struct hasht *s, struct list *l);
-void handle_class(struct typeinfo *t, struct tree *n);
+static bool handle_node(struct tree *n, int d);
+static void handle_init(struct typeinfo *v, struct tree *n);
+static void handle_init_list(struct typeinfo *v, struct tree *n);
+static void handle_function(struct typeinfo *t, struct tree *n, char *k);
+static void handle_param(struct typeinfo *v, struct tree *n, struct hasht *s, struct list *l);
+static void handle_param_list(struct tree *n, struct hasht *s, struct list *l);
+static void handle_class(struct typeinfo *t, struct tree *n);
 
 /* basic type comparators */
-struct typeinfo int_type;
-struct typeinfo double_type;
-struct typeinfo char_type;
-struct typeinfo string_type;
-struct typeinfo bool_type;
-struct typeinfo void_type;
-struct typeinfo class_type;
-struct typeinfo unknown_type;
+static struct typeinfo int_type;
+static struct typeinfo double_type;
+static struct typeinfo char_type;
+static struct typeinfo string_type;
+static struct typeinfo bool_type;
+static struct typeinfo void_type;
+static struct typeinfo class_type;
+static struct typeinfo unknown_type;
 
 /*
  * Initialize comparator types
  */
-void set_type_comparators()
+static void set_type_comparators()
 {
 	int_type.base = INT_T;
 	int_type.pointer = false;
@@ -121,7 +121,7 @@ void set_type_comparators()
 /*
  * Maps a Bison type to a 120++ type.
  */
-enum type map_type(enum yytokentype t)
+static enum type map_type(enum yytokentype t)
 {
 	switch (t) {
 	case INTEGER:
@@ -151,92 +151,6 @@ enum type map_type(enum yytokentype t)
 	default:
 		return UNKNOWN_T;
 	}
-}
-
-/*
- * Given a type enum, returns its name as a static string.
- */
-#define R(rule) case rule: return #rule
-char *print_basetype(struct typeinfo *t)
-{
-	switch (t->base) {
-		R(INT_T);
-		R(DOUBLE_T);
-		R(CHAR_T);
-		R(BOOL_T);
-		R(ARRAY_T);
-		R(VOID_T);
-		R(UNKNOWN_T);
-	case FUNCTION_T:
-		return print_basetype(t->function.type);
-	case CLASS_T:
-		return (t->class.type) ? t->class.type : "CLASS_T";
-	}
-
-	return NULL; /* error */
-}
-#undef R
-
-/*
- * Prints a realistic reprensentation of a symbol to the stream.
- *
- * Example: DOUBLE_T foobar(INT_T *, AClass)
- */
-void print_typeinfo(FILE *stream, char *k, struct typeinfo *v)
-{
-	if (v == NULL)
-		log_error("print_typeinfo(): type for %s was null", k);
-
-	switch (v->base) {
-	case INT_T:
-	case DOUBLE_T:
-	case CHAR_T:
-	case BOOL_T:
-	case VOID_T: {
-		fprintf(stream, "%s", print_basetype(v));
-		break;
-	}
-	case ARRAY_T: {
-		print_typeinfo(stream, NULL, v->array.type);
-		if (k)
-			fprintf(stream, " %s%s",
-			        (v->array.type->pointer) ? "*" : "", k);
-		if (v->array.size)
-			fprintf(stream, "[%zu]", v->array.size);
-		else
-			fprintf(stream, "[]");
-		if (k)
-			fprintf(stream, "\n");
-		return;
-	}
-	case FUNCTION_T: {
-		print_typeinfo(stream, NULL, v->function.type);
-		fprintf(stream, " %s%s(",
-		        (v->function.type->pointer) ? "*" : "", k);
-
-		struct list_node *iter = list_head(v->function.parameters);
-		while (!list_end(iter)) {
-			struct typeinfo *p = iter->data;
-			print_typeinfo(stream, NULL, p);
-			fprintf(stream, "%s", (p->pointer) ? " *" : "");
-			iter = iter->next;
-			if (!list_end(iter))
-				fprintf(stream, ", ");
-		}
-		fprintf(stream, ")\n");
-		return;
-	}
-	case CLASS_T: {
-		fprintf(stream, "%s", print_basetype(v));
-		break;
-	}
-	case UNKNOWN_T: {
-		fprintf(stream, "unknown type");
-		break;
-	}
-	}
-	if (k)
-		fprintf(stream, " %s%s\n", (v->pointer) ? "*" : "", k);
 }
 
 /*
@@ -323,7 +237,7 @@ struct hasht *symbol_populate(struct tree *syntax)
 /*
  * Search the stack of scopes for a given identifier.
  */
-struct typeinfo *symbol_search(char *k)
+static struct typeinfo *symbol_search(char *k)
 {
 	if (k == NULL)
 		return NULL;
@@ -346,7 +260,7 @@ struct typeinfo *symbol_search(char *k)
  * will define the function with the given symbol table. Will error
  * for duplicate symbols or mismatched function declarations.
  */
-void symbol_insert(char *k, struct typeinfo *v, struct tree *n, struct hasht *l)
+static void symbol_insert(char *k, struct typeinfo *v, struct tree *n, struct hasht *l)
 {
 	if (v == NULL)
 		log_error("symbol_insert(): type for %s was null", k);
@@ -384,7 +298,7 @@ void symbol_insert(char *k, struct typeinfo *v, struct tree *n, struct hasht *l)
 /*
  * Frees key and deletes value.
  */
-void symbol_free(struct hash_node *n)
+static void symbol_free(struct hash_node *n)
 {
 	if (n == NULL)
 		log_crash();
@@ -396,7 +310,7 @@ void symbol_free(struct hash_node *n)
 /*
  * Given a tree node, get the first subtree with the production rule.
  */
-struct tree *get_production(struct tree *n, enum rule r)
+static struct tree *get_production(struct tree *n, enum rule r)
 {
 	if (n == NULL)
 		log_crash();
@@ -417,7 +331,7 @@ struct tree *get_production(struct tree *n, enum rule r)
 /*
  * Wrapper to return null if token not found, else return token.
  */
-struct token *get_category(struct tree *n, int target, int before)
+static struct token *get_category(struct tree *n, int target, int before)
 {
 	struct token *t = get_category_(n, target, before);
 	if (t && t->category == target)
@@ -429,7 +343,7 @@ struct token *get_category(struct tree *n, int target, int before)
 /*
  * Walks tree returning first token matching category, else null.
  */
-struct token *get_category_(struct tree *n, int target, int before)
+static struct token *get_category_(struct tree *n, int target, int before)
 {
 	if (n == NULL)
 		log_crash();
@@ -454,7 +368,7 @@ struct token *get_category_(struct tree *n, int target, int before)
 /*
  * Returns true identifier if found, else null.
  */
-char *get_identifier(struct tree *n)
+static char *get_identifier(struct tree *n)
 {
 	struct token *t = get_category(n, IDENTIFIER, -1);
 	if (t)
@@ -466,7 +380,7 @@ char *get_identifier(struct tree *n)
 /*
  * Returns if pointer is found in tree.
  */
-bool get_pointer(struct tree *n)
+static bool get_pointer(struct tree *n)
 {
 	return get_category(n, '*', IDENTIFIER);
 }
@@ -474,7 +388,7 @@ bool get_pointer(struct tree *n)
 /*
  * Returns size of array if found, 0 if not given, -1 if not array.
  */
-int get_array(struct tree *n)
+static int get_array(struct tree *n)
 {
 	if (get_category(n, '[', INTEGER)) {
 		struct token *t = get_category(n, INTEGER, ']');
@@ -486,7 +400,7 @@ int get_array(struct tree *n)
 /*
  * Returns class name if found, else null.
  */
-char *get_class(struct tree *n)
+static char *get_class(struct tree *n)
 {
 	struct token *t = get_category(n, CLASS_NAME, IDENTIFIER);
 	if (t)
@@ -495,12 +409,12 @@ char *get_class(struct tree *n)
 		return NULL;
 }
 
-bool get_public(struct tree *n)
+static bool get_public(struct tree *n)
 {
 	return get_category(n, PUBLIC, PRIVATE);
 }
 
-bool get_private(struct tree *n)
+static bool get_private(struct tree *n)
 {
 	return get_category(n, PRIVATE, PUBLIC);
 }
@@ -508,7 +422,7 @@ bool get_private(struct tree *n)
 /*
  * Returns class name only if like class::something
  */
-char *class_member(struct tree *n)
+static char *class_member(struct tree *n)
 {
 	struct tree *prod = NULL;
 	if ((prod = get_production(n, DIRECT_DECL4))     /* class::ident */
@@ -520,7 +434,7 @@ char *class_member(struct tree *n)
 /*
  * Constructs new empty typeinfo.
  */
-struct typeinfo *typeinfo_new(struct tree *n)
+static struct typeinfo *typeinfo_new(struct tree *n)
 {
 	if (n == NULL)
 		log_crash();
@@ -543,7 +457,7 @@ struct typeinfo *typeinfo_new(struct tree *n)
 /*
  * Constructs a typeinfo for an array.
  */
-struct typeinfo *typeinfo_new_array(struct tree *n, struct typeinfo *t)
+static struct typeinfo *typeinfo_new_array(struct tree *n, struct typeinfo *t)
 {
 	struct typeinfo *array = typeinfo_new(n);
 	array->base = ARRAY_T;
@@ -555,7 +469,7 @@ struct typeinfo *typeinfo_new_array(struct tree *n, struct typeinfo *t)
 /*
  * Constructs a typeinfo for a function.
  */
-struct typeinfo *typeinfo_new_function(struct tree *n, struct typeinfo *t, bool define)
+static struct typeinfo *typeinfo_new_function(struct tree *n, struct typeinfo *t, bool define)
 {
 	/* make new symbol table if defining */
 	struct hasht *local = (define)
@@ -581,7 +495,7 @@ struct typeinfo *typeinfo_new_function(struct tree *n, struct typeinfo *t, bool 
 /*
  * Returns a copy of a typeinfo object.
  */
-struct typeinfo *typeinfo_copy(struct typeinfo *t)
+static struct typeinfo *typeinfo_copy(struct typeinfo *t)
 {
 	if (t == NULL)
 		log_crash();
@@ -623,7 +537,7 @@ struct typeinfo *typeinfo_copy(struct typeinfo *t)
  *
  * For primitives and classes returns itself.
  */
-struct typeinfo *typeinfo_return(struct typeinfo *t)
+static struct typeinfo *typeinfo_return(struct typeinfo *t)
 {
 	if (t == NULL)
 		log_crash();
@@ -637,7 +551,7 @@ struct typeinfo *typeinfo_return(struct typeinfo *t)
 /*
  * Get typeinfo for identifier or literal value.
  */
-struct typeinfo *get_typeinfo(struct tree *n) {
+static struct typeinfo *get_typeinfo(struct tree *n) {
 	if (n == NULL)
 		log_crash();
 
@@ -660,29 +574,22 @@ struct typeinfo *get_typeinfo(struct tree *n) {
 		struct token *token = n->data;
 
 		switch (map_type(token->category)) {
-		case INT_T: {
+		case INT_T:
 			return &int_type;
-		}
-		case DOUBLE_T: {
+		case DOUBLE_T:
 			return &double_type;
-		}
-		case CHAR_T: {
+		case CHAR_T:
 			return &char_type;
-		}
-		case ARRAY_T: {
+		case ARRAY_T:
 			return &string_type;
-		}
-		case BOOL_T: {
+		case BOOL_T:
 			return &bool_type;
-		}
-		case VOID_T: {
+		case VOID_T:
 			return &void_type;
-		}
 		case FUNCTION_T:
 		case CLASS_T:
-		case UNKNOWN_T: {
+		case UNKNOWN_T:
 			return &unknown_type;
-		}
 		}
 	}
 	return NULL;
@@ -692,7 +599,7 @@ struct typeinfo *get_typeinfo(struct tree *n) {
  * Recursively perform type checking on the relevant expression
  * production rules for the given syntax tree.
  */
-struct typeinfo *type_check(struct tree *n)
+static struct typeinfo *type_check(struct tree *n)
 {
 	if (n == NULL)
 		log_crash();
@@ -1217,7 +1124,7 @@ struct typeinfo *type_check(struct tree *n)
 /*
  * Frees types for arrays and functions, and parameter lists.
  */
-void typeinfo_delete(struct typeinfo *t)
+static void typeinfo_delete(struct typeinfo *t)
 {
 	switch (t->base) {
 	case ARRAY_T: {
@@ -1237,7 +1144,7 @@ void typeinfo_delete(struct typeinfo *t)
 /*
  * Recursively compares two typeinfos.
  */
-bool typeinfo_compare(struct typeinfo *a, struct typeinfo *b)
+static bool typeinfo_compare(struct typeinfo *a, struct typeinfo *b)
 {
 	/* Two null types are the same */
 	if (a == NULL && b == NULL)
@@ -1285,7 +1192,7 @@ bool typeinfo_compare(struct typeinfo *a, struct typeinfo *b)
 /*
  * Compares each type of two lists of types (for functions).
  */
-bool typeinfo_list_compare(struct list *a, struct list *b)
+static bool typeinfo_list_compare(struct list *a, struct list *b)
 {
 	struct list_node *a_iter = list_head(a);
 	struct list_node *b_iter = list_head(b);
@@ -1304,7 +1211,7 @@ bool typeinfo_list_compare(struct list *a, struct list *b)
  * Recursively handles nodes, processing SIMPLE_DECL1 and
  * FUNCTION_DEF2 for symbols.
  */
-bool handle_node(struct tree *n, int d)
+static bool handle_node(struct tree *n, int d)
 {
 	switch (get_rule(n)) {
 	case SIMPLE_DECL1: { /* variable and function declarations */
@@ -1333,7 +1240,7 @@ bool handle_node(struct tree *n, int d)
  *
  * Works for basic types, pointers, arrays, and function declarations.
  */
-void handle_init(struct typeinfo *v, struct tree *n)
+static void handle_init(struct typeinfo *v, struct tree *n)
 {
 	char *k = get_identifier(n);
 
@@ -1388,7 +1295,7 @@ void handle_init(struct typeinfo *v, struct tree *n)
 /*
  * Handles lists of init declarators recursively.
  */
-void handle_init_list(struct typeinfo *v, struct tree *n)
+static void handle_init_list(struct typeinfo *v, struct tree *n)
 {
 	enum rule r = get_rule(n);
 	if (r == INIT_DECL_LIST2 || r == MEMBER_SPEC1 || r == MEMBER_DECL_LIST2) {
@@ -1425,7 +1332,7 @@ void handle_init_list(struct typeinfo *v, struct tree *n)
 /*
  * Handles function definitions, recursing with handle_node().
  */
-void handle_function(struct typeinfo *t, struct tree *n, char *k)
+static void handle_function(struct typeinfo *t, struct tree *n, char *k)
 {
 	struct typeinfo *v = typeinfo_new_function(n, t, true);
 
@@ -1455,7 +1362,7 @@ void handle_function(struct typeinfo *t, struct tree *n, char *k)
  * table and able to find an indentifier, inserts into the scope. If
  * given a parameters list, will insert into the list.
  */
-void handle_param(struct typeinfo *v, struct tree *n, struct hasht *s, struct list *l)
+static void handle_param(struct typeinfo *v, struct tree *n, struct hasht *s, struct list *l)
 {
 	char *k = get_identifier(n);
 
@@ -1477,7 +1384,7 @@ void handle_param(struct typeinfo *v, struct tree *n, struct hasht *s, struct li
 /*
  * Handles an arbitrarily nested list of parameters recursively.
  */
-void handle_param_list(struct tree *n, struct hasht *s, struct list *l)
+static void handle_param_list(struct tree *n, struct hasht *s, struct list *l)
 {
 	if (tree_size(n) != 1) { /* recurse on list */
 		enum rule r = get_rule(n);
@@ -1498,7 +1405,7 @@ void handle_param_list(struct tree *n, struct hasht *s, struct list *l)
 /*
  * Handles a class declaration with public and/or private scopes.
  */
-void handle_class(struct typeinfo *t, struct tree *n)
+static void handle_class(struct typeinfo *t, struct tree *n)
 {
 	char *k = get_identifier(n);
 	t->base = CLASS_T; /* class definition is still a class */
@@ -1519,3 +1426,95 @@ void handle_class(struct typeinfo *t, struct tree *n)
 
 	symbol_insert(k, t, n, NULL);
 }
+
+/*
+ * Given a type enum, returns its name as a static string.
+ */
+#define R(rule) case rule: return #rule
+static char *print_basetype(struct typeinfo *t)
+{
+	switch (t->base) {
+		R(INT_T);
+		R(DOUBLE_T);
+		R(CHAR_T);
+		R(BOOL_T);
+		R(ARRAY_T);
+		R(VOID_T);
+		R(UNKNOWN_T);
+	case FUNCTION_T:
+		return print_basetype(t->function.type);
+	case CLASS_T:
+		return (t->class.type) ? t->class.type : "CLASS_T";
+	}
+
+	return NULL; /* error */
+}
+#undef R
+
+/*
+ * Prints a realistic reprensentation of a symbol to the stream.
+ *
+ * Example: DOUBLE_T foobar(INT_T *, AClass)
+ */
+static void print_typeinfo(FILE *stream, char *k, struct typeinfo *v)
+{
+	if (v == NULL)
+		log_error("print_typeinfo(): type for %s was null", k);
+
+	switch (v->base) {
+	case INT_T:
+	case DOUBLE_T:
+	case CHAR_T:
+	case BOOL_T:
+	case VOID_T: {
+		fprintf(stream, "%s", print_basetype(v));
+		break;
+	}
+	case ARRAY_T: {
+		print_typeinfo(stream, NULL, v->array.type);
+		if (k)
+			fprintf(stream, " %s%s",
+			        (v->array.type->pointer) ? "*" : "", k);
+		if (v->array.size)
+			fprintf(stream, "[%zu]", v->array.size);
+		else
+			fprintf(stream, "[]");
+		if (k)
+			fprintf(stream, "\n");
+		return;
+	}
+	case FUNCTION_T: {
+		print_typeinfo(stream, NULL, v->function.type);
+		fprintf(stream, " %s%s(",
+		        (v->function.type->pointer) ? "*" : "", k);
+
+		struct list_node *iter = list_head(v->function.parameters);
+		while (!list_end(iter)) {
+			struct typeinfo *p = iter->data;
+			print_typeinfo(stream, NULL, p);
+			fprintf(stream, "%s", (p->pointer) ? " *" : "");
+			iter = iter->next;
+			if (!list_end(iter))
+				fprintf(stream, ", ");
+		}
+		fprintf(stream, ")\n");
+		return;
+	}
+	case CLASS_T: {
+		fprintf(stream, "%s", print_basetype(v));
+		break;
+	}
+	case UNKNOWN_T: {
+		fprintf(stream, "unknown type");
+		break;
+	}
+	}
+	if (k)
+		fprintf(stream, " %s%s\n", (v->pointer) ? "*" : "", k);
+}
+
+#undef scope_current
+#undef scope_push
+#undef scope_pop
+#undef get_rule
+#undef get_token
