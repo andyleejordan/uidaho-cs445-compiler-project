@@ -110,10 +110,8 @@ void test_sentinel(struct list *list)
 
 void test_size(struct list *list, size_t size)
 {
-	if (list_size(list) != size) {
-		sprintf(buffer, "size should have been %lu", size);
-		failure(buffer);
-	}
+	if (list_size(list) != size)
+		failure("size should have been %lu", size);
 }
 
 void test_empty(struct list *list)
@@ -161,34 +159,26 @@ void test_non_empty(struct list *list)
 
 void test_head_data(struct list *list, char *data)
 {
-	if (!compare(list_front(list), data)) {
-		sprintf(buffer, "head should have been '%s'", data);
-		failure(buffer);
-	}
+	if (!compare(list_front(list), data))
+		failure("head should have been '%s'", data);
 }
 
 void test_tail_data(struct list *list, char *data)
 {
-	if (!compare(list_back(list), data)) {
-		sprintf(buffer, "tail should have been '%s'", data);
-		failure(buffer);
-	}
+	if (!compare(list_back(list), data))
+		failure("tail should have been '%s'", data);
 }
 
 void test_search_data(struct list *list, char* data)
 {
-	if (!list_search(list, data)) {
-		sprintf(buffer, "list should have had '%s'", data);
-		failure(buffer);
-	}
+	if (!list_search(list, data))
+		failure("list should have had '%s'", data);
 }
 
 void test_not_search_data(struct list *list, char* data)
 {
-	if (list_search(list, data)) {
-		sprintf(buffer, "list should not have had '%s'", data);
-		failure(buffer);
-	}
+	if (list_search(list, data))
+		failure("list should not have had '%s'", data);
 }
 
 void test_iter_forward(struct list *list)
@@ -200,10 +190,9 @@ void test_iter_forward(struct list *list)
 		printf("%s ", (char *)iter->data);
 		iter = iter->next;
 	}
-	if (counter != list_size(list)) {
-		sprintf(buffer, "iter forward counted %lu, but had size %lu", counter, list_size(list));
-		failure(buffer);
-	}
+	if (counter != list_size(list))
+		failure("iter forward counted %lu, but had size %lu",
+		        counter, list_size(list));
 }
 
 void test_iter_backward(struct list *list)
@@ -215,8 +204,7 @@ void test_iter_backward(struct list *list)
 		printf("%s ", (char *)iter->data);
 		iter = iter->prev;
 	}
-	if (counter != list_size(list)) {
-		sprintf(buffer, "iter backward counted %lu, but had size %lu", counter, list_size(list));
-		failure(buffer);
-	}
+	if (counter != list_size(list))
+		failure("iter backward counted %lu, but had size %lu",
+		        counter, list_size(list));
 }

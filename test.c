@@ -8,6 +8,7 @@
  */
 
 #include <string.h>
+#include <stdarg.h>
 
 #include "test.h"
 
@@ -16,19 +17,41 @@ bool compare(const char *a, const char *b)
 	return (0 == strcmp(a, b));
 }
 
-void running(char *s)
+void running(const char *format, ...)
 {
+	va_list ap;
+	va_start(ap, format);
+
 	status = EXIT_SUCCESS;
-	printf("RUNNING %s tests\n", s);
+
+	printf("RUNNING: ");
+	vprintf(format, ap);
+	printf(" tests\n");
+
+	va_end(ap);
 }
 
-void testing(char *s)
+void testing(const char *format, ...)
 {
-	printf("TESTING %s\n", s);
+	va_list ap;
+	va_start(ap, format);
+
+	printf("TESTING: ");
+	vprintf(format, ap);
+	printf("\n");
+
+	va_end(ap);
 }
 
-void failure(char *s)
+void failure(const char *format, ...)
 {
+	va_list ap;
+	va_start(ap, format);
+
 	status = EXIT_FAILURE;
-	fprintf(stderr, "FAILURE %s!\n", s);
+	fprintf(stderr, "FAILURE: ");
+	vfprintf(stderr, format, ap);
+	fprintf(stderr, "!\n");
+
+	va_end(ap);
 }

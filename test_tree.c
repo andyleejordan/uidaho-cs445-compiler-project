@@ -71,10 +71,8 @@ int main()
 
 void test_size(struct tree *tree, size_t size)
 {
-	if (tree_size(tree) != size) {
-		sprintf(buffer, "size should have been %zu", size);
-		failure(buffer);
-	}
+	if (tree_size(tree) != size)
+		failure("size should have been %zu", size);
 }
 
 void test_new(struct tree *tree, struct tree *parent, void *data)
