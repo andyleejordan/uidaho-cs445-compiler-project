@@ -18,11 +18,13 @@
 #include "args.h"
 #include "logger.h"
 
+#include "libs.h"
+#include "lexer.h"
+
 #include "list.h"
 #include "tree.h"
 #include "hasht.h"
 
-#include "lexer.h"
 /* argument parser */
 const char *argp_program_version = "120++ hw3-alpha";
 const char *argp_program_bug_address = "<andrew@schwartzmeyer.com>";
@@ -77,6 +79,16 @@ int main(int argc, char **argv)
 
 	/* setup lexer and parse each argument (or stdin) as a new 'program' */
 	for (int i = 0; arguments.input_files[i]; ++i) {
+		/* reset library flags */
+		libs.usingstd	= false;
+		libs.cstdlib	= false;
+		libs.cmath	= false;
+		libs.ctime	= false;
+		libs.cstring	= false;
+		libs.fstream	= false;
+		libs.iostream	= false;
+		libs.string	= false;
+		libs.iomanip	= false;
 
 		/* reset directory for each input file */
 		if (chdir(cwd) != 0)

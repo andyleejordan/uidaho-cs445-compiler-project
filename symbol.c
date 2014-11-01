@@ -16,6 +16,7 @@
 #include "args.h"
 #include "logger.h"
 #include "token.h"
+#include "libs.h"
 #include "list.h"
 #include "hasht.h"
 #include "tree.h"
@@ -25,10 +26,6 @@
 
 /* from lexer */
 extern struct hasht *typenames;
-extern bool usingstd;
-extern bool fstream;
-extern bool iostream;
-extern bool string;
 
 /* stack of scopes */
 struct list *yyscopes;
@@ -261,8 +258,9 @@ struct hasht *symbol_populate(struct tree *syntax)
 	scope_push(global);
 
 	/* handle standard libraries */
-	if (usingstd) {
-		if (fstream || iostream) { /* iostream includes fstream */
+	if (libs.usingstd) {
+		/* iostream includes fstream */
+		if (libs.fstream || libs.iostream) {
 			struct typeinfo *ifstream = malloc(sizeof(*ifstream));
 			ifstream->base = CLASS_T;
 			ifstream->pointer = false;
@@ -288,7 +286,7 @@ struct hasht *symbol_populate(struct tree *syntax)
 			ofstream->class.type = "std::ofstream";
 			symbol_insert("ofstream", ofstream, NULL, NULL);
 		}
-		if (iostream) {
+		if (libs.iostream) {
 			struct typeinfo *cin = malloc(sizeof(*cin));
 			cin->base = CLASS_T;
 			cin->class.type = "ifstream";
@@ -304,7 +302,7 @@ struct hasht *symbol_populate(struct tree *syntax)
 			endl->base = CHAR_T;
 			symbol_insert("endl", endl, NULL, NULL);
 		}
-		if (string) {
+		if (libs.string) {
 			struct typeinfo *string = malloc(sizeof(*string));
 			string->base = CLASS_T;
 			string->pointer = false;

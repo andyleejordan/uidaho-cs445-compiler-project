@@ -28,6 +28,7 @@ IS       (u|U|l|L)*
 #include <libgen.h>
 
 #include "logger.h"
+#include "libs.h"
 #include "list.h"
 #include "tree.h"
 #include "hasht.h"
@@ -51,16 +52,6 @@ struct token *yytoken = NULL;
 void prepare_token(int category);
 
 /* handle #include libraries */
-bool usingstd = false;
-bool cstdlib  = false;
-bool cmath    = false;
-bool ctime    = false;
-bool cstring  = false;
-bool fstream  = false;
-bool iostream = false;
-bool string   = false;
-bool iomanip  = false;
-
 void handle_fstream();
 void handle_string();
 
@@ -94,31 +85,31 @@ int check_identifier(const char *s);
 
 <INC>{
         [ \t]*          { /* eat whitespace */ }
-        "<cstdlib>"     { cstdlib  = true; BEGIN(INITIAL); }
-        "<cmath>"       { cmath    = true; BEGIN(INITIAL); }
-        "<ctime>"       { ctime    = true; BEGIN(INITIAL); }
-        "<cstring>"     { cstring  = true; BEGIN(INITIAL); }
-        "<fstream>"     { fstream  = true;
-                          if (usingstd)
+        "<cstdlib>"     { libs.cstdlib  = true; BEGIN(INITIAL); }
+        "<cmath>"       { libs.cmath    = true; BEGIN(INITIAL); }
+        "<ctime>"       { libs.ctime    = true; BEGIN(INITIAL); }
+        "<cstring>"     { libs.cstring  = true; BEGIN(INITIAL); }
+        "<fstream>"     { libs.fstream  = true;
+                          if (libs.usingstd)
                                   handle_fstream();
                           BEGIN(INITIAL); }
-        "<iostream>"    { iostream = true; BEGIN(INITIAL); }
-        "<string>"      { string   = true;
-                          if (usingstd)
+        "<iostream>"    { libs.iostream = true; BEGIN(INITIAL); }
+        "<string>"      { libs.string   = true;
+                          if (libs.usingstd)
                                   handle_string();
                           BEGIN(INITIAL); }
-        "<iomanip>"     { iomanip  = true; BEGIN(INITIAL); }
+        "<iomanip>"     { libs.iomanip  = true; BEGIN(INITIAL); }
         \"[^\"]+\"      { handle_include(yytext); BEGIN(INITIAL); }
-        "<"[^<>]*">"    { lexerror("Unrecognized system library"); }
-        <<EOF>>         { lexerror("Unexpected EOF"); }
-        .               { lexerror("Unrecognized token following #include"); }
+        "<"[^<>]*">"    { log_lexical("Unrecognized library %s", yytext); }
+        <<EOF>>         { log_lexical("Unexpected EOF"); }
+        .               { log_lexical("Unrecognized token %s"); }
 }
 
   /* only allowed namespace directive */
-"using namespace std;"  { usingstd = true;
-                          if (fstream)
+"using namespace std;"  { libs.usingstd = true;
+                          if (libs.fstream)
                                   handle_fstream();
-                          if (string)
+                          if (libs.string)
                                   handle_string(); }
 
   /* keywords */
