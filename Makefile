@@ -16,7 +16,7 @@ BISON = bison
 # flags
 CDEBUG = -g
 CFLAGS = -O -Wall -Werror -std=gnu99
-LDFLAGS = -g -largp
+LDFLAGS = -g
 FLEXFLAGS =
 BISONFLAGS = -Wall -Werror
 
