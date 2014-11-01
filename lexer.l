@@ -27,6 +27,7 @@ IS       (u|U|l|L)*
 #include <ctype.h>
 #include <libgen.h>
 
+#include "logger.h"
 #include "list.h"
 #include "tree.h"
 #include "hasht.h"
@@ -40,10 +41,7 @@ IS       (u|U|l|L)*
 
 /* from main */
 extern struct list *filenames;
-extern char* error_buf;
-
 void chdirname(char *c);
-void handle_error(char *c);
 
 /* from parser */
 void delete_tree(void *data, bool leaf);
@@ -74,10 +72,6 @@ struct hasht *typenames;
 void insert_typename(char *k, int c);
 void insert_typename_tree(struct tree *t, int category);
 int check_identifier(const char *s);
-
-/* error helpers */
-void lexerror(const char *s);
-void unsupported();
 
 %}
 
@@ -176,7 +170,7 @@ void unsupported();
 "union"                 |
 "using"                 |
 "virtual"               |
-"volatile"              { unsupported(); }
+"volatile"              { log_unsupported(); }
 
   /* integer and floating constants */
 {D}+{IS}?               { TOKEN(INTEGER); }
@@ -188,7 +182,7 @@ void unsupported();
 \'                      { prepare_token(CHARACTER); BEGIN(CHR); }
 
 <CHR>{
-        \'              { lexerror("Empty char literal"); }
+        \'              { log_lexical("Empty char literal"); }
         "\\'"           { yytoken->ival = '\''; YYAPPENDTEXT(); BEGIN(CHREND); }
         "\\\""          { yytoken->ival = '"';  YYAPPENDTEXT(); BEGIN(CHREND); }
         "\\?"           { yytoken->ival = '\?'; YYAPPENDTEXT(); BEGIN(CHREND); }
@@ -204,13 +198,13 @@ void unsupported();
         [^\\"'"]        { yytoken->ival = *yytext;
                           YYAPPENDTEXT();
                           BEGIN(CHREND); }
-        .               { lexerror("Unrecognized token in char literal"); }
+        .               { log_lexical("Unrecognized token %s in char literal", yytext); }
 }
 
 <CHREND>{
         \'              { YYAPPENDTEXT(); BEGIN(INITIAL); return CHARACTER; }
-        \n              { lexerror("Unexpected newline in char literal"); }
-        .               { lexerror("Too many symbols in char literal"); }
+        \n              { log_lexical("Unexpected newline in char literal"); }
+        .               { log_lexical("Too many symbols in char literal"); }
 }
 
   /* string literal */
@@ -235,9 +229,9 @@ void unsupported();
         "\\\\"          { YYAPPENDCHAR('\\'); YYAPPENDTEXT(); }
         [^\\\"\n]+      { token_push_sval_string(yytoken, yytext);
                           YYAPPENDTEXT(); }
-        \n              { lexerror("Unexpected newline in string literal"); }
-        .               { lexerror("Unrecognized token in string literal"); }
-        <<EOF>>         { lexerror("Unterminated string literal"); }
+        \n              { log_lexical("Unexpected newline in string literal"); }
+        .               { log_lexical("Unrecognized token in string literal"); }
+        <<EOF>>         { log_lexical("Unterminated string literal"); }
 }
 
   /* operators */
@@ -292,7 +286,7 @@ void unsupported();
   /* identifer */
 {L}({L}|{D})*           { return check_identifier(yytext); }
 
-<*>.                    { lexerror("Unrecognized token"); }
+<*>.                    { log_lexical("Unrecognized token"); }
 
 <<EOF>>                 { /* pop the current buffer and filename */
                           yypop_buffer_state();
@@ -309,27 +303,6 @@ void unsupported();
                           if (!YY_CURRENT_BUFFER)
                                   yyterminate(); }
 %%
-
-/*
- * Prints relevant information for lexical errors and exits returning 1
- * per assignment requirements.
- */
-void lexerror(const char *s)
-{
-	fprintf(stderr, "Lexical error: file %s, line %d, token %s: %s\n",
-                (const char *)list_back(filenames), yylineno, yytext, s);
-	exit(1);
-}
-
-/*
- * Prints error message and exits per assignment requirements.
- */
-void unsupported()
-{
-	fprintf(stderr, "C++ operation unsupported in 120++: file %s, line %d, token: %s\n",
-                (const char *)list_back(filenames), yylineno, yytext);
-	exit(3);
-}
 
 /*
  * Creates a token with the necessary information, then allocates a
@@ -356,27 +329,25 @@ void handle_include(const char *s)
 	size_t len = strlen(s) - 2; /* size without surrounding quotes */
 	char *include = calloc(len+1, sizeof(char));
 	if (include == NULL)
-		handle_error("handle include");
 	strncpy(include, s+1, len); /* copy substring */
+		log_crash();
 	include[len] = '\0';
 
 	/* get the real path */
 	char *filename = realpath(include, NULL);
-	if (filename == NULL) {
-		sprintf(error_buf, "Could not resolve path to included file: %s, included from %s\n",
-                        include, (const char *)list_back(filenames));
-		handle_error(error_buf);
-	}
+	if (filename == NULL)
+		log_error("Could not find included file %s from %s",
+		          include, (const char *)list_back(filenames));
+
 	free(include);
 	list_push_back(filenames, filename);
 
 	/* open file and push buffer */
 	yyin = fopen(filename, "r");
-	if (yyin == NULL) {
-		sprintf(error_buf, "Could not open included file: %s, include from %s\n",
-                        filename, (const char *)list_back(filenames));
-		handle_error(error_buf);
-	}
+	if (yyin == NULL)
+		log_error("Could not open included file %s from %s",
+		          filename, (const char *)list_back(filenames));
+
 	yylineno = 1;
 	yypush_buffer_state(yy_create_buffer(yyin, YY_BUF_SIZE));
 
@@ -415,13 +386,16 @@ void insert_typename(char *k, int c)
 {
 	char *key = strdup(k);
 	int *i = malloc(sizeof(*i));
+	if (key == NULL || i == NULL)
+		log_crash();
+
 	*i = c;
 
 	if (hasht_search(typenames, key))
-		lexerror("token previously declared as identifier");
+		log_lexical("Typename %s previously declared", k);
 
 	if (hasht_insert(typenames, key, i) == NULL)
-		handle_error("typenames table failed to insert");
+		log_error("Failed to insert into typenames table");
 }
 
 /*

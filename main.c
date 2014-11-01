@@ -13,6 +13,7 @@
 #include <string.h>
 #include <libgen.h>
 #include <unistd.h>
+#include "logger.h"
 
 #include "list.h"
 #include "tree.h"
@@ -35,10 +36,6 @@ struct hasht *symbol_populate(struct tree *syntax);
 struct tree *yyprogram = NULL;
 struct list *filenames = NULL;
 
-/* error helpers */
-void handle_error(char *c);
-char error_buf[256];
-
 /* chdir to dirname of given filename safely */
 void chdirname(char *c);
 
@@ -46,11 +43,11 @@ int main(int argc, char **argv)
 {
 	char *cwd = getcwd(NULL, 0);
 	if (cwd == NULL)
-		handle_error("getcwd");
+		log_crash();
 
 	filenames = list_new(NULL, &free);
 	if (filenames == NULL)
-		handle_error("main filenames");
+		log_crash();
 
 	/* setup lexer and parse each argument (or stdin) as a new 'program' */
 	for (int i = 1; i <= argc; ++i) {
@@ -90,7 +87,7 @@ int main(int argc, char **argv)
 		list_push_back(filenames, filename);
 		yypush_buffer_state(yy_create_buffer(yyin, YY_BUF_SIZE));
 
-		/* call Bison */
+		log_debug("Invoking Bison");
 		int result = yyparse();
 		if (result != 0)
 			return 2;
@@ -100,7 +97,7 @@ int main(int argc, char **argv)
 
 		/* build the symbol tables */
 		struct hasht *global = symbol_populate(yyprogram);
-		printf("global symbol table had %zu entries\n", hasht_used(global));
+		log_debug("global symbol table had %zu entries", hasht_used(global));
 
 		/* clean up */
 		tree_free(yyprogram);
@@ -114,34 +111,20 @@ int main(int argc, char **argv)
 }
 
 /*
- * Passes given string to perror and exits with EXIT_FAILURE, used for
- * internal program errors.
- */
-void handle_error(char *c)
-{
-	perror(c);
-	exit(EXIT_FAILURE);
-}
-
-/*
  * Helper function to safely chdir to dirname of given filename.
  */
 void chdirname(char *c)
 {
 	char *filename = strdup(c);
 	if (filename == NULL)
-		handle_error("chdirname");
+		log_crash();
 
 	char *dir = dirname(filename);
-	if (dir == NULL) {
-		sprintf(error_buf, "Could not get dirname of %s", filename);
-		handle_error(error_buf);
-	}
+	if (dir == NULL)
+		log_crash();
 
-	if (chdir(dir) != 0) {
-		sprintf(error_buf, "Could not chdir to %s", dir);
-		handle_error(error_buf);
-	}
+	if (chdir(dir) != 0)
+		log_error("Could not chdir to %s", dir);
 
 	free(filename);
 }

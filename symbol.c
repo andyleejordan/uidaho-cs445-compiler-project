@@ -13,6 +13,7 @@
 #include <stdarg.h>
 
 #include "symbol.h"
+#include "logger.h"
 #include "token.h"
 #include "list.h"
 #include "hasht.h"
@@ -30,7 +31,6 @@ extern bool string;
 
 /* stack of scopes */
 struct list *yyscopes;
-char error_buf[256];
 
 #define scope_current() (struct hasht *)list_back(yyscopes)
 #define scope_push(s) list_push_back(yyscopes, s)
@@ -79,8 +79,6 @@ void handle_function(struct typeinfo *t, struct tree *n, char *k);
 void handle_param(struct typeinfo *v, struct tree *n, struct hasht *s, struct list *l);
 void handle_param_list(struct tree *n, struct hasht *s, struct list *l);
 void handle_class(struct typeinfo *t, struct tree *n);
-
-void semantic_error(char *s, struct tree *n);
 
 /* basic type comparators */
 struct typeinfo int_type;
@@ -188,10 +186,9 @@ char *print_basetype(struct typeinfo *t)
  */
 void print_typeinfo(FILE *stream, char *k, struct typeinfo *v)
 {
-	if (v == NULL) {
-		fprintf(stderr, "print_typeinfo(): type for %s was null\n", k);
-		return;
-	}
+	if (v == NULL)
+		log_error("print_typeinfo(): type for %s was null", k);
+
 	switch (v->base) {
 	case INT_T:
 	case DOUBLE_T:
@@ -252,9 +249,14 @@ struct hasht *symbol_populate(struct tree *syntax)
 	set_type_comparators();
 
 	struct hasht *global = hasht_new(32, true, NULL, NULL, &symbol_free);
+	if (global == NULL)
+		log_crash();
 
 	/* initialize scope stack */
 	yyscopes = list_new(NULL, NULL);
+	if (yyscopes == NULL)
+		log_crash();
+
 	scope_push(global);
 
 	/* handle standard libraries */
@@ -347,10 +349,8 @@ struct typeinfo *symbol_search(char *k)
  */
 void symbol_insert(char *k, struct typeinfo *v, struct tree *n, struct hasht *l)
 {
-	if (v == NULL) {
-		fprintf(stderr, "symbol_insert(): type for %s was null\n", k);
-		return;
-	}
+	if (v == NULL)
+		log_error("symbol_insert(): type for %s was null", k);
 
 	struct typeinfo *e = NULL;
 	if (l != NULL && v->base == FUNCTION_T)
@@ -366,18 +366,16 @@ void symbol_insert(char *k, struct typeinfo *v, struct tree *n, struct hasht *l)
 		hasht_insert(scope_current(), k, v);
 	} else if (e->base == FUNCTION_T && v->base == FUNCTION_T) {
 		if (!typeinfo_compare(e, v)) {
-			semantic_error("function prototypes mismatched", n);
+			log_semantic(n, "function signatures for %s mismatched", k);
 		} else if (l) {
-			if (e->function.symbols == NULL) {
+			/* define the function */
+			if (e->function.symbols == NULL)
 				e->function.symbols = l;
-			} else {
-				sprintf(error_buf, "function %s already defined", k);
-				semantic_error(error_buf, n);
-			}
+			else
+				log_semantic(n, "function %s already defined", k);
 		}
 	} else {
-		sprintf(error_buf, "identifier %s already declared", k);
-		semantic_error(error_buf, n);
+		log_semantic(n, "identifier %s already declared", k);
 	}
 }
 
@@ -386,6 +384,9 @@ void symbol_insert(char *k, struct typeinfo *v, struct tree *n, struct hasht *l)
  */
 void symbol_free(struct hash_node *n)
 {
+	if (n == NULL)
+		log_crash();
+
 	free(n->key);
 	typeinfo_delete(n->value);
 }
@@ -395,6 +396,9 @@ void symbol_free(struct hash_node *n)
  */
 struct tree *get_production(struct tree *n, enum rule r)
 {
+	if (n == NULL)
+		log_crash();
+
 	if (tree_size(n) != 1 && get_rule(n) == r)
 		return n;
 
@@ -426,7 +430,7 @@ struct token *get_category(struct tree *n, int target, int before)
 struct token *get_category_(struct tree *n, int target, int before)
 {
 	if (n == NULL)
-		return NULL;
+		log_crash();
 
 	if (tree_size(n) == 1) {
 		struct token *t = n->data;
@@ -482,9 +486,6 @@ int get_array(struct tree *n)
  */
 char *get_class(struct tree *n)
 {
-	if (n == NULL)
-		return NULL;
-
 	struct token *t = get_category(n, CLASS_NAME, IDENTIFIER);
 	if (t)
 		return t->text;
@@ -519,7 +520,13 @@ char *class_member(struct tree *n)
  */
 struct typeinfo *typeinfo_new(struct tree *n)
 {
+	if (n == NULL)
+		log_crash();
+
 	struct typeinfo *t = calloc(1, sizeof(*t));
+	if (t == NULL)
+		log_crash();
+
 	t->base = (get_rule(n) == FUNCTION_DEF1)
 		? CLASS_T /* constructor return type is always class */
 		: map_type(get_token(n, 0)->category); /* TODO: factor out dependency */
@@ -554,6 +561,8 @@ struct typeinfo *typeinfo_new_function(struct tree *n, struct typeinfo *t, bool 
 		: NULL;
 
 	struct list *params = list_new(NULL, NULL);
+	if (params == NULL)
+		log_crash();
 
 	handle_param_list(n, local, params);
 
@@ -573,9 +582,12 @@ struct typeinfo *typeinfo_new_function(struct tree *n, struct typeinfo *t, bool 
 struct typeinfo *typeinfo_copy(struct typeinfo *t)
 {
 	if (t == NULL)
-		return NULL;
+		log_crash();
 
 	struct typeinfo *n = malloc(sizeof(*n));
+	if (n == NULL)
+		log_crash();
+
 	n->base = t->base;
 	n->pointer = t->pointer;
 
@@ -611,6 +623,9 @@ struct typeinfo *typeinfo_copy(struct typeinfo *t)
  */
 struct typeinfo *typeinfo_return(struct typeinfo *t)
 {
+	if (t == NULL)
+		log_crash();
+
 	if (t->base == FUNCTION_T)
 		return t->function.type;
 	else
@@ -621,6 +636,9 @@ struct typeinfo *typeinfo_return(struct typeinfo *t)
  * Get typeinfo for identifier or literal value.
  */
 struct typeinfo *get_typeinfo(struct tree *n) {
+	if (n == NULL)
+		log_crash();
+
 	/* reset base type comparators */
 	set_type_comparators();
 
@@ -674,10 +692,8 @@ struct typeinfo *get_typeinfo(struct tree *n) {
  */
 struct typeinfo *type_check(struct tree *n)
 {
-	if (n == NULL) {
-		fprintf(stderr, "type_check(): n was null\n");
-		return NULL;
-	}
+	if (n == NULL)
+		log_crash();
 
 	if (tree_size(n) == 1)
 		return get_typeinfo(n);
@@ -688,27 +704,26 @@ struct typeinfo *type_check(struct tree *n)
 		/* initialization of simple variable */
 		char *k = get_identifier(n->parent);
 		if (k == NULL)
-			semantic_error("couldn't get identifier in init", n);
+			log_semantic(n, "could not get identifier in init");
 
 		struct typeinfo *l = symbol_search(k);
 		if (l == NULL)
-			semantic_error("couldn't get symbol for identifier in init", n);
+			log_semantic(n, "could not get symbol for %s in init", k);
 
 		struct typeinfo *r = type_check(tree_index(n, 0));
 		if (r == NULL)
-			semantic_error("variable undeclared", n);
+			log_semantic(n, "symbol %s undeclared", k);
 
 		if (typeinfo_compare(l, r)) {
-			fprintf(stderr, "CHECK: initializer %s at depth %zu\n", k, list_size(yyscopes));
+			log_check("initialized %s", k);
 			return l;
 		} else if (l->base == CLASS_T
 		           && (strcmp(l->class.type, "string") == 0)
 		           && r->base == CHAR_T && r->pointer) {
-			fprintf(stderr, "CHECK: std::string initialized with string literal\n");
+			log_check("initialized std::string %s with string literal", k);
 			return l;
 		} else {
-			sprintf(error_buf, "could not initialize %s with given type", k);
-			semantic_error(error_buf, n);
+			log_semantic(n, "could not initialize %s with given type", k);
 		}
 	}
 	case INIT_LIST2: {
@@ -716,14 +731,14 @@ struct typeinfo *type_check(struct tree *n)
 		   type matches the array's element type */
 		char *k = get_identifier(n->parent->parent);
 		if (k == NULL)
-			semantic_error("couldn't get identifier in init list", n);
+			log_semantic(n, "could not get identifier in initializer list");
 
 		struct typeinfo *l = symbol_search(k);
 		if (l == NULL)
-			semantic_error("couldn't get type in init list", n);
+			log_semantic(n, "could not get symbol for %s in initializer list", k);
 
 		if (l->base != ARRAY_T)
-			semantic_error("initializer list type was not an array", n);
+			log_semantic(n, "initializer list assignee %s was not an array", k);
 
 		struct list_node *iter = list_head(n->children);
 		size_t items = 0;
@@ -731,19 +746,19 @@ struct typeinfo *type_check(struct tree *n)
 			++items;
 			struct typeinfo *elem = type_check(iter->data);
 			if (!typeinfo_compare(l->array.type, elem))
-				semantic_error("initializer item type was not array type", n);
+				log_semantic(n, "initializer item did not match %s element type", k);
 			if (items > l->array.size)
-				semantic_error("too many items in initializer list", n);
+				log_semantic(n, "array %k size %zu exceeded by initializer list", k, l->array.size);
 			iter = iter->next;
 		}
-		fprintf(stderr, "CHECK: initializer list matched\n");
+		log_check("initialized %s with list", k);
 		return l;
 	}
 	case NEW_EXPR1: {
 		/* new operator */
 		struct tree *type_spec = get_production(n, TYPE_SPEC_SEQ);
 		if (type_spec == NULL)
-			semantic_error("couldn't get type_spec for new", n);
+			log_semantic(n, "new operator missing type spec");
 
 		struct typeinfo *type = typeinfo_copy(get_typeinfo(tree_index(type_spec, 0)));
 		type->pointer = true;
@@ -760,24 +775,27 @@ struct typeinfo *type_check(struct tree *n)
 
 			struct typeinfo *l = symbol_search(c);
 			if (l == NULL)
-				semantic_error("couldn't find class constructor", n);
+				log_semantic(n, "could not find constructor for %s", c);
 
 			struct typeinfo *r = typeinfo_copy(l);
 			r->function.parameters = list_new(NULL, NULL);
+			if (r->function.parameters == NULL)
+				log_crash();
+
 			struct tree *expr_list = get_production(n, EXPR_LIST);
 			if (expr_list) {
 				struct list_node *iter = list_head(expr_list->children);
 				while (!list_end(iter)) {
 					struct typeinfo *t = type_check(iter->data);
 					if (t == NULL)
-						semantic_error("couldn't get type for parameter", iter->data);
+						log_semantic(iter->data, "could not get type for parameter to %s constructor", c);
 					list_push_back(r->function.parameters, t);
 					iter = iter->next;
 				}
 			}
 
 			if (!typeinfo_compare(l, r))
-				semantic_error("ctor invocation did not match signature", n);
+				log_semantic(n, "new operator types mismatched");
 
 			list_free(r->function.parameters);
 			free(r);
@@ -785,7 +803,8 @@ struct typeinfo *type_check(struct tree *n)
 			/* pop newly pushed scopes */
 			while (list_size(yyscopes) != scopes)
 				scope_pop();
-			fprintf(stderr, "CHECK: ctor invocation\n");
+
+			log_check("new operator");
 		}
 
 		return type;
@@ -794,7 +813,7 @@ struct typeinfo *type_check(struct tree *n)
 		/* assignment operator */
 		char *k = get_identifier(tree_index(n, 0));
 		if (k == NULL)
-			semantic_error("left assignment operand not assignable", n);
+			log_semantic(n, "left assignment operand not assignable");
 
 		struct typeinfo *l = type_check(tree_index(n, 0));
 		struct typeinfo *r = type_check(tree_index(n, 2));
@@ -808,15 +827,15 @@ struct typeinfo *type_check(struct tree *n)
 		case MULEQ:
 		case DIVEQ: {
 			if (!(typeinfo_compare(l, &int_type) || typeinfo_compare(l, &double_type)))
-				semantic_error("left operand not an int or double", n);
+				log_semantic(n, "left operand not an int or double");
 
 			if (!(typeinfo_compare(r, &int_type) || typeinfo_compare(r, &double_type)))
-				semantic_error("right operand not an int or double", n);
+				log_semantic(n, "right operand not an int or double");
 			break;
 		}
 		case MODEQ: {
 			if (!typeinfo_compare(l, &int_type) || !typeinfo_compare(r, &int_type))
-				semantic_error("modulo operand not an integer", n);
+				log_semantic(n, "modulo operand not an integer");
 			break;
 		}
 		case SREQ:
@@ -824,20 +843,20 @@ struct typeinfo *type_check(struct tree *n)
 		case ANDEQ:
 		case XOREQ:
 		case OREQ: {
-			semantic_error("compound bitwise equality operator unsupported", n);
+			log_semantic(n, "compound bitwise equality operator unsupported");
 		}
 		}
 
 		if (typeinfo_compare(l, r)) {
-			fprintf(stderr, "CHECK: assignment to %s\n", k);
+			log_check("assigned %s", k);
 			return l;
 		} else if (l->base == CLASS_T
 		           && (strcmp(l->class.type, "string") == 0)
 		           && r->base == CHAR_T && r->pointer) {
-			fprintf(stderr, "CHECK: std::string assigned with string literal\n");
+			log_check("std::string %s assigned with string literal", k);
 			return l;
 		} else {
-			semantic_error("assignment types don't match", n);
+			log_semantic(n, "could not assign to %s", k);
 		}
 	}
 	case EQUAL_EXPR2:
@@ -845,9 +864,9 @@ struct typeinfo *type_check(struct tree *n)
 		struct typeinfo *l = type_check(tree_index(n, 0));
 		struct typeinfo *r = type_check(tree_index(n, 2));
 		if (!typeinfo_compare(l, r))
-			semantic_error("equality operands don't match", n);
+			log_semantic(n, "equality operands don't match");
 
-		fprintf(stderr, "CHECK: equality\n");
+		log_check("equality comparison");
 		return &bool_type;
 	}
 	case REL_EXPR2: /* < */
@@ -856,16 +875,16 @@ struct typeinfo *type_check(struct tree *n)
 	case REL_EXPR5: /* >= */ {
 		struct typeinfo *l = type_check(tree_index(n, 0));
 		if (!(typeinfo_compare(l, &int_type) || typeinfo_compare(l, &double_type)))
-			semantic_error("left operand not an int or double", n);
+			log_semantic(n, "left operand not an int or double");
 
 		struct typeinfo *r = type_check(tree_index(n, 2));
 		if (!(typeinfo_compare(r, &int_type) || typeinfo_compare(r, &double_type)))
-			semantic_error("right operand not an int or double", n);
+			log_semantic(n, "right operand not an int or double");
 
 		if (!typeinfo_compare(l, r))
-			semantic_error("operands don't match", n);
+			log_semantic(n, "could not order operands");
 
-		fprintf(stderr, "CHECK: comparison\n");
+		log_check("order comparison");
 		return &bool_type;
 	}
 	case ADD_EXPR2:  /* + */
@@ -874,16 +893,16 @@ struct typeinfo *type_check(struct tree *n)
 	case MULT_EXPR3: /* / */ {
 		struct typeinfo *l = type_check(tree_index(n, 0));
 		if (!(typeinfo_compare(l, &int_type) || typeinfo_compare(l, &double_type)))
-			semantic_error("left operand not an int or double", n);
+			log_semantic(n, "left operand not an int or double");
 
 		struct typeinfo *r = type_check(tree_index(n, 2));
 		if (!(typeinfo_compare(r, &int_type) || typeinfo_compare(r, &double_type)))
-			semantic_error("right operand not an int or double", n);
+			log_semantic(n, "right operand not an int or double");
 
 		if (!typeinfo_compare(l, r))
-			semantic_error("operands don't match", n);
+			log_semantic(n, "could not perform arithmetic on operands");
 
-		fprintf(stderr, "CHECK: binary operators\n");
+		log_check("binary arithmetic");
 		return l;
 	}
 	case MULT_EXPR4: {
@@ -891,27 +910,27 @@ struct typeinfo *type_check(struct tree *n)
 		struct typeinfo *l = type_check(tree_index(n, 0));
 		struct typeinfo *r = type_check(tree_index(n, 2));
 		if (!typeinfo_compare(l, &int_type) || !typeinfo_compare(r, &int_type))
-			semantic_error("modulo operand not an integer", n);
+			log_semantic(n, "modulo operand not an integer");
 
-		fprintf(stderr, "CHECK: modulo arithmetic\n");
+		log_check("modulo arithmetic");
 		return l;
 	}
 	case AND_EXPR2:
 	case XOR_EXPR2:
 	case OR_EXPR2: {
-		semantic_error("unsupported bitwise operator", n);
+		log_semantic(n, "C++ bitwise operation unsupported in 120++");
 	}
 	case LOGICAL_AND_EXPR2: /* && */
 	case LOGICAL_OR_EXPR2:  /* || */ {
 		struct typeinfo *l = type_check(tree_index(n, 0));
 		if (!(typeinfo_compare(l, &int_type) || typeinfo_compare(l, &bool_type)))
-			semantic_error("left operand not an int or bool", n);
+			log_semantic(n, "left operand not an int or bool");
 
 		struct typeinfo *r = type_check(tree_index(n, 2));
 		if (!(typeinfo_compare(r, &int_type) || typeinfo_compare(r, &bool_type)))
-			semantic_error("right operand not an int or bool", n);
+			log_semantic(n, "right operand not an int or bool");
 
-		fprintf(stderr, "CHECK: logical operator\n");
+		log_check("logical comparison");
 		return &bool_type;
 	}
 	case POSTFIX_EXPR2: {
@@ -919,31 +938,26 @@ struct typeinfo *type_check(struct tree *n)
 		char *k = get_identifier(n);
 
 		struct typeinfo *l = symbol_search(k);
-		if (l == NULL) {
-			sprintf(error_buf, "array %s not declared", k);
-			semantic_error(error_buf, n);
-		}
-		if (l->base != ARRAY_T) {
-			semantic_error("trying to index non array type", n);
-		}
+		if (l == NULL)
+			log_semantic(n, "array %s not declared", k);
+		if (l->base != ARRAY_T)
+			log_semantic(n, "trying to index non array symbol %s", k);
 
 		struct typeinfo *r = type_check(tree_index(n, 2));
 		if (r == NULL)
-			semantic_error("couldn't get index for array", n);
+			log_semantic(n, "missing index for array operator");
 		if (!typeinfo_compare(&int_type, r))
-			semantic_error("array index not an integer", n);
+			log_semantic(n, "array index not an integer");
 
-		fprintf(stderr, "CHECK: %s[index]\n", k);
+		log_check("%s[index]", k);
 		return l->array.type;
 	}
 	case POSTFIX_EXPR3: {
 		/* function invocation: build typeinfo list from
 		   EXPR_LIST, recursing on each item */
 		struct typeinfo *l = type_check(tree_index(n, 0));
-		if (l == NULL) {
-			sprintf(error_buf, "function not declared");
-			semantic_error(error_buf, n);
-		}
+		if (l == NULL)
+			log_semantic(n, "function not declared");
 		struct typeinfo *r = typeinfo_copy(l);
 
 		r->function.parameters = list_new(NULL, NULL);
@@ -953,20 +967,20 @@ struct typeinfo *type_check(struct tree *n)
 			while (!list_end(iter)) {
 				struct typeinfo *t = type_check(iter->data);
 				if (t == NULL)
-					semantic_error("couldn't get type for parameter", iter->data);
+					log_semantic(iter->data, "could not get type for parameter");
 				list_push_back(r->function.parameters, t);
 				iter = iter->next;
 			}
 		}
 
 		if (!typeinfo_compare(l, r)) {
-			semantic_error("function invocation did not match signature", n);
+			log_semantic(n, "function invocation did not match signature");
 		}
 
 		list_free(r->function.parameters);
 		free(r);
 
-		fprintf(stderr, "CHECK: function invocation\n");
+		log_check("function invocation");
 		return typeinfo_return(l);
 	}
 	case POSTFIX_EXPR5:
@@ -974,20 +988,23 @@ struct typeinfo *type_check(struct tree *n)
 		/* class_instance.field access */
 		char *k = get_identifier(n);
 		char *f = get_identifier(tree_index(n, 2));
+		if (k == NULL || f == NULL)
+			log_crash();
 
 		struct typeinfo *l = symbol_search(k);
 		if (l->base != CLASS_T || l->pointer)
-			semantic_error("expected class instance", n);
+			log_semantic(n, "expected %s to be a class instance", k);
 
-		struct typeinfo *class = symbol_search(l->class.type);
+		char *c = l->class.type;
+		struct typeinfo *class = symbol_search(c);
 		if (class == NULL)
-			semantic_error("couldn't get class type", n);
+			log_semantic(n, "could not get class %s symbol", c);
 
 		struct typeinfo *r = hasht_search(class->class.public, f);
 		if (r == NULL)
-			semantic_error("requested field not in public scope", n);
+			log_semantic(n, "field %s not in public scope of %s", f, c);
 
-		fprintf(stderr, "CHECK: %s.%s\n", k, f);
+		log_check("%s.%s", k, f);
 		return typeinfo_return(r);
 	}
 	case POSTFIX_EXPR7:
@@ -995,70 +1012,79 @@ struct typeinfo *type_check(struct tree *n)
 		/* class_ptr->field access */
 		char *k = get_identifier(n);
 		char *f = get_identifier(tree_index(n, 2));
+		if (k == NULL || f == NULL)
+			log_crash();
 
 		struct typeinfo *l = symbol_search(k);
 		if (l->base != CLASS_T || !l->pointer)
-			semantic_error("expected class pointer", n);
+			log_semantic(n, "expected %s to be a class pointer", k);
 
-		struct typeinfo *class = symbol_search(l->class.type);
+		char *c = l->class.type;
+		struct typeinfo *class = symbol_search(c);
 		if (class == NULL)
-			semantic_error("couldn't get class type", n);
+			log_semantic(n, "could not get class %s symbol", c);
 
 		struct typeinfo *r = hasht_search(class->class.public, f);
 		if (r == NULL)
-			semantic_error("requested field not in public scope", n);
+			log_semantic(n, "field %s not in public scope of %s", f, c);
 
-		fprintf(stderr, "CHECK: %s->%s\n", k, f);
+		log_check("%s->%s", k, f);
 		return typeinfo_return(r);
 	}
 	case POSTFIX_EXPR9:  /* i++ */
 	case POSTFIX_EXPR10: /* i-- */ {
 		struct typeinfo *t = type_check(tree_index(n, 0));
 		if (!typeinfo_compare(t, &int_type))
-			semantic_error("operand to postfix ++/-- not an int", n);
+			log_semantic(n, "operand to postfix ++/-- not an int");
 
-		fprintf(stderr, "CHECK: postfix ++/--\n");
+		log_check("postfix ++/--");
 		return t;
 	}
 	case UNARY_EXPR2: /* ++i */
 	case UNARY_EXPR3: /* --i */ {
 		struct typeinfo *t = type_check(tree_index(n, 1));
 		if (!typeinfo_compare(t, &int_type))
-			semantic_error("operand to prefix ++/-- not an int", n);
+			log_semantic(n, "operand to prefix ++/-- not an int");
 
-		fprintf(stderr, "CHECK: prefix ++/--\n");
+		log_check("prefix ++/--");
 		return t;
 	}
 	case UNARY_EXPR4: {
 		/* dereference operator */
 		char *k = get_identifier(n);
+		if (k == NULL)
+			log_crash();
 
 		struct typeinfo *type = symbol_search(k);
 		if (type == NULL)
-			semantic_error("undeclared variable", n);
+			log_semantic(n, "%s is undeclared", k);
 
 		if (!type->pointer)
-			semantic_error("can't dereference non-pointer", n);
+			log_semantic(n, "cannot dereference non-pointer %s", k);
 
 		struct typeinfo *copy = typeinfo_copy(type);
 		copy->pointer = false;
 
+		log_check("*%s", k);
 		return copy;
 	}
 	case UNARY_EXPR5: {
 		/* address operator */
 		char *k = get_identifier(n);
+		if (k == NULL)
+			log_crash();
 
 		struct typeinfo *type = symbol_search(k);
 		if (type == NULL)
-			semantic_error("undeclared variable", n);
+			log_semantic(n, "%s is undeclared", k);
 
 		if (type->pointer)
-			semantic_error("double pointers unsupported in 120++", n);
+			log_semantic(n, "double pointers unsupported in 120++");
 
 		struct typeinfo *copy = typeinfo_copy(type);
 		copy->pointer = true;
 
+		log_check("&%s", k);
 		return copy;
 	}
 	case UNARY_EXPR6: {
@@ -1066,29 +1092,26 @@ struct typeinfo *type_check(struct tree *n)
 
 		switch (get_token(n, 0)->category) {
 		case '+':
-		case '-': {
+		case '-':
 			if (!typeinfo_compare(t, &int_type))
-				semantic_error("unary + or - operand not an int", n);
+				log_semantic(n, "unary + or - operand not an int");
 
-			fprintf(stderr, "CHECK: unary + or -\n");
+			log_check("unary + or -");
 			return t;
-		}
-		case '!': {
+		case '!':
 			if (!(typeinfo_compare(t, &int_type) || typeinfo_compare(t, &bool_type)))
-				semantic_error("! operand not an int or bool", n);
+				log_semantic(n, "! operand not an int or bool");
 
-			fprintf(stderr, "CHECK: logical not\n");
+			log_check("logical not");
 			return &bool_type;
-		}
-		case '~': {
-			semantic_error("destructors not yet supported", n);
-		}
+		case '~':
+			log_semantic(n, "destructors not yet supported");
 		}
 	}
 	case SHIFT_EXPR2: {
 		/* << only used for puts-to IO */
-		if (!(usingstd && (fstream || iostream)))
-			semantic_error("<< can only be used with std streams in 120++", n);
+		if (!(libs.usingstd && (libs.fstream || libs.iostream)))
+			log_semantic(n, "<< can only be used with std streams in 120++");
 
 		/* recurse on items of shift expression */
 		struct list_node *iter = list_head(n->children);
@@ -1098,10 +1121,8 @@ struct typeinfo *type_check(struct tree *n)
 
 			/* ensure leftmost child is of type std::ofstream */
 			if (iter == list_head(n->children)) {
-				if (!(t->base == CLASS_T && (strcmp(t->class.type, "ofstream") == 0))) {
-					print_typeinfo(stderr, "t", t);
-					semantic_error("leftmost << operand not a ofstream", iter->data);
-				}
+				if (!(t->base == CLASS_T && (strcmp(t->class.type, "ofstream") == 0)))
+					log_semantic(iter->data, "leftmost << operand not a ofstream");
 				/* return leftmost type as result of << */
 				ret = t;
 			} else if (!(typeinfo_compare(t, &int_type)
@@ -1110,12 +1131,12 @@ struct typeinfo *type_check(struct tree *n)
 			             || typeinfo_compare(t, &char_type)
 			             || typeinfo_compare(t, &string_type)
 			             || (t->base == CLASS_T && (strcmp(t->class.type, "string") == 0)))) {
-				semantic_error("a << operand is not an appropriate type", iter->data);
+				log_semantic(iter->data, "a << operand is not an appropriate type");
 			}
 			iter = iter->next;
 		}
 
-		fprintf(stderr, "CHECK: <<\n");
+		log_check("<<");
 		return ret;
 	}
 	case FUNCTION_DEF1:
@@ -1136,7 +1157,7 @@ struct typeinfo *type_check(struct tree *n)
 			: get_identifier(n);
 		struct typeinfo *function = symbol_search(k);
 		if (function == NULL)
-			semantic_error("undeclared function", n);
+			log_semantic(n, "%s is undeclared", k);
 		scope_push(function->function.symbols);
 
 		/* check return type of function */
@@ -1156,10 +1177,10 @@ struct typeinfo *type_check(struct tree *n)
 		    /* accept void return for 0 if expecting int */
 		    && (typeinfo_compare(ret, &int_type)
 		        && typeinfo_compare(typeinfo_return(function), &void_type))) {
-			semantic_error("return value of wrong type for function", n);
+			log_semantic(n, "return value of wrong type for function %s", k);
 		}
 
-		fprintf(stderr, "CHECK: function %s return\n", k);
+		log_check("function %s return type", k);
 
 		/* recursive type check of children while in subscope(s) */
 		struct list_node *iter = list_head(n->children);
@@ -1348,17 +1369,17 @@ void handle_init(struct typeinfo *v, struct tree *n)
 	case DIRECT_DECL6: { /* array with size */
 		v = typeinfo_new_array(n, v);
 		if (v->array.size < 1)
-			semantic_error("bad array initializer size", n);
+			log_semantic(n, "bad array initializer size");
 		break;
 	}
 	default:
-		semantic_error("unsupported init declaration", n);
+		log_semantic(n, "unsupported init declaration");
 	}
 
 	if (k && v) {
 		symbol_insert(k, v, n, NULL);
 	} else {
-		semantic_error("failed to get init declarator symbol", n);
+		log_semantic(n, "failed to get init declarator symbol");
 	}
 }
 
@@ -1384,7 +1405,7 @@ void handle_init_list(struct typeinfo *v, struct tree *n)
 			v->class.private = hasht_new(8, true, NULL, NULL, &symbol_free);
 			scope_push(v->class.private);
 		} else {
-			semantic_error("unrecognized class access specifier", n);
+			log_semantic(n, "unrecognized class access specifier");
 		}
 		handle_init_list(v, tree_index(n, 1));
 		scope_pop();
@@ -1405,7 +1426,6 @@ void handle_init_list(struct typeinfo *v, struct tree *n)
 void handle_function(struct typeinfo *t, struct tree *n, char *k)
 {
 	struct typeinfo *v = typeinfo_new_function(n, t, true);
-	print_typeinfo(stderr, k, v);
 
 	size_t scopes = list_size(yyscopes);
 
@@ -1496,17 +1516,4 @@ void handle_class(struct typeinfo *t, struct tree *n)
 	}
 
 	symbol_insert(k, t, n, NULL);
-}
-
-/*
- * Follow a node to a token, emit error, exit with 3.
- */
-void semantic_error(char *s, struct tree *n)
-{
-	while (tree_size(n) > 1)
-		n = list_front(n->children);
-	struct token *t = n->data;
-	fprintf(stderr, "Semantic error: file %s, line %d, token %s: %s\n",
-	        t->filename, t->lineno, t->text, s);
-	exit(3);
 }

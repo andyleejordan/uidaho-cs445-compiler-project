@@ -13,11 +13,10 @@
 #include <libgen.h>
 
 #include "token.h"
+#include "logger.h"
 #include "parser.tab.h"
 
 #define TEXT_CHUNK_SIZE 128
-
-extern void handle_error(char *c);
 
 size_t token_sval_size = 0;
 
@@ -27,7 +26,7 @@ struct token *token_new(int category, int lineno,
 {
 	struct token *t = malloc(sizeof(*t));
 	if (t == NULL)
-		handle_error("token create");
+		log_crash();
 
 	t->category = category;
 	t->lineno = lineno;
@@ -137,7 +136,7 @@ void token_print(struct token *t)
 {
 		char *filename = strdup(t->filename);
 		if (filename == NULL)
-			handle_error("token_print()");
+			log_crash();
 
 		printf("%-5d%-12s%-12s%s ",
 		       t->lineno,
@@ -176,7 +175,7 @@ void token_realloc_sval(struct token *t)
 
 	t->sval = realloc(t->sval, token_sval_size);
 	if (t->sval == NULL)
-		handle_error("token_sval");
+		log_crash();
 }
 
 /*
@@ -219,7 +218,7 @@ void token_finish_sval(struct token *t)
 	token_push_sval_char(t, '\0');
 	t->sval = realloc(t->sval, t->ssize);
 	if (t->sval == NULL)
-		handle_error("finish sval");
+		log_crash();
 }
 
 /*
@@ -230,7 +229,7 @@ void token_realloc_text(struct token *t, const char *s)
 	size_t size = strlen(t->text)+strlen(s)+1;
 	t->text = realloc(t->text, size);
 	if (t->text == NULL)
-		handle_error("token text");
+		log_crash();
 }
 
 /*

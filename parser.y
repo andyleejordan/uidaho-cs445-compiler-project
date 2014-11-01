@@ -48,6 +48,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "logger.h"
 #include "token.h"
 #include "list.h"
 #include "tree.h"
@@ -61,7 +62,6 @@ extern struct list *filenames;
 extern int yylineno;
 extern char *yytext;
 int yylex();
-void yyerror(const char *s);
 void insert_typename_tree(struct tree *t, int category);
 
 /* syntax tree utilities */
@@ -72,6 +72,9 @@ void delete_tree(void *data, bool leaf);
 /* semantic action helpers */
 #define P(name, ...) tree_new_group(NULL, (void *)copy_int(name), NULL, &delete_tree, __VA_ARGS__)
 #define E() NULL
+
+/* Bison's error function */
+void yyerror(const char *s);
 
 %}
 
@@ -747,17 +750,6 @@ SEMICOLON_opt:
 #undef E
 
 /*
- * Prints relevant information for syntax errors and exits returning 2
- * per assignment requirements.
- */
-void yyerror(const char *s)
-{
-	fprintf(stderr, "Syntax error: file %s, line %d, token %s: %s\n",
-                (const char *)list_back(filenames), yylineno, yytext, s);
-	exit(2);
-}
-
-/*
  * Helper function passed to tree_preorder().
  *
  * Given a terminal tree node, prints its contained token's value.
@@ -796,6 +788,20 @@ void delete_tree(void *data, bool leaf)
 int *copy_int(int i)
 {
 	int *p = malloc(sizeof(*p));
+	if (p == NULL)
+		log_crash();
+
 	*p = i;
 	return p;
+}
+
+/*
+ * Prints relevant information for syntax errors and exits returning 2
+ * per assignment requirements.
+ */
+void yyerror(const char *s)
+{
+	fprintf(stderr, "SYNTAX ERROR: file %s, line %d, token %s: %s\n",
+                (const char *)list_back(filenames), yylineno, yytext, s);
+	exit(2);
 }
