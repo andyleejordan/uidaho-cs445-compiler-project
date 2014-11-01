@@ -129,7 +129,7 @@ int main(int argc, char **argv)
 
 		/* build the symbol tables */
 		struct hasht *global = symbol_populate(yyprogram);
-		log_debug("global symbol table had %zu entries", hasht_used(global));
+		log_debug("global scope had %zu symbols", hasht_used(global));
 
 		/* clean up */
 		tree_free(yyprogram);

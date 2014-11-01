@@ -284,10 +284,12 @@ static void symbol_insert(char *k, struct typeinfo *v, struct tree *n, struct ha
 			log_semantic(n, "function signatures for %s mismatched", k);
 		} else if (l) {
 			/* define the function */
-			if (e->function.symbols == NULL)
+			if (e->function.symbols == NULL) {
 				e->function.symbols = l;
-			else
+				log_check("function %s defined", k);
+			} else {
 				log_semantic(n, "function %s already defined", k);
+			}
 		}
 	} else {
 		log_semantic(n, "identifier %s already declared", k);
@@ -677,6 +679,7 @@ static struct typeinfo *type_check(struct tree *n)
 			char *c = type->class.type;
 			struct typeinfo *class = symbol_search(c);
 			if (class) {
+				log_debug("pushing class scopes");
 				scope_push(class->class.public);
 				scope_push(class->class.private);
 			}
@@ -709,9 +712,9 @@ static struct typeinfo *type_check(struct tree *n)
 			free(r);
 
 			/* pop newly pushed scopes */
+			log_debug("popping scopes");
 			while (list_size(yyscopes) != scopes)
 				scope_pop();
-
 			log_check("new operator");
 		}
 
@@ -1055,6 +1058,7 @@ static struct typeinfo *type_check(struct tree *n)
 		/* retrieve class scopes */
 		struct typeinfo *class = symbol_search(class_member(n));
 		if (class) {
+			log_debug("pushing class scopes");
 			scope_push(class->class.public);
 			scope_push(class->class.private);
 		}
@@ -1063,9 +1067,12 @@ static struct typeinfo *type_check(struct tree *n)
 		char *k = (production == FUNCTION_DEF1)
 			? get_class(n) /* ctor function name is class name */
 			: get_identifier(n);
+
 		struct typeinfo *function = symbol_search(k);
 		if (function == NULL)
 			log_semantic(n, "%s is undeclared", k);
+
+		log_debug("pushing function scope");
 		scope_push(function->function.symbols);
 
 		/* check return type of function */
@@ -1097,7 +1104,7 @@ static struct typeinfo *type_check(struct tree *n)
 			iter = iter->next;
 		}
 
-		/* pop newly pushed scopes */
+		log_debug("popping scopes");
 		while (list_size(yyscopes) != scopes)
 			scope_pop();
 
@@ -1307,15 +1314,21 @@ static void handle_init_list(struct typeinfo *v, struct tree *n)
 	} else if (r == MEMBER_SPEC2) {
 		/* begining of class access specifier tree */
 		if (get_public(n)) {
+			log_debug("creating and pushing public class scope");
 			v->class.public = hasht_new(8, true, NULL, NULL, &symbol_free);
 			scope_push(v->class.public);
 		} else if (get_private(n)) {
+			log_debug("creating and pushing private class scope");
 			v->class.private = hasht_new(8, true, NULL, NULL, &symbol_free);
 			scope_push(v->class.private);
 		} else {
 			log_semantic(n, "unrecognized class access specifier");
 		}
+
 		handle_init_list(v, tree_index(n, 1));
+
+		log_debug("class scope had %zu symbols", hasht_size(list_back(yyscopes)));
+		log_debug("popping scope");
 		scope_pop();
 	} else if (r == MEMBER_DECL1) {
 		/* recurse to end of class declaration */
@@ -1339,6 +1352,7 @@ static void handle_function(struct typeinfo *t, struct tree *n, char *k)
 
 	struct typeinfo *class = symbol_search(class_member(n));
 	if (class) {
+		log_debug("pushing class scopes");
 		scope_push(class->class.public);
 		scope_push(class->class.private);
 	}
@@ -1346,10 +1360,12 @@ static void handle_function(struct typeinfo *t, struct tree *n, char *k)
 	symbol_insert(k, v, n, v->function.symbols);
 
 	/* recurse on children while in subscope */
+	log_debug("pushing function scope");
 	scope_push(v->function.symbols);
 	tree_preorder(get_production(n, COMPOUND_STATEMENT), 0, &handle_node);
 
-	/* pop newly pushed scopes */
+	log_debug("function scope had %zu symbols", hasht_size(v->function.symbols));
+	log_debug("popping scopes");
 	while (list_size(yyscopes) != scopes)
 		scope_pop();
 }
@@ -1410,10 +1426,13 @@ static void handle_class(struct typeinfo *t, struct tree *n)
 	t->base = CLASS_T; /* class definition is still a class */
 	handle_init_list(t, tree_index(n, 1));
 
-	if (t->class.public == NULL)
+	if (t->class.public == NULL) {
+		log_debug("creating default public scope for %s", k);
 		t->class.public = hasht_new(2, true, NULL, NULL, &symbol_free);
+	}
 
 	if (hasht_search(t->class.public, k) == NULL) {
+		log_debug("declaring default constructor for %s", k);
 		struct typeinfo *ret = typeinfo_new(n);
 		ret->base = CLASS_T;
 		ret->class.type = k;
