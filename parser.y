@@ -83,6 +83,7 @@ static void yyerror(const char *s);
 %require "3.0"
 %defines
 %expect 21
+%define parse.error verbose
 
 %union {
         struct tree *t;
