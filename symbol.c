@@ -61,6 +61,9 @@ static bool get_private(struct tree *n);
 static char *class_member(struct tree *n);
 
 static struct typeinfo *type_check(struct tree *n);
+static struct typeinfo *get_left_type(struct tree *n);
+static struct typeinfo *get_right_type(struct tree *n);
+
 static struct typeinfo *typeinfo_new(struct tree *n);
 static struct typeinfo *typeinfo_new_array(struct tree *n, struct typeinfo *t);
 static struct typeinfo *typeinfo_new_function(struct tree *n, struct typeinfo *t, bool define);
@@ -586,6 +589,30 @@ static struct typeinfo *get_typeinfo(struct tree *n) {
 }
 
 /*
+ * Require symbol for child 0, left operand.
+ */
+static struct typeinfo *get_left_type(struct tree *n)
+{
+	struct tree *n_= tree_index(n, 0);
+	struct typeinfo *t = type_check(n_);
+	if (t == NULL)
+		log_semantic(n_, "left operand undeclared");
+	return t;
+}
+
+/*
+ * Require symbol for child 2, right operand.
+ */
+static struct typeinfo *get_right_type(struct tree *n)
+{
+	struct tree *n_= tree_index(n, 2);
+	struct typeinfo *t = type_check(n_);
+	if (t == NULL)
+		log_semantic(n_, "right operand undeclared");
+	return t;
+}
+
+/*
  * Recursively perform type checking on the relevant expression
  * production rules for the given syntax tree.
  */
@@ -710,9 +737,13 @@ static struct typeinfo *type_check(struct tree *n)
 	case DELETE_EXPR1:
 	case DELETE_EXPR2: {
 		/* delete operator */
-		struct typeinfo *type = type_check(tree_index(n, 1));
-		if (!type->pointer)
+		struct typeinfo *t = type_check(tree_index(n, 1));
+		if (t == NULL)
+			log_semantic(n, "symbol %s undeclared", get_identifier(n));
+
+		if (!t->pointer)
 			log_semantic(n, "delete operator expected a pointer");
+
 		return NULL;
 	}
 	case ASSIGN_EXPR2: {
@@ -721,8 +752,8 @@ static struct typeinfo *type_check(struct tree *n)
 		if (k == NULL)
 			log_semantic(n, "left assignment operand not assignable");
 
-		struct typeinfo *l = type_check(tree_index(n, 0));
-		struct typeinfo *r = type_check(tree_index(n, 2));
+		struct typeinfo *l = get_left_type(n);
+		struct typeinfo *r = get_right_type(n);
 
 		switch (get_token(n, 1)->category) {
 		case '=': {
@@ -767,8 +798,9 @@ static struct typeinfo *type_check(struct tree *n)
 	}
 	case EQUAL_EXPR2:
 	case EQUAL_EXPR3: {
-		struct typeinfo *l = type_check(tree_index(n, 0));
-		struct typeinfo *r = type_check(tree_index(n, 2));
+		struct typeinfo *l = get_left_type(n);
+		struct typeinfo *r = get_right_type(n);
+
 		if (!typeinfo_compare(l, r))
 			log_semantic(n, "equality operands don't match");
 
@@ -779,11 +811,11 @@ static struct typeinfo *type_check(struct tree *n)
 	case REL_EXPR3: /* > */
 	case REL_EXPR4: /* <= */
 	case REL_EXPR5: /* >= */ {
-		struct typeinfo *l = type_check(tree_index(n, 0));
+		struct typeinfo *l = get_left_type(n);
 		if (!(typeinfo_compare(l, &int_type) || typeinfo_compare(l, &double_type)))
 			log_semantic(n, "left operand not an int or double");
 
-		struct typeinfo *r = type_check(tree_index(n, 2));
+		struct typeinfo *r = get_right_type(n);
 		if (!(typeinfo_compare(r, &int_type) || typeinfo_compare(r, &double_type)))
 			log_semantic(n, "right operand not an int or double");
 
@@ -797,11 +829,11 @@ static struct typeinfo *type_check(struct tree *n)
 	case ADD_EXPR3:  /* - */
 	case MULT_EXPR2: /* * */
 	case MULT_EXPR3: /* / */ {
-		struct typeinfo *l = type_check(tree_index(n, 0));
+		struct typeinfo *l = get_left_type(n);
 		if (!(typeinfo_compare(l, &int_type) || typeinfo_compare(l, &double_type)))
 			log_semantic(n, "left operand not an int or double");
 
-		struct typeinfo *r = type_check(tree_index(n, 2));
+		struct typeinfo *r = get_right_type(n);
 		if (!(typeinfo_compare(r, &int_type) || typeinfo_compare(r, &double_type)))
 			log_semantic(n, "right operand not an int or double");
 
@@ -813,8 +845,9 @@ static struct typeinfo *type_check(struct tree *n)
 	}
 	case MULT_EXPR4: {
 		/* modulo operator */
-		struct typeinfo *l = type_check(tree_index(n, 0));
-		struct typeinfo *r = type_check(tree_index(n, 2));
+		struct typeinfo *l = get_left_type(n);
+		struct typeinfo *r = get_right_type(n);
+
 		if (!typeinfo_compare(l, &int_type) || !typeinfo_compare(r, &int_type))
 			log_semantic(n, "modulo operand not an integer");
 
@@ -828,11 +861,11 @@ static struct typeinfo *type_check(struct tree *n)
 	}
 	case LOGICAL_AND_EXPR2: /* && */
 	case LOGICAL_OR_EXPR2:  /* || */ {
-		struct typeinfo *l = type_check(tree_index(n, 0));
+		struct typeinfo *l = get_left_type(n);
 		if (!(typeinfo_compare(l, &int_type) || typeinfo_compare(l, &bool_type)))
 			log_semantic(n, "left operand not an int or bool");
 
-		struct typeinfo *r = type_check(tree_index(n, 2));
+		struct typeinfo *r = get_right_type(n);
 		if (!(typeinfo_compare(r, &int_type) || typeinfo_compare(r, &bool_type)))
 			log_semantic(n, "right operand not an int or bool");
 
@@ -849,9 +882,7 @@ static struct typeinfo *type_check(struct tree *n)
 		if (l->base != ARRAY_T)
 			log_semantic(n, "trying to index non array symbol %s", k);
 
-		struct typeinfo *r = type_check(tree_index(n, 2));
-		if (r == NULL)
-			log_semantic(n, "missing index for array operator");
+		struct typeinfo *r = get_right_type(n);
 		if (!typeinfo_compare(&int_type, r))
 			log_semantic(n, "array index not an integer");
 
@@ -861,9 +892,7 @@ static struct typeinfo *type_check(struct tree *n)
 	case POSTFIX_EXPR3: {
 		/* function invocation: build typeinfo list from
 		   EXPR_LIST, recursing on each item */
-		struct typeinfo *l = type_check(tree_index(n, 0));
-		if (l == NULL)
-			log_semantic(n, "function not declared");
+		struct typeinfo *l = get_left_type(n);
 		struct typeinfo *r = typeinfo_copy(l);
 
 		r->function.parameters = list_new(NULL, NULL);
@@ -873,7 +902,7 @@ static struct typeinfo *type_check(struct tree *n)
 			while (!list_end(iter)) {
 				struct typeinfo *t = type_check(iter->data);
 				if (t == NULL)
-					log_semantic(iter->data, "could not get type for parameter");
+					log_semantic(iter->data, "symbol for parameter undeclared");
 				list_push_back(r->function.parameters, t);
 				iter = iter->next;
 			}
@@ -897,13 +926,15 @@ static struct typeinfo *type_check(struct tree *n)
 		log_assert(k && f);
 
 		struct typeinfo *l = symbol_search(k);
+		if (l == NULL)
+			log_semantic(n, "symbol %s undeclared", k);
 		if (l->base != CLASS_T || l->pointer)
 			log_semantic(n, "expected %s to be a class instance", k);
 
 		char *c = l->class.type;
 		struct typeinfo *class = symbol_search(c);
 		if (class == NULL)
-			log_semantic(n, "could not get class %s symbol", c);
+			log_semantic(n, " symbol %s undeclared", c);
 
 		struct typeinfo *r = hasht_search(class->class.public, f);
 		if (r == NULL)
@@ -920,13 +951,15 @@ static struct typeinfo *type_check(struct tree *n)
 		log_assert(k && f);
 
 		struct typeinfo *l = symbol_search(k);
+		if (l == NULL)
+			log_semantic(n, "symbol %s undeclared", k);
 		if (l->base != CLASS_T || !l->pointer)
 			log_semantic(n, "expected %s to be a class pointer", k);
 
 		char *c = l->class.type;
 		struct typeinfo *class = symbol_search(c);
 		if (class == NULL)
-			log_semantic(n, "could not get class %s symbol", c);
+			log_semantic(n, "symbol %s undeclared", c);
 
 		struct typeinfo *r = hasht_search(class->class.public, f);
 		if (r == NULL)
@@ -947,6 +980,8 @@ static struct typeinfo *type_check(struct tree *n)
 	case UNARY_EXPR2: /* ++i */
 	case UNARY_EXPR3: /* --i */ {
 		struct typeinfo *t = type_check(tree_index(n, 1));
+		if (t == NULL)
+			log_semantic(n, "symbol undeclared");
 		if (!typeinfo_compare(t, &int_type))
 			log_semantic(n, "operand to prefix ++/-- not an int");
 
@@ -958,14 +993,14 @@ static struct typeinfo *type_check(struct tree *n)
 		char *k = get_identifier(n);
 		log_assert(k);
 
-		struct typeinfo *type = symbol_search(k);
-		if (type == NULL)
-			log_semantic(n, "%s is undeclared", k);
+		struct typeinfo *t = symbol_search(k);
+		if (t == NULL)
+			log_semantic(n, "symbol %s undeclared", k);
 
-		if (!type->pointer)
+		if (!t->pointer)
 			log_semantic(n, "cannot dereference non-pointer %s", k);
 
-		struct typeinfo *copy = typeinfo_copy(type);
+		struct typeinfo *copy = typeinfo_copy(t);
 		copy->pointer = false;
 
 		log_check("*%s", k);
@@ -976,14 +1011,14 @@ static struct typeinfo *type_check(struct tree *n)
 		char *k = get_identifier(n);
 		log_assert(k);
 
-		struct typeinfo *type = symbol_search(k);
-		if (type == NULL)
-			log_semantic(n, "%s is undeclared", k);
+		struct typeinfo *t = symbol_search(k);
+		if (t == NULL)
+			log_semantic(n, "symbol %s undeclared", k);
 
-		if (type->pointer)
+		if (t->pointer)
 			log_semantic(n, "double pointers unsupported in 120++");
 
-		struct typeinfo *copy = typeinfo_copy(type);
+		struct typeinfo *copy = typeinfo_copy(t);
 		copy->pointer = true;
 
 		log_check("&%s", k);
@@ -991,6 +1026,8 @@ static struct typeinfo *type_check(struct tree *n)
 	}
 	case UNARY_EXPR6: {
 		struct typeinfo *t = type_check(tree_index(n, 1));
+		if (t == NULL)
+			log_semantic(n, "symbol undeclared");
 
 		switch (get_token(n, 0)->category) {
 		case '+':
@@ -1020,6 +1057,8 @@ static struct typeinfo *type_check(struct tree *n)
 		struct typeinfo *ret = NULL;
 		while (!list_end(iter)) {
 			struct typeinfo *t = type_check(iter->data);
+			if (t == NULL)
+				log_semantic(iter->data, "symbol undeclared");
 
 			/* ensure leftmost child is of type std::ofstream */
 			if (iter == list_head(n->children)) {
@@ -1053,6 +1092,8 @@ static struct typeinfo *type_check(struct tree *n)
 			log_semantic(l, "left operand of >> is not cin");
 
 		struct typeinfo *t = type_check(r);
+		if (t == NULL)
+			log_semantic(r, "symbol undeclared");
 		if (!(typeinfo_compare(t, &int_type)
 		      || typeinfo_compare(t, &double_type)
 		      || typeinfo_compare(t, &char_type)
@@ -1084,7 +1125,7 @@ static struct typeinfo *type_check(struct tree *n)
 
 		struct typeinfo *function = symbol_search(k);
 		if (function == NULL)
-			log_semantic(n, "%s is undeclared", k);
+			log_semantic(n, "symbol %s undeclared", k);
 
 		log_debug("pushing function scope");
 		scope_push(function->function.symbols);
