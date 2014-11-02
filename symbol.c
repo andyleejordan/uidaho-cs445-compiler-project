@@ -658,7 +658,7 @@ static struct typeinfo *type_check(struct tree *n)
 		if (type_spec == NULL)
 			log_semantic(n, "new operator missing type spec");
 
-		struct typeinfo *type = typeinfo_copy(get_typeinfo(tree_index(type_spec, 0)));
+		struct typeinfo *type = typeinfo_copy(type_check(tree_index(type_spec, 0)));
 		type->pointer = true;
 
 		if (type->base == CLASS_T) {
@@ -706,6 +706,14 @@ static struct typeinfo *type_check(struct tree *n)
 		}
 
 		return type;
+	}
+	case DELETE_EXPR1:
+	case DELETE_EXPR2: {
+		/* delete operator */
+		struct typeinfo *type = type_check(tree_index(n, 1));
+		if (!type->pointer)
+			log_semantic(n, "delete operator expected a pointer");
+		return NULL;
 	}
 	case ASSIGN_EXPR2: {
 		/* assignment operator */
