@@ -18,7 +18,7 @@ char *print_rule(enum rule r)
 {
 	switch (r) {
 		R(PROGRAM);
-		R(UNQUALID_2);
+		R(UNQUAL_ID2);
 		R(QUAL_ID);
 		R(NESTED_NAME1);
 		R(POSTFIX_EXPR2);

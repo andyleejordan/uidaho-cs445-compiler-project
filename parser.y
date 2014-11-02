@@ -177,7 +177,7 @@ id_expression:
 
 unqualified_id:
         IDENTIFIER       { $$ = $1; }
-        | '~' CLASS_NAME { $$ = P(UNQUALID_2, 2, $1, $2); }
+        | '~' CLASS_NAME { $$ = P(UNQUAL_ID2, 2, $1, $2); }
         ;
 
 qualified_id:
