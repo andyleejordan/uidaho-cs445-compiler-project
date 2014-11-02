@@ -26,7 +26,7 @@
 #include "hasht.h"
 
 /* argument parser */
-const char *argp_program_version = "120++ hw3-alpha";
+const char *argp_program_version = "120++ hw3";
 const char *argp_program_bug_address = "<andrew@schwartzmeyer.com>";
 static char doc[] = "University of Idaho CS 445 - Compiler and Translator design: 120++ compiler";
 static char args_doc[] = "120 [-tsc] infile...";
