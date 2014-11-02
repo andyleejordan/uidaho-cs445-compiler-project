@@ -1,19 +1,13 @@
 * Tasks
 ** TODO Use flyweight pattern for repeated strings
-** TODO Respect include guards (?)
-** TODO Add libraries to their own struct (?)
+** TODO Respect include guards
 ** TODO Expand list library
 - =struct list *list_copy=
 - =struct list *list_concat=
 - =list_split=
 - =list_sort=
-** TODO Assignment #3
-*** TODO Type checking
-**** TODO Postfix expressions
-**** TODO Handle undeclared variables
-**** TODO Require and check types everywhere at compile-time
-**** TODO Check that function call signatures match
-**** TODO Check that operators' operands are compatible
-*** TODO Print out syntax tree on --syntax only
-*** TODO Add default class constructor if none provided
-*** TODO Handle class destructors (?)
+** TODO Expand type checking
+*** refactor for type promotion (=typeinfo_compatible(a, b)=)
+*** faux headers for stdlibs
+*** pass by reference
+*** ternary operator
