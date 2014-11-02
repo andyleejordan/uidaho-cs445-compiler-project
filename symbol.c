@@ -1041,6 +1041,29 @@ static struct typeinfo *type_check(struct tree *n)
 		log_check("<<");
 		return ret;
 	}
+	case SHIFT_EXPR3: {
+		/* << only used for gets-from IO */
+		if (!(libs.usingstd && (libs.fstream || libs.iostream)))
+			log_semantic(n, ">> can only be used with std streams in 120++");
+
+		struct tree *l = tree_index(n, 0);
+		struct tree *r = tree_index(n, 1);
+		char *cin = get_identifier(l);
+		if (strcmp(cin, "cin") != 0)
+			log_semantic(l, "left operand of >> is not cin");
+
+		struct typeinfo *t = type_check(r);
+		if (!(typeinfo_compare(t, &int_type)
+		      || typeinfo_compare(t, &double_type)
+		      || typeinfo_compare(t, &char_type)
+		      || typeinfo_compare(t, &string_type)
+		      || (t->base == CLASS_T && (strcmp(t->class.type, "string") == 0))))
+			log_semantic(r, "right operand of >> is not int, double, char, char *, or std::string");
+
+		log_check(">>");
+		return NULL;
+
+	}
 	case FUNCTION_DEF1:
 	case FUNCTION_DEF2: {
 		/* manage scopes for function recursion */
