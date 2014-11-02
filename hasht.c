@@ -216,7 +216,7 @@ void hasht_free(struct hasht *self)
 {
 	for (size_t i = 0; i < hasht_size(self); ++i) {
 		struct hash_node *slot = self->table[i];
-		if (slot != NULL)
+		if (slot)
 			self->delete(slot);
 	}
 	free(self->table);

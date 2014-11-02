@@ -286,7 +286,7 @@ static int check_identifier(const char *s);
 
                           /* if there's another file to process, chdir to it */
                           char *filename = list_back(filenames);
-                          if (filename != NULL)
+                          if (filename)
                                   chdirname(filename);
 
                           yylineno = 1; /* restart line numbering count */
@@ -321,8 +321,7 @@ void handle_include(const char *s)
 	size_t len = strlen(s) - 2;
 
 	char *include = calloc(len + 1, sizeof(char));
-	if (include == NULL)
-		log_crash();
+	log_assert(include);
 
 	/* copy substring */
 	strncpy(include, s + 1, len);
@@ -379,8 +378,7 @@ void insert_typename(char *k, int c)
 {
 	char *key = strdup(k);
 	int *i = malloc(sizeof(*i));
-	if (key == NULL || i == NULL)
-		log_crash();
+	log_assert(key && i);
 
 	*i = c;
 

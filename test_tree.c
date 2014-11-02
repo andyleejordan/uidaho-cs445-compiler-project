@@ -93,7 +93,7 @@ void test_new_group(struct tree *t)
 {
 	test_size(t, 3);
 
-	if (t->parent != NULL)
+	if (t->parent)
 		failure("parent wasn't NULL");
 
 	if (!compare(t->data, "root"))

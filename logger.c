@@ -61,12 +61,18 @@ void log_debug(const char *format, ...)
 }
 
 /*
- * Propogated library error; call perror and exit failure.
+ * Acts like assert.
+ *
+ * If errno is set, print it.
  */
-void log_crash()
+void log_assert(bool p)
 {
+	if (p)
+		return;
+
 	fprintf(stderr, "CRASH: probably received unexpected null\n");
-	perror("");
+	if (errno != 0)
+		perror("fatal");
 	exit(EXIT_FAILURE);
 }
 

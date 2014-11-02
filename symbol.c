@@ -161,13 +161,11 @@ struct hasht *symbol_populate(struct tree *syntax)
 	set_type_comparators();
 
 	struct hasht *global = hasht_new(32, true, NULL, NULL, &symbol_free);
-	if (global == NULL)
-		log_crash();
+	log_assert(global);
 
 	/* initialize scope stack */
 	yyscopes = list_new(NULL, NULL);
-	if (yyscopes == NULL)
-		log_crash();
+	log_assert(yyscopes);
 
 	scope_push(global);
 
@@ -266,7 +264,7 @@ static void symbol_insert(char *k, struct typeinfo *v, struct tree *n, struct ha
 		log_error("symbol_insert(): type for %s was null", k);
 
 	struct typeinfo *e = NULL;
-	if (l != NULL && v->base == FUNCTION_T)
+	if (l && v->base == FUNCTION_T)
 		/* search for function declaration to define */
 		e = symbol_search(k);
 	else
@@ -302,8 +300,7 @@ static void symbol_insert(char *k, struct typeinfo *v, struct tree *n, struct ha
  */
 static void symbol_free(struct hash_node *n)
 {
-	if (n == NULL)
-		log_crash();
+	log_assert(n);
 
 	free(n->key);
 	typeinfo_delete(n->value);
@@ -314,8 +311,7 @@ static void symbol_free(struct hash_node *n)
  */
 static struct tree *get_production(struct tree *n, enum rule r)
 {
-	if (n == NULL)
-		log_crash();
+	log_assert(n);
 
 	if (tree_size(n) != 1 && get_rule(n) == r)
 		return n;
@@ -347,8 +343,7 @@ static struct token *get_category(struct tree *n, int target, int before)
  */
 static struct token *get_category_(struct tree *n, int target, int before)
 {
-	if (n == NULL)
-		log_crash();
+	log_assert(n);
 
 	if (tree_size(n) == 1) {
 		struct token *t = n->data;
@@ -438,12 +433,10 @@ static char *class_member(struct tree *n)
  */
 static struct typeinfo *typeinfo_new(struct tree *n)
 {
-	if (n == NULL)
-		log_crash();
+	log_assert(n);
 
 	struct typeinfo *t = calloc(1, sizeof(*t));
-	if (t == NULL)
-		log_crash();
+	log_assert(t);
 
 	t->base = (get_rule(n) == FUNCTION_DEF1)
 		? CLASS_T /* constructor return type is always class */
@@ -479,8 +472,7 @@ static struct typeinfo *typeinfo_new_function(struct tree *n, struct typeinfo *t
 		: NULL;
 
 	struct list *params = list_new(NULL, NULL);
-	if (params == NULL)
-		log_crash();
+	log_assert(params);
 
 	handle_param_list(n, local, params);
 
@@ -499,12 +491,10 @@ static struct typeinfo *typeinfo_new_function(struct tree *n, struct typeinfo *t
  */
 static struct typeinfo *typeinfo_copy(struct typeinfo *t)
 {
-	if (t == NULL)
-		log_crash();
+	log_assert(t);
 
 	struct typeinfo *n = malloc(sizeof(*n));
-	if (n == NULL)
-		log_crash();
+	log_assert(n);
 
 	n->base = t->base;
 	n->pointer = t->pointer;
@@ -541,8 +531,7 @@ static struct typeinfo *typeinfo_copy(struct typeinfo *t)
  */
 static struct typeinfo *typeinfo_return(struct typeinfo *t)
 {
-	if (t == NULL)
-		log_crash();
+	log_assert(t);
 
 	if (t->base == FUNCTION_T)
 		return t->function.type;
@@ -554,8 +543,7 @@ static struct typeinfo *typeinfo_return(struct typeinfo *t)
  * Get typeinfo for identifier or literal value.
  */
 static struct typeinfo *get_typeinfo(struct tree *n) {
-	if (n == NULL)
-		log_crash();
+	log_assert(n);
 
 	/* reset base type comparators */
 	set_type_comparators();
@@ -603,8 +591,7 @@ static struct typeinfo *get_typeinfo(struct tree *n) {
  */
 static struct typeinfo *type_check(struct tree *n)
 {
-	if (n == NULL)
-		log_crash();
+	log_assert(n);
 
 	if (tree_size(n) == 1)
 		return get_typeinfo(n);
@@ -691,8 +678,7 @@ static struct typeinfo *type_check(struct tree *n)
 
 			struct typeinfo *r = typeinfo_copy(l);
 			r->function.parameters = list_new(NULL, NULL);
-			if (r->function.parameters == NULL)
-				log_crash();
+			log_assert(r->function.parameters);
 
 			struct tree *expr_list = get_production(n, EXPR_LIST);
 			if (expr_list) {
@@ -900,8 +886,7 @@ static struct typeinfo *type_check(struct tree *n)
 		/* class_instance.field access */
 		char *k = get_identifier(n);
 		char *f = get_identifier(tree_index(n, 2));
-		if (k == NULL || f == NULL)
-			log_crash();
+		log_assert(k && f);
 
 		struct typeinfo *l = symbol_search(k);
 		if (l->base != CLASS_T || l->pointer)
@@ -924,8 +909,7 @@ static struct typeinfo *type_check(struct tree *n)
 		/* class_ptr->field access */
 		char *k = get_identifier(n);
 		char *f = get_identifier(tree_index(n, 2));
-		if (k == NULL || f == NULL)
-			log_crash();
+		log_assert(k && f);
 
 		struct typeinfo *l = symbol_search(k);
 		if (l->base != CLASS_T || !l->pointer)
@@ -964,8 +948,7 @@ static struct typeinfo *type_check(struct tree *n)
 	case UNARY_EXPR4: {
 		/* dereference operator */
 		char *k = get_identifier(n);
-		if (k == NULL)
-			log_crash();
+		log_assert(k);
 
 		struct typeinfo *type = symbol_search(k);
 		if (type == NULL)
@@ -983,8 +966,7 @@ static struct typeinfo *type_check(struct tree *n)
 	case UNARY_EXPR5: {
 		/* address operator */
 		char *k = get_identifier(n);
-		if (k == NULL)
-			log_crash();
+		log_assert(k);
 
 		struct typeinfo *type = symbol_search(k);
 		if (type == NULL)

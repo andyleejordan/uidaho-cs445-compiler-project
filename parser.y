@@ -790,8 +790,7 @@ void delete_tree(void *data, bool leaf)
 static int *copy_int(int i)
 {
 	int *p = malloc(sizeof(*p));
-	if (p == NULL)
-		log_crash();
+	log_assert(p);
 
 	*p = i;
 	return p;

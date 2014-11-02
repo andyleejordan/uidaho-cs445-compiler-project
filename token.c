@@ -29,8 +29,7 @@ struct token *token_new(int category, int lineno,
                         const char *text, const char* filename)
 {
 	struct token *t = malloc(sizeof(*t));
-	if (t == NULL)
-		log_crash();
+	log_assert(t);
 
 	t->category = category;
 	t->lineno = lineno;
@@ -68,8 +67,7 @@ void token_free(struct token *t)
 void token_print(struct token *t)
 {
 		char *filename = strdup(t->filename);
-		if (filename == NULL)
-			log_crash();
+		log_assert(filename);
 
 		printf("%-5d%-12s%-12s%s ",
 		       t->lineno,
@@ -130,8 +128,7 @@ void token_finish_sval(struct token *t)
 	++t->ssize;
 	token_push_sval_char(t, '\0');
 	t->sval = realloc(t->sval, t->ssize);
-	if (t->sval == NULL)
-		log_crash();
+	log_assert(t->sval);
 }
 
 /*
@@ -160,8 +157,7 @@ static void token_realloc_sval(struct token *t)
 		token_sval_size += TEXT_CHUNK_SIZE;
 
 	t->sval = realloc(t->sval, token_sval_size);
-	if (t->sval == NULL)
-		log_crash();
+	log_assert(t->sval);
 }
 
 /*
@@ -171,8 +167,7 @@ static void token_realloc_text(struct token *t, const char *s)
 {
 	size_t size = strlen(t->text)+strlen(s)+1;
 	t->text = realloc(t->text, size);
-	if (t->text == NULL)
-		log_crash();
+	log_assert(t->text);
 }
 
 

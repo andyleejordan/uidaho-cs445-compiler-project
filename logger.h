@@ -10,11 +10,13 @@
 #ifndef LOGGER_H
 #define LOGGER_H
 
+#include <stdbool.h>
+
 struct tree;
 
 void log_error(const char *format, ...);
 void log_debug(const char *format, ...);
-void log_crash();
+void log_assert(bool p);
 
 void log_lexical(const char *format, ...);
 void log_semantic(struct tree *n, const char *format, ...);

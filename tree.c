@@ -103,7 +103,7 @@ void tree_preorder(struct tree *self, int d, bool (*f)(struct tree *t, int d))
 	}
 
 	bool recurse = true;
-	if (f != NULL)
+	if (f)
 		recurse = f(self, d);
 
 	if (recurse) {

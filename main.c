@@ -70,12 +70,10 @@ int main(int argc, char **argv)
 	argp_parse(&argp, argc, argv, 0, 0, &arguments);
 
 	char *cwd = getcwd(NULL, 0);
-	if (cwd == NULL)
-		log_crash();
+	log_assert(cwd);
 
 	filenames = list_new(NULL, &free);
-	if (filenames == NULL)
-		log_crash();
+	log_assert(filenames);
 
 	/* setup lexer and parse each argument (or stdin) as a new 'program' */
 	for (int i = 0; arguments.input_files[i]; ++i) {
@@ -91,13 +89,11 @@ int main(int argc, char **argv)
 		libs.iomanip	= false;
 
 		/* reset directory for each input file */
-		if (chdir(cwd) != 0)
-			log_crash();
+		log_assert(chdir(cwd) == 0);
 
 		/* setup typenames table for lexer */
 		typenames = hasht_new(8, true, NULL, NULL, &free_typename);
-		if (typenames == NULL)
-			log_crash();
+		log_assert(typenames);
 
 		/* resolve path to input file */
 		char *filename = realpath(arguments.input_files[i], NULL);
@@ -148,12 +144,10 @@ int main(int argc, char **argv)
 void chdirname(char *c)
 {
 	char *filename = strdup(c);
-	if (filename == NULL)
-		log_crash();
+	log_assert(filename);
 
 	char *dir = dirname(filename);
-	if (dir == NULL)
-		log_crash();
+	log_assert(dir);
 
 	if (chdir(dir) != 0)
 		log_error("Could not chdir to %s", dir);
