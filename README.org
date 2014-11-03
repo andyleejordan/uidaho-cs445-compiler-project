@@ -1,18 +1,24 @@
+#+TITLE: Compiler and Translator Design Project
+#+OPTIONS: toc:nil num:nil
+
 * Compiler and Translator Design Project
 
 [[https://travis-ci.org/andschwa/uidaho-cs445][https://travis-ci.org/andschwa/uidaho-cs445.svg?branch=master]]
-
 /Andrew Schwartzmeyer/
 
-This repository is my work-in-progress for the University of Idaho's
-Fall 2014 course [[http://www2.cs.uidaho.edu/~jeffery/courses/445/syllabus.html][CS 445: Compiler and Translator Design]], by
-Dr. Clinton Jeffery.
+- University of Idaho - Department of Computer Science
+- [[http://www2.cs.uidaho.edu/~jeffery/courses/445/syllabus.html][CS 445]]: Compiler and Translator Design, by Dr. Clinton Jeffery
+
+This is a work-in-progress old-school compiler using Flex and Bison
+for a subset of C++, dubbed "120++" as it should work for most code
+written in CS 120, including basic classes.
+
+This repo is located at: https://github.com/andschwa/uidaho-cs445
 
 ** Assignment #1: A Lexical Analyzer
 
 Per the [[http://www2.cs.uidaho.edu/~jeffery/courses/445/hw1.html][requirements]], my initial goal was to create a lexical analyzer
-(using [[http://flex.sourceforge.net/][Flex]]) for the subset of the C++ programming language used in
-our CS 120 course, dubbed "120++".
+(using [[http://flex.sourceforge.net/][Flex]]) for 120++.
 
 ** Assignment #2: A Syntax Tree
 
