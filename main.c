@@ -28,14 +28,25 @@
 /* argument parser */
 const char *argp_program_version = "120++ hw3";
 const char *argp_program_bug_address = "<andrew@schwartzmeyer.com>";
-static char doc[] = "University of Idaho CS 445 - Compiler and Translator design: 120++ compiler";
-static char args_doc[] = "120 [-tsc] infile...";
+
+static char doc[] = "Andrew Schwartzmeyer's 120++ compiler.\v"
+	"University of Idaho - Department of Computer Science\n"
+	"CS 445: Compiler and Translator Design, by Dr. Clinton Jeffery\n\n"
+	"This is a work-in-progress old-school compiler using Flex and Bison\n"
+	"for a subset of C++, dubbed '120++' as it should work for most code\n"
+	"written in CS 120, including basic classes.\n\n"
+	"This repo is located at: https://github.com/andschwa/uidaho-cs445";
+
+static char args_doc[] = "infile...";
 
 static struct argp_option options[] = {
-	{ "debug",   'd', 0,      0, "Call perror() when crashing" },
-	{ "tree",    't', 0,      0, "Print the syntax tree" },
-	{ "symbols", 's', 0,      0, "Print the populated symbols" },
-	{ "checks",  'c', 0,      0, "Print the performed type checks" },
+	{ "debug",   'd', 0,      0, "Print debug messages (scopes, mostly).\n"
+	  "Also disables exit on assertion failure."},
+	{ "tree",    't', 0,      0, "Print the syntax tree." },
+	{ "syntax",  't', 0,      OPTION_ALIAS },
+	{ "symbols", 's', 0,      0, "Print the populated symbols." },
+	{ "checks",  'c', 0,      0, "Print the performed type checks." },
+	{ "types",   'c', 0,      OPTION_ALIAS },
 	{ 0 }
 };
 
