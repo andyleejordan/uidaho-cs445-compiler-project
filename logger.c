@@ -30,7 +30,7 @@ void log_error(const char *format, ...)
 	va_list ap;
 	va_start(ap, format);
 
-	fprintf(stderr, "ERROR: ");
+	fprintf(stderr, "error: ");
 	vfprintf(stderr, format, ap);
 	fprintf(stderr, "\n");
 
@@ -53,7 +53,7 @@ void log_debug(const char *format, ...)
 	va_list ap;
 	va_start(ap, format);
 
-	fprintf(stderr, "DEBUG: ");
+	fprintf(stderr, "debug: ");
 	vfprintf(stderr, format, ap);
 	fprintf(stderr, "\n");
 
@@ -70,10 +70,13 @@ void log_assert(bool p)
 	if (p)
 		return;
 
-	fprintf(stderr, "CRASH: probably received unexpected null\n");
+	fprintf(stderr, "assertion failed: probably received unexpected null\n");
 	if (errno != 0)
-		perror("fatal");
-	exit(EXIT_FAILURE);
+		perror("");
+
+	/* debug builds should allow the segfault for stack tracing */
+	if (!arguments.debug)
+		exit(EXIT_FAILURE);
 }
 
 /*
@@ -81,7 +84,8 @@ void log_assert(bool p)
  */
 void log_unsupported()
 {
-	fprintf(stderr, "C++ operation unsupported in 120++: file %s, line %d, token: %s\n",
+	fprintf(stderr, "error: operation unsupported\n"
+	        "file: %s\n" "line: %d\n" "token: %s\n",
                 (const char *)list_back(filenames), yylineno, yytext);
 	exit(3);
 }
@@ -95,12 +99,13 @@ void log_lexical(const char *format, ...)
 	va_list ap;
 	va_start(ap, format);
 
-	fprintf(stderr, "LEXICAL ERROR: file %s, line %d, token %s\n",
-                (const char *)list_back(filenames), yylineno, yytext);
+	fprintf(stderr, "lexical error: ");
 	vfprintf(stderr, format, ap);
-	fprintf(stderr, "\n");
 
 	va_end(ap);
+
+	fprintf(stderr, "\n" "file: %s\n" "line: %d\n" "token: %s\n",
+                (const char *)list_back(filenames), yylineno, yytext);
 
 	exit(1);
 }
@@ -113,19 +118,20 @@ void log_semantic(struct tree *n, const char *format, ...)
 	va_list ap;
 	va_start(ap, format);
 
-	fprintf(stderr, "SEMANTIC ERROR: ");
+	fprintf(stderr, "semantic error: ");
+	vfprintf(stderr, format, ap);
+
+	va_end(ap);
+
+	fprintf(stderr, "\n");
 	if (n) {
 		while (tree_size(n) > 1)
 			n = list_front(n->children);
 		struct token *t = n->data;
-		fprintf(stderr, "file %s, line %d, token %s\n",
+		fprintf(stderr, "file: %s\n" "line: %d\n" "token: %s\n",
 		        t->filename, t->lineno, t->text);
 	}
 
-	vfprintf(stderr, format, ap);
-	fprintf(stderr, "\n");
-
-	va_end(ap);
 	exit(3);
 }
 
@@ -137,7 +143,7 @@ void log_check(const char *format, ...)
 	va_list ap;
 	va_start(ap, format);
 
-	fprintf(stderr, "TYPE CHECK: ");
+	fprintf(stderr, "type check: ");
 	vfprintf(stderr, format, ap);
 	fprintf(stderr, "\n");
 

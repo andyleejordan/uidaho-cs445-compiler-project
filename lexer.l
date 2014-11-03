@@ -101,9 +101,9 @@ static int check_identifier(const char *s);
                           BEGIN(INITIAL); }
         "<iomanip>"     { libs.iomanip  = true; BEGIN(INITIAL); }
         \"[^\"]+\"      { handle_include(yytext); BEGIN(INITIAL); }
-        "<"[^<>]*">"    { log_lexical("Unrecognized library %s", yytext); }
-        <<EOF>>         { log_lexical("Unexpected EOF"); }
-        .               { log_lexical("Unrecognized token %s"); }
+        "<"[^<>]*">"    { log_lexical("unrecognized library: %s", yytext); }
+        <<EOF>>         { log_lexical("unexpected EOF"); }
+        .               { log_lexical("unrecognized token: %s"); }
 }
 
   /* only allowed namespace directive */
@@ -174,7 +174,7 @@ static int check_identifier(const char *s);
 \'                      { prepare_token(CHARACTER); BEGIN(CHR); }
 
 <CHR>{
-        \'              { log_lexical("Empty char literal"); }
+        \'              { log_lexical("empty char literal"); }
         "\\'"           { yytoken->ival = '\''; YYAPPENDTEXT(); BEGIN(CHREND); }
         "\\\""          { yytoken->ival = '"';  YYAPPENDTEXT(); BEGIN(CHREND); }
         "\\?"           { yytoken->ival = '\?'; YYAPPENDTEXT(); BEGIN(CHREND); }
@@ -190,13 +190,13 @@ static int check_identifier(const char *s);
         [^\\"'"]        { yytoken->ival = *yytext;
                           YYAPPENDTEXT();
                           BEGIN(CHREND); }
-        .               { log_lexical("Unrecognized token %s in char literal", yytext); }
+        .               { log_lexical("in char literal, unrecognized token: %s", yytext); }
 }
 
 <CHREND>{
         \'              { YYAPPENDTEXT(); BEGIN(INITIAL); return CHARACTER; }
-        \n              { log_lexical("Unexpected newline in char literal"); }
-        .               { log_lexical("Too many symbols in char literal"); }
+        \n              { log_lexical("in char literal: unexpected newline"); }
+        .               { log_lexical("in char literal: too many symbols"); }
 }
 
   /* string literal */
@@ -221,9 +221,9 @@ static int check_identifier(const char *s);
         "\\\\"          { YYAPPENDCHAR('\\'); YYAPPENDTEXT(); }
         [^\\\"\n]+      { token_push_sval_string(yytoken, yytext);
                           YYAPPENDTEXT(); }
-        \n              { log_lexical("Unexpected newline in string literal"); }
-        .               { log_lexical("Unrecognized token in string literal"); }
-        <<EOF>>         { log_lexical("Unterminated string literal"); }
+        \n              { log_lexical("in string literal: unexpected newline"); }
+        .               { log_lexical("in string literal: unrecognized token"); }
+        <<EOF>>         { log_lexical("in string literal: unterminated"); }
 }
 
   /* operators */
@@ -278,7 +278,7 @@ static int check_identifier(const char *s);
   /* identifer */
 {L}({L}|{D})*           { return check_identifier(yytext); }
 
-<*>.                    { log_lexical("Unrecognized token"); }
+<*>.                    { log_lexical("unrecognized token: %s", yytext); }
 
 <<EOF>>                 { /* pop the current buffer and filename */
                           yypop_buffer_state();
@@ -330,7 +330,8 @@ void handle_include(const char *s)
 	/* get the real path */
 	char *filename = realpath(include, NULL);
 	if (filename == NULL)
-		log_error("Could not find included file %s from %s",
+		log_error("could not find included file: %s\n"
+		          "included from: %s",
 		          include, (const char *)list_back(filenames));
 
 	free(include);
@@ -339,7 +340,8 @@ void handle_include(const char *s)
 	/* open file and push buffer */
 	yyin = fopen(filename, "r");
 	if (yyin == NULL)
-		log_error("Could not open included file %s from %s",
+		log_error("could not open included file: %s\n"
+		          "included from: %s",
 		          filename, (const char *)list_back(filenames));
 
 	yylineno = 1;
@@ -383,10 +385,10 @@ void insert_typename(char *k, int c)
 	*i = c;
 
 	if (hasht_search(typenames, key))
-		log_lexical("Typename %s previously declared", k);
+		log_lexical("typename %s previously declared", k);
 
 	if (hasht_insert(typenames, key, i) == NULL)
-		log_error("Failed to insert into typenames table");
+		log_error("failed to insert %s into typenames table", k);
 }
 
 /*

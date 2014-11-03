@@ -803,7 +803,8 @@ static int *copy_int(int i)
  */
 static void yyerror(const char *s)
 {
-	fprintf(stderr, "SYNTAX ERROR: file %s, line %d, token %s: %s\n",
-                (const char *)list_back(filenames), yylineno, yytext, s);
+	fprintf(stderr, "Bison error: %s\n"
+	        "file: %s\n" "line: %d\n" "token: %s\n",
+	        s, (const char *)list_back(filenames), yylineno, yytext);
 	exit(2);
 }

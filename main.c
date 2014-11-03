@@ -98,9 +98,9 @@ int main(int argc, char **argv)
 		/* resolve path to input file */
 		char *filename = realpath(arguments.input_files[i], NULL);
 		if (filename == NULL)
-			log_error("Could not find input file %s", arguments.input_files[i]);
+			log_error("could not find input file: %s", arguments.input_files[i]);
 
-		printf("Parsing file %s\n", filename);
+		printf("parsing file: %s\n", filename);
 
 		/* chdir for relative path lookups */
 		chdirname(filename);
@@ -108,13 +108,13 @@ int main(int argc, char **argv)
 		/* open file and push buffer for flex */
 		yyin = fopen(filename, "r");
 		if (yyin == NULL)
-			log_error("Could not open input file %s", filename);
+			log_error("could not open input file: %s", filename);
 
 		/* push filename and buffer state for lexer */
 		list_push_back(filenames, filename);
 		yypush_buffer_state(yy_create_buffer(yyin, YY_BUF_SIZE));
 
-		log_debug("Invoking Bison");
+		log_debug("invoking Bison");
 		int result = yyparse();
 		if (result != 0)
 			return 2;
@@ -150,7 +150,7 @@ void chdirname(char *c)
 	log_assert(dir);
 
 	if (chdir(dir) != 0)
-		log_error("Could not chdir to %s", dir);
+		log_error("could not chdir: %s", dir);
 
 	free(filename);
 }
