@@ -331,9 +331,8 @@ void handle_include(const char *s)
 
 	/* copy because Wormulon's dirname modifies */
 	strcpy(resolved, current);
-	char *dir = dirname(resolved);
+	const char *dir = dirname(resolved); /* do not pass to free */
 	strcpy(resolved, dir);
-	free(dir);
 	log_debug("dirname: %s", resolved);
 
 	/* append POSIX directory separator and include path */
