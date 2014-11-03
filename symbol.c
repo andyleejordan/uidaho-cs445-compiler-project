@@ -25,11 +25,10 @@
 #include "hasht.h"
 #include "tree.h"
 
-/* from lexer */
-extern struct hasht *typenames;
-
 /* stack of scopes */
-struct list *yyscopes;
+extern struct tree *yyprogram;
+extern struct hasht *yytypes;
+extern struct list *yyscopes;
 
 #define scope_current() (struct hasht *)list_back(yyscopes)
 #define scope_push(s) list_push_back(yyscopes, s)
@@ -47,7 +46,6 @@ static void print_typeinfo(FILE *stream, char *k, struct typeinfo *v);
 
 static struct typeinfo *symbol_search(char *k);
 static void symbol_insert(char *k, struct typeinfo *v, struct tree *n, struct hasht *l);
-static void symbol_free(struct hash_node *n);
 
 static struct tree *get_production(struct tree *n, enum rule r);
 static struct token *get_category(struct tree *n, int target, int before);
@@ -60,7 +58,6 @@ static bool get_public(struct tree *n);
 static bool get_private(struct tree *n);
 static char *class_member(struct tree *n);
 
-static struct typeinfo *type_check(struct tree *n);
 static struct typeinfo *get_left_type(struct tree *n);
 static struct typeinfo *get_right_type(struct tree *n);
 
@@ -159,18 +156,9 @@ static enum type map_type(enum yytokentype t)
 /*
  * Populate a global symbol table given the root of a syntax tree.
  */
-struct hasht *symbol_populate(struct tree *syntax)
+void symbol_populate()
 {
 	set_type_comparators();
-
-	struct hasht *global = hasht_new(32, true, NULL, NULL, &symbol_free);
-	log_assert(global);
-
-	/* initialize scope stack */
-	yyscopes = list_new(NULL, NULL);
-	log_assert(yyscopes);
-
-	scope_push(global);
 
 	/* handle standard libraries */
 	if (libs.usingstd) {
@@ -227,12 +215,7 @@ struct hasht *symbol_populate(struct tree *syntax)
 	}
 
 	/* do a top-down pre-order traversal to populate symbol tables */
-	tree_preorder(syntax, 0, &handle_node);
-	type_check(syntax);
-
-	list_free(yyscopes);
-
-	return global;
+	tree_preorder(yyprogram, 0, &handle_node);
 }
 
 /*
@@ -301,7 +284,7 @@ static void symbol_insert(char *k, struct typeinfo *v, struct tree *n, struct ha
 /*
  * Frees key and deletes value.
  */
-static void symbol_free(struct hash_node *n)
+void symbol_free(struct hash_node *n)
 {
 	log_assert(n);
 
@@ -616,7 +599,7 @@ static struct typeinfo *get_right_type(struct tree *n)
  * Recursively perform type checking on the relevant expression
  * production rules for the given syntax tree.
  */
-static struct typeinfo *type_check(struct tree *n)
+struct typeinfo *type_check(struct tree *n)
 {
 	log_assert(n);
 

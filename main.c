@@ -11,8 +11,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <libgen.h>
-#include <unistd.h>
 #include <argp.h>
 
 #include "args.h"
@@ -20,6 +18,7 @@
 
 #include "libs.h"
 #include "lexer.h"
+#include "symbol.h"
 
 #include "list.h"
 #include "tree.h"
@@ -55,21 +54,18 @@ static struct argp argp = { options, parse_opt, args_doc, doc };
 
 /* shared with lexer and parser */
 struct tree *yyprogram;
-struct list *filenames;
+struct list *yyscopes;
+struct list *yyfiles;
+struct hasht *yytypes;
 
-/* chdir to dirname of given filename safely */
-void chdirname(char *c);
+static void parse_program(char *filename);
 
 /* from lexer */
-extern struct hasht *typenames;
 void free_typename(struct hash_node *t);
 
 /* from parser */
 int yyparse();
 bool print_tree(struct tree *t, int d);
-
-/* from symbol */
-struct hasht *symbol_populate(struct tree *syntax);
 
 int main(int argc, char **argv)
 {
@@ -80,90 +76,78 @@ int main(int argc, char **argv)
 
 	argp_parse(&argp, argc, argv, 0, 0, &arguments);
 
-	char *cwd = getcwd(NULL, 0);
-	log_assert(cwd);
-
-	filenames = list_new(NULL, &free);
-	log_assert(filenames);
-
-	/* setup lexer and parse each argument (or stdin) as a new 'program' */
+	/* parse each input file as a new 'program' */
 	for (int i = 0; arguments.input_files[i]; ++i) {
-		/* reset library flags */
-		libs.usingstd	= false;
-		libs.cstdlib	= false;
-		libs.cmath	= false;
-		libs.ctime	= false;
-		libs.cstring	= false;
-		libs.fstream	= false;
-		libs.iostream	= false;
-		libs.string	= false;
-		libs.iomanip	= false;
-
-		/* reset directory for each input file */
-		log_assert(chdir(cwd) == 0);
-
-		/* setup typenames table for lexer */
-		typenames = hasht_new(8, true, NULL, NULL, &free_typename);
-		log_assert(typenames);
-
-		/* resolve path to input file */
 		char *filename = realpath(arguments.input_files[i], NULL);
 		if (filename == NULL)
 			log_error("could not find input file: %s", arguments.input_files[i]);
-
-		printf("parsing file: %s\n", filename);
-
-		/* chdir for relative path lookups */
-		chdirname(filename);
-
-		/* open file and push buffer for flex */
-		yyin = fopen(filename, "r");
-		if (yyin == NULL)
-			log_error("could not open input file: %s", filename);
-
-		/* push filename and buffer state for lexer */
-		list_push_back(filenames, filename);
-		yypush_buffer_state(yy_create_buffer(yyin, YY_BUF_SIZE));
-
-		log_debug("invoking Bison");
-		int result = yyparse();
-		if (result != 0)
-			return 2;
-
-		/* print syntax tree */
-		if (arguments.tree)
-			tree_preorder(yyprogram, 0, &print_tree);
-
-		/* build the symbol tables */
-		struct hasht *global = symbol_populate(yyprogram);
-		log_debug("global scope had %zu symbols", hasht_used(global));
-
-		/* clean up */
-		tree_free(yyprogram);
-		yylex_destroy();
-		hasht_free(typenames);
+		parse_program(filename);
 	}
-
-	list_free(filenames);
 
 	return EXIT_SUCCESS;
 }
 
-/*
- * Helper function to safely chdir to dirname of given filename.
- */
-void chdirname(char *c)
+void parse_program(char *filename)
 {
-	char *filename = strdup(c);
-	log_assert(filename);
+	printf("parsing file: %s\n", filename);
 
-	char *dir = dirname(filename);
-	log_assert(dir);
+	yyfiles = list_new(NULL, &free);
+	log_assert(yyfiles);
+	list_push_back(yyfiles, filename);
 
-	if (chdir(dir) != 0)
-		log_error("could not chdir: %s", dir);
+	/* open file for lexer */
+	yyin = fopen(filename, "r");
+	if (yyin == NULL)
+		log_error("could not open input file: %s", filename);
 
-	free(filename);
+	/* push buffer state for lexer */
+	yypush_buffer_state(yy_create_buffer(yyin, YY_BUF_SIZE));
+
+	/* setup yytypes table for lexer */
+	yytypes = hasht_new(8, true, NULL, NULL, &free_typename);
+	log_assert(yytypes);
+
+	/* reset library flags */
+	libs.usingstd	= false;
+	libs.cstdlib	= false;
+	libs.cmath	= false;
+	libs.ctime	= false;
+	libs.cstring	= false;
+	libs.fstream	= false;
+	libs.iostream	= false;
+	libs.string	= false;
+	libs.iomanip	= false;
+
+	log_debug("invoking Bison");
+	int result = yyparse();
+	if (result != 0)
+		exit(2);
+
+	/* print syntax tree */
+	if (arguments.tree)
+		tree_preorder(yyprogram, 0, &print_tree);
+
+	log_debug("performing semantic analysis");
+
+	/* initialize scope stack */
+	yyscopes = list_new(NULL, NULL);
+	log_assert(yyscopes);
+	struct hasht *global = hasht_new(32, true, NULL, NULL, &symbol_free);
+	log_assert(global);
+	list_push_back(yyscopes, global);
+
+	/* build the symbol tables */
+	symbol_populate();
+	log_debug("global scope had %zu symbols", hasht_used(global));
+
+	type_check(yyprogram);
+
+	/* clean up */
+	tree_free(yyprogram);
+	yylex_destroy();
+	hasht_free(yytypes);
+	list_free(yyfiles);
+	list_free(yyscopes);
 }
 
 static error_t parse_opt(int key, char *arg, struct argp_state *state)

@@ -58,7 +58,7 @@
 
 /* from main */
 extern struct tree *yyprogram;
-extern struct list *filenames;
+extern struct list *yyfiles;
 
 /* from lexer */
 extern int yylineno;
@@ -67,9 +67,9 @@ int yylex();
 void insert_typename_tree(struct tree *t, int category);
 
 /* syntax tree utilities */
-static int *copy_int(int i);
 bool print_tree(struct tree *t, int d);
 void delete_tree(void *data, bool leaf);
+static int *copy_int(int i);
 
 /* semantic action helpers */
 #define P(name, ...) tree_new_group(NULL, (void *)copy_int(name), NULL, &delete_tree, __VA_ARGS__)
@@ -805,6 +805,6 @@ static void yyerror(const char *s)
 {
 	fprintf(stderr, "Bison error: %s\n"
 	        "file: %s\n" "line: %d\n" "token: %s\n",
-	        s, (const char *)list_back(filenames), yylineno, yytext);
+	        s, (const char *)list_back(yyfiles), yylineno, yytext);
 	exit(2);
 }

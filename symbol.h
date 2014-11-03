@@ -14,8 +14,11 @@
 #include <stddef.h>
 
 struct tree;
+struct hash_node;
 
-struct hasht *symbol_populate(struct tree *syntax);
+void symbol_populate();
+struct typeinfo *type_check(struct tree *n);
+void symbol_free(struct hash_node *n);
 
 enum type {
 	INT_T,
@@ -43,7 +46,7 @@ struct typeinfo {
 			struct hasht *symbols; /* NULL until defined */
 		} function;
 		struct classinfo {
-			char *type; /* from typenames table */
+			char *type; /* from yytypes table */
 			struct hasht *public;
 			struct hasht *private;
 		} class;

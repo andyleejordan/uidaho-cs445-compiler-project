@@ -20,7 +20,7 @@
 #include "tree.h"
 
 /* from main */
-extern struct list *filenames;
+extern struct list *yyfiles;
 
 /*
  * Print message to stderr. If debug, call perror. Exit failure.
@@ -86,7 +86,7 @@ void log_unsupported()
 {
 	fprintf(stderr, "error: operation unsupported\n"
 	        "file: %s\n" "line: %d\n" "token: %s\n",
-                (const char *)list_back(filenames), yylineno, yytext);
+                (const char *)list_back(yyfiles), yylineno, yytext);
 	exit(3);
 }
 
@@ -105,7 +105,7 @@ void log_lexical(const char *format, ...)
 	va_end(ap);
 
 	fprintf(stderr, "\n" "file: %s\n" "line: %d\n" "token: %s\n",
-                (const char *)list_back(filenames), yylineno, yytext);
+                (const char *)list_back(yyfiles), yylineno, yytext);
 
 	exit(1);
 }

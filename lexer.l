@@ -24,7 +24,6 @@ IS       (u|U|l|L)*
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <ctype.h>
 #include <libgen.h>
 
 #include "logger.h"
@@ -42,8 +41,8 @@ IS       (u|U|l|L)*
 #define YYAPPENDCHAR(character) token_push_sval_char(yytoken, character)
 
 /* from main */
-extern struct list *filenames;
-void chdirname(char *c);
+extern struct list *yyfiles;
+extern struct hasht *yytypes;
 
 /* from parser */
 void delete_tree(void *data, bool leaf);
@@ -60,7 +59,6 @@ static void handle_string();
 static void handle_include(const char *s);
 
 /* typenames data */
-struct hasht *typenames;
 void insert_typename(char *k, int c);
 void insert_typename_tree(struct tree *t, int category);
 static int check_identifier(const char *s);
@@ -280,20 +278,16 @@ static int check_identifier(const char *s);
 
 <*>.                    { log_lexical("unrecognized token: %s", yytext); }
 
-<<EOF>>                 { /* pop the current buffer and filename */
+<<EOF>>                 { /* restart line numbering count */
+                          yylineno = 1;
+                          /* pop the current buffer and filename */
                           yypop_buffer_state();
-                          list_pop_back(filenames);
-
-                          /* if there's another file to process, chdir to it */
-                          char *filename = list_back(filenames);
-                          if (filename)
-                                  chdirname(filename);
-
-                          yylineno = 1; /* restart line numbering count */
+                          list_pop_back(yyfiles);
 
                           /* if buffer stack is empty, stop */
                           if (!YY_CURRENT_BUFFER)
-                                  yyterminate(); }
+                                  yyterminate();
+                        }
 %%
 
 /*
@@ -303,7 +297,7 @@ static int check_identifier(const char *s);
 void prepare_token(int category)
 {
 	yytoken = token_new(category, yylineno, yytext,
-                            (const char *)list_back(filenames));
+                            (const char *)list_back(yyfiles));
 	yylval.t = tree_new(NULL, yytoken, NULL,
                             (void (*)(void *, bool))&delete_tree);
 }
@@ -311,12 +305,15 @@ void prepare_token(int category)
 /*
  * Given yytext of the literal form "somefile.h", this extracts the
  * substring corresponding to the path, determines the full path to
- * the file, pushes that path to the filenames list, opens the file
- * into yyin, resets the line number count to 1, and pushes a new Flex
+ * the file, pushes that path to the yyfiles list, opens the file into
+ * yyin, resets the line number count to 1, and pushes a new Flex
  * buffer for the file.
  */
 void handle_include(const char *s)
 {
+	/* restart line numbering count */
+	yylineno = 1;
+
 	/* size without surrounding quotes */
 	size_t len = strlen(s) - 2;
 
@@ -327,49 +324,65 @@ void handle_include(const char *s)
 	strncpy(include, s + 1, len);
 	include[len] = '\0';
 
-	/* get the real path */
-	char *filename = realpath(include, NULL);
+	/* path = realpath(dirname(current) + "/" + include) */
+	char *current = list_back(yyfiles);
+	/* lengths of current file + include + '/' + '\0'; dirname < current */
+	char *resolved = calloc(len + strlen(current) + 2, sizeof(char));
+
+	/* copy because Wormulon's dirname modifies */
+	strcpy(resolved, current);
+	char *dir = dirname(resolved);
+	strcpy(resolved, dir);
+	free(dir);
+	log_debug("dirname: %s", resolved);
+
+	/* append POSIX directory separator and include path */
+	strcat(resolved, "/");
+	strcat(resolved, include);
+	log_debug("resolved: %s", resolved);
+
+	/* resolve abosolute path name */
+	char *filename = realpath(resolved, NULL);
 	if (filename == NULL)
 		log_error("could not find included file: %s\n"
-		          "included from: %s",
-		          include, (const char *)list_back(filenames));
-
+		          "included from: %s", include, current);
+	free(resolved);
 	free(include);
-	list_push_back(filenames, filename);
 
-	/* open file and push buffer */
+	/* open file */
 	yyin = fopen(filename, "r");
 	if (yyin == NULL)
 		log_error("could not open included file: %s\n"
-		          "included from: %s",
-		          filename, (const char *)list_back(filenames));
+		          "included from: %s", filename, current);
 
-	yylineno = 1;
+	/* push filename and buffer state */
+	list_push_back(yyfiles, filename);
+	log_debug("filename: %s", filename);
 	yypush_buffer_state(yy_create_buffer(yyin, YY_BUF_SIZE));
 }
 
 /*
- * Insert "ifstream" and "ofstream" into typenames hash table.
+ * Insert "ifstream" and "ofstream" into yytypes hash table.
  */
 void handle_fstream()
 {
-	if (!hasht_search(typenames, "ifstream")) {
+	if (!hasht_search(yytypes, "ifstream")) {
 		insert_typename("ifstream", CLASS_NAME);
 		insert_typename("ofstream", CLASS_NAME);
 	}
 }
 
 /*
- * Insert "string" into typenames hash table.
+ * Insert "string" into yytypes hash table.
  */
 void handle_string()
 {
-	if (!hasht_search(typenames, "string"))
+	if (!hasht_search(yytypes, "string"))
 		insert_typename("string", CLASS_NAME);
 }
 
 /*
- * Inserts typename into typenames hash table.
+ * Inserts typename into yytypes hash table.
  *
  * Copies both the typename string (key) and integer category (value)
  * so that a) the table can be freed later b) the table is not
@@ -384,16 +397,16 @@ void insert_typename(char *k, int c)
 
 	*i = c;
 
-	if (hasht_search(typenames, key))
+	if (hasht_search(yytypes, key))
 		log_lexical("typename %s previously declared", k);
 
-	if (hasht_insert(typenames, key, i) == NULL)
-		log_error("failed to insert %s into typenames table", k);
+	if (hasht_insert(yytypes, key, i) == NULL)
+		log_error("failed to insert %s into yytypes table", k);
 }
 
 /*
  * Unwraps a tree leaf and inserts token's text as key with category
- * as value into typenames hash table.
+ * as value into yytypes hash table.
  */
 void insert_typename_tree(struct tree *t, int category)
 {
@@ -413,7 +426,7 @@ void free_typename(struct hash_node *t)
  */
 int check_identifier(const char *s)
 {
-	int *c = hasht_search(typenames, (void *)s);
+	int *c = hasht_search(yytypes, (void *)s);
 	if (c)
 		TOKEN(*c);
 	else
