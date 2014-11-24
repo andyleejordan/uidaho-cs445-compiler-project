@@ -283,8 +283,13 @@ void hasht_default_delete(struct hash_node *n)
  */
 struct hash_node *hash_node_new(struct hash_node *n, void *key, void *value)
 {
-	if (n == NULL)
+	if (n == NULL) {
 		n = malloc(sizeof(*n));
+		if (n == NULL) {
+			fprintf(stderr, "hasht_node_new(): couldn't allocate new node\n");
+			return NULL;
+		}
+	}
 
 	n->key = key;
 	n->value = value;
