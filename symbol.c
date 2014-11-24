@@ -480,6 +480,8 @@ static struct typeinfo *typeinfo_new_function(struct tree *n, struct typeinfo *t
 
 /*
  * Returns a copy of a typeinfo object.
+ *
+ * Memory leaks galore right now.
  */
 static struct typeinfo *typeinfo_copy(struct typeinfo *t)
 {
@@ -488,28 +490,23 @@ static struct typeinfo *typeinfo_copy(struct typeinfo *t)
 	struct typeinfo *n = malloc(sizeof(*n));
 	log_assert(n);
 
-	n->base = t->base;
-	n->pointer = t->pointer;
+	n = memcpy(n, t, sizeof(*t));
+	log_assert(n);
 
+	/* recursive copy of the types */
 	switch(n->base) {
-	case ARRAY_T: {
-		n->array.type = t->array.type;
-		n->array.size = t->array.size;
+	case ARRAY_T:
+		n->array.type = typeinfo_copy(t->array.type);
 		break;
-	}
-	case FUNCTION_T: {
-		n->function.type = t->function.type;
-		n->function.parameters = t->function.parameters;
-		n->function.symbols = t->function.symbols;
+	case FUNCTION_T:
+		/* may also want to copy parameters list and symbol table */
+		n->function.type = typeinfo_copy(t->function.type);
 		break;
-	}
-	case CLASS_T: {
-		n->class.type = t->class.type;
-		n->class.public = t->class.public;
-		n->class.private = t->class.private;
+	case CLASS_T:
+		/* this type is a string not a typeinfo */
 		break;
-	}
 	default:
+		/* the rest don't need anything else */
 		break;
 	}
 
