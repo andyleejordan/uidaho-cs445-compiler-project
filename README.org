@@ -29,3 +29,8 @@ grammar that works with Bison.
 Per the [[http://www2.cs.uidaho.edu/~jeffery/courses/445/hw3.html][requirements]], my third goal was to perform semantic analysis
 (including populating symbol tables and type checking the expressions)
 on the syntax tree.
+
+** Assignment #4: Intermediate Code Generation
+Per the [[http://www2.cs.uidaho.edu/~jeffery/courses/445/hw4.html][requirements]], my fourth goal was to implement intermediate
+code generation, i.e., a list of three-address instructions given the
+parse tree.
