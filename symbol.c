@@ -165,6 +165,7 @@ void symbol_populate()
 		/* iostream includes fstream */
 		if (libs.fstream || libs.iostream) {
 			struct typeinfo *ifstream = malloc(sizeof(*ifstream));
+			log_assert(ifstream);
 			ifstream->base = CLASS_T;
 			ifstream->pointer = false;
 			ifstream->class.type = "std::ifstream";
@@ -173,6 +174,7 @@ void symbol_populate()
 
 			/* adding ifstream.ignore() */
 			struct typeinfo *ignore = malloc(sizeof(*ignore));
+			log_assert(ignore);
 			ignore->base = FUNCTION_T;
 			ignore->pointer = false;
 			ignore->function.type = typeinfo_copy(&void_type);
@@ -184,6 +186,7 @@ void symbol_populate()
 			scope_pop();
 
 			struct typeinfo *ofstream = malloc(sizeof(*ofstream));
+			log_assert(ofstream);
 			ofstream->base = CLASS_T;
 			ofstream->pointer = false;
 			ofstream->class.type = "std::ofstream";
@@ -191,12 +194,14 @@ void symbol_populate()
 		}
 		if (libs.iostream) {
 			struct typeinfo *cin = malloc(sizeof(*cin));
+			log_assert(cin);
 			cin->base = CLASS_T;
 			cin->pointer = false;
 			cin->class.type = "ifstream";
 			symbol_insert("cin", cin, NULL, NULL);
 
 			struct typeinfo *cout = malloc(sizeof(*cout));
+			log_assert(cout);
 			cout->base = CLASS_T;
 			cout->pointer = false;
 			cout->class.type = "ofstream";
@@ -207,6 +212,7 @@ void symbol_populate()
 		}
 		if (libs.string) {
 			struct typeinfo *string = malloc(sizeof(*string));
+			log_assert(string);
 			string->base = CLASS_T;
 			string->pointer = false;
 			string->class.type = "std::string";
