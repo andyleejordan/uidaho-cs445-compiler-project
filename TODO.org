@@ -1,11 +1,59 @@
 * Tasks
-** TODO Use flyweight pattern for repeated strings
-** TODO Respect include guards
+** TODO Create interface for chosen opcode set
+#+begin_src C
+  enum opcode {
+          ADD,    /* x := y op z  store result of binary operation on y and z to x */
+          SUB,
+          MUL,
+          DIV,
+          NEG,    /* x := op y      store result of unary operation on y to x */
+          ASN,    /* x := y store y to x */
+          ADDR,   /* x := &y        store address of y to x */
+          LCONT,  /* x := *y        store contents pointed to by y to x */
+          SCONT,  /* *x := y        store y to location pointed to by x */
+          GOTO,   /* goto L unconditional jump to L */
+          BLT,    /* if x rop y then goto L binary conditional jump to L */
+          BGT,    /* TODO: other binary conditionals */
+          BIF,    /* if x then goto L             unary conditional jump to L */
+          BNIF,   /* if !x then goto L              unary negative conditional jump to L */
+          PARM,   /* param x        store x as a parameter */
+          CALL,   /* call p, n, x   call procedure p with n parameters, store result in x */
+          RET     /* return x       return from procedure, use x as the result */
+  };
+
+  struct op {
+          enum opcode c;
+          struct address a[3];
+  };
+#+end_src
+** TODO Create type for memory addresses
+#+begin_src C
+  enum location {
+          LOCAL,
+          GLOBAL,
+          CONSTANT,
+          CLASS,
+          LABEL
+  };
+
+  struct address {
+          enum location l;
+          int offset o;
+  };
+
+#+end_src
+** TODO Traversal to assign places on leaves
+** TODO Traversal to assign labels for jumps
+** TODO Post-order traversal to assign code to expressions
+** TODO Post-order traversal to create list from code nodes
+** TODO Print out code
 ** TODO Expand list library
 - =struct list *list_copy=
 - =struct list *list_concat=
 - =list_split=
 - =list_sort=
+** TODO Use flyweight pattern for repeated strings
+** TODO Respect include guards
 ** TODO Expand type checking
 *** refactor for type promotion (=typeinfo_compatible(a, b)=)
 *** faux headers for stdlibs
