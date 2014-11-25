@@ -1408,7 +1408,7 @@ static void handle_init_list(struct typeinfo *v, struct tree *n)
 
 		handle_init_list(v, tree_index(n, 1));
 
-		log_debug("class scope had %zu symbols", hasht_size(list_back(yyscopes)));
+		log_debug("class scope had %zu symbols", hasht_used(list_back(yyscopes)));
 		log_debug("popping scope");
 		scope_pop();
 	} else if (r == MEMBER_DECL1) {
@@ -1451,7 +1451,7 @@ static void handle_function(struct typeinfo *t, struct tree *n, char *k)
 	scope_push(v->function.symbols);
 	tree_preorder(get_production(n, COMPOUND_STATEMENT), 0, &handle_node);
 
-	log_debug("function scope had %zu symbols", hasht_size(v->function.symbols));
+	log_debug("function scope had %zu symbols", hasht_used(v->function.symbols));
 	log_debug("popping scopes");
 	while (list_size(yyscopes) != scopes)
 		scope_pop();
@@ -1516,6 +1516,8 @@ static void handle_class(struct typeinfo *t, struct tree *n)
 	char *k = get_identifier(n);
 	t->base = CLASS_T; /* class definition is still a class */
 
+	symbol_insert(k, t, n, NULL);
+
 	/* setup class region and offset */
 	enum region region_ = region;
 	size_t offset_ = offset;
@@ -1539,8 +1541,6 @@ static void handle_class(struct typeinfo *t, struct tree *n)
 		symbol_insert(k, ctor, NULL, NULL);
 		scope_pop();
 	}
-
-	symbol_insert(k, t, n, NULL);
 
 	/* restore region and offset */
 	region = region_;
