@@ -275,7 +275,6 @@ static void symbol_insert(char *k, struct typeinfo *v, struct tree *n, struct ha
 		/* assign region and offset */
 		v->address.region = region;
 		v->address.offset = offset;
-		offset += typeinfo_size(v);
 
 		hasht_insert(scope_current(), k, v);
 		if (arguments.symbols) {
@@ -283,6 +282,9 @@ static void symbol_insert(char *k, struct typeinfo *v, struct tree *n, struct ha
 			        print_region(region), offset);
 			print_typeinfo(stderr, k, v);
 		}
+
+		/* increment offset */
+		offset += typeinfo_size(v);
 	} else if (e->base == FUNCTION_T && v->base == FUNCTION_T) {
 		if (!typeinfo_compare(e, v)) {
 			log_semantic(n, "function signatures for %s mismatched", k);
