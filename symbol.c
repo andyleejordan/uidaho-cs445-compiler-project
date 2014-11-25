@@ -34,6 +34,9 @@ extern struct list *yyscopes;
 #define scope_push(s) list_push_back(yyscopes, s)
 #define scope_pop() list_pop_back(yyscopes)
 
+static enum region region;
+static size_t offset;
+
 /* syntax tree helpers */
 #define get_rule(n) *(enum rule *)((struct tree *)n)->data
 #define get_token(n, i) ((struct token *)tree_index(n, i)->data)
@@ -43,6 +46,7 @@ static enum type map_type(enum yytokentype t);
 static void set_type_comparators();
 static char *print_basetype(struct typeinfo *t);
 static void print_typeinfo(FILE *stream, char *k, struct typeinfo *v);
+static char *print_region(enum region r);
 
 static struct typeinfo *symbol_search(char *k);
 static void symbol_insert(char *k, struct typeinfo *v, struct tree *n, struct hasht *l);
@@ -66,6 +70,7 @@ static struct typeinfo *typeinfo_new_array(struct tree *n, struct typeinfo *t);
 static struct typeinfo *typeinfo_new_function(struct tree *n, struct typeinfo *t, bool define);
 static struct typeinfo *typeinfo_copy(struct typeinfo *t);
 static struct typeinfo *typeinfo_return(struct typeinfo *t);
+static size_t typeinfo_size(struct typeinfo *t);
 static void typeinfo_delete(struct typeinfo *t);
 static bool typeinfo_compare(struct typeinfo *a, struct typeinfo *b);
 static bool typeinfo_list_compare(struct list *a, struct list *b);
@@ -158,6 +163,9 @@ static enum type map_type(enum yytokentype t)
  */
 void symbol_populate()
 {
+	offset = 0;
+	region = GLOBAL_R;
+
 	set_type_comparators();
 
 	/* handle standard libraries */
@@ -264,10 +272,15 @@ static void symbol_insert(char *k, struct typeinfo *v, struct tree *n, struct ha
 		e = hasht_search(list_tail(yyscopes)->data, k);
 
 	if (e == NULL) {
+		/* assign region and offset */
+		v->address.region = region;
+		v->address.offset = offset;
+		offset += typeinfo_size(v);
+
 		hasht_insert(scope_current(), k, v);
 		if (arguments.symbols) {
-			fprintf(stderr, "Inserting at depth %zu: ",
-			        list_size(yyscopes));
+			fprintf(stderr, "Inserting at %s - %zu: ",
+			        print_region(region), offset);
 			print_typeinfo(stderr, k, v);
 		}
 	} else if (e->base == FUNCTION_T && v->base == FUNCTION_T) {
@@ -467,6 +480,7 @@ static struct typeinfo *typeinfo_new_function(struct tree *n, struct typeinfo *t
 	log_assert(params);
 
 	handle_param_list(n, local, params);
+	/* TODO: mark end of parameters in region */
 
 	struct typeinfo *function = typeinfo_new(n);
 	function->base = FUNCTION_T;
@@ -526,6 +540,29 @@ static struct typeinfo *typeinfo_return(struct typeinfo *t)
 		return t->function.type;
 	else
 		return t;
+}
+
+/*
+ * Returns calculated size for type.
+ */
+static size_t typeinfo_size(struct typeinfo *t)
+{
+	switch (t->base) {
+	case INT_T:
+	case DOUBLE_T:
+		return 8;
+	case CHAR_T:
+	case BOOL_T:
+		return 1;
+	case ARRAY_T:
+		return t->array.size * typeinfo_size(t->array.type);
+	case FUNCTION_T:
+		return 0; /* TODO: sum size of scope */
+	case CLASS_T:
+		return 0; /* TODO: sum sizes of scopes */
+	default:
+		return 0;
+	}
 }
 
 /*
@@ -1400,6 +1437,12 @@ static void handle_function(struct typeinfo *t, struct tree *n, char *k)
 
 	symbol_insert(k, v, n, v->function.symbols);
 
+	/* setup local region and offset */
+	enum region region_ = region;
+	size_t offset_ = offset;
+	region = LOCAL_R;
+	offset = 0;
+
 	/* recurse on children while in subscope */
 	log_debug("pushing function scope");
 	scope_push(v->function.symbols);
@@ -1409,6 +1452,10 @@ static void handle_function(struct typeinfo *t, struct tree *n, char *k)
 	log_debug("popping scopes");
 	while (list_size(yyscopes) != scopes)
 		scope_pop();
+
+	/* restore region and offset */
+	region = region_;
+	offset = offset_;
 }
 
 /*
@@ -1465,6 +1512,13 @@ static void handle_class(struct typeinfo *t, struct tree *n)
 {
 	char *k = get_identifier(n);
 	t->base = CLASS_T; /* class definition is still a class */
+
+	/* setup class region and offset */
+	enum region region_ = region;
+	size_t offset_ = offset;
+	region = CLASS_R;
+	offset = 0;
+
 	handle_init_list(t, tree_index(n, 1));
 
 	if (t->class.public == NULL) {
@@ -1484,12 +1538,17 @@ static void handle_class(struct typeinfo *t, struct tree *n)
 	}
 
 	symbol_insert(k, t, n, NULL);
+
+	/* restore region and offset */
+	region = region_;
+	offset = offset_;
 }
+
+#define R(rule) case rule: return #rule
 
 /*
  * Given a type enum, returns its name as a static string.
  */
-#define R(rule) case rule: return #rule
 static char *print_basetype(struct typeinfo *t)
 {
 	switch (t->base) {
@@ -1508,6 +1567,23 @@ static char *print_basetype(struct typeinfo *t)
 
 	return NULL; /* error */
 }
+
+/*
+ * Given a region enu, returns its name as a static string.
+ */
+static char *print_region(enum region r)
+{
+	switch (r) {
+		R(GLOBAL_R);
+		R(LOCAL_R);
+		R(CLASS_R);
+		R(LABEL_R);
+		R(CONST_R);
+	};
+
+	return NULL; /* error */
+}
+
 #undef R
 
 /*
