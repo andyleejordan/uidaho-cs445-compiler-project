@@ -543,10 +543,13 @@ static struct typeinfo *typeinfo_return(struct typeinfo *t)
 }
 
 /*
- * Returns calculated size for type.
+ * Returns calculated size for type. Assuming 64-bit.
  */
 static size_t typeinfo_size(struct typeinfo *t)
 {
+	if (t->pointer)
+		return 8;
+
 	switch (t->base) {
 	case INT_T:
 	case DOUBLE_T:
