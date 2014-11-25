@@ -13,7 +13,11 @@
           SCONT,  /* *x := y        store y to location pointed to by x */
           GOTO,   /* goto L unconditional jump to L */
           BLT,    /* if x rop y then goto L binary conditional jump to L */
-          BGT,    /* TODO: other binary conditionals */
+          BLE,
+          BGT,
+          BGE,
+          BEQ,
+          BNE,
           BIF,    /* if x then goto L             unary conditional jump to L */
           BNIF,   /* if !x then goto L              unary negative conditional jump to L */
           PARM,   /* param x        store x as a parameter */
@@ -26,7 +30,7 @@
           struct address a[3];
   };
 #+end_src
-** TODO Create type for memory addresses
+** DONE Create type for memory addresses
 #+begin_src C
   enum location {
           LOCAL,
@@ -37,11 +41,15 @@
   };
 
   struct address {
-          enum location l;
-          int offset o;
+          enum location location;
+          int offset;
   };
 
 #+end_src
+** TODO Add address field to symbols
+Should be as simple as maintaining the current scope's offset, and
+using that to create an address for each symbol, held in their
+respective typeinfo structs.
 ** TODO Traversal to assign places on leaves
 ** TODO Traversal to assign labels for jumps
 ** TODO Post-order traversal to assign code to expressions
