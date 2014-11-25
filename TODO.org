@@ -46,10 +46,11 @@
   };
 
 #+end_src
-** TODO Add address field to symbols
+** DONE Add address field to symbols
 Should be as simple as maintaining the current scope's offset, and
 using that to create an address for each symbol, held in their
 respective typeinfo structs.
+** TODO Expand hash library for deep table copies (for class instances)
 ** TODO Traversal to assign places on leaves
 ** TODO Traversal to assign labels for jumps
 ** TODO Post-order traversal to assign code to expressions

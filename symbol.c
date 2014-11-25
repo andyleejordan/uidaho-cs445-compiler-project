@@ -71,6 +71,7 @@ static struct typeinfo *typeinfo_new_function(struct tree *n, struct typeinfo *t
 static struct typeinfo *typeinfo_copy(struct typeinfo *t);
 static struct typeinfo *typeinfo_return(struct typeinfo *t);
 static size_t typeinfo_size(struct typeinfo *t);
+static size_t scope_size(struct hasht *t);
 static void typeinfo_delete(struct typeinfo *t);
 static bool typeinfo_compare(struct typeinfo *a, struct typeinfo *b);
 static bool typeinfo_list_compare(struct list *a, struct list *b);
@@ -450,6 +451,7 @@ static struct typeinfo *typeinfo_new(struct tree *n)
 		: map_type(get_token(n, 0)->category); /* TODO: factor out dependency */
 	t->pointer = get_pointer(n);
 
+	/* TODO: handle copying of scopes for class instances */
 	if (t->base == CLASS_T)
 		t->class.type = get_class(n);
 
@@ -562,12 +564,33 @@ static size_t typeinfo_size(struct typeinfo *t)
 	case ARRAY_T:
 		return t->array.size * typeinfo_size(t->array.type);
 	case FUNCTION_T:
-		return 0; /* TODO: sum size of scope */
+		return scope_size(t->function.symbols);
 	case CLASS_T:
-		return 0; /* TODO: sum sizes of scopes */
+		return scope_size(t->class.public) + scope_size(t->class.private);
 	default:
 		return 0;
 	}
+}
+
+/*
+ * Returns sum of sizes of symbols in scope.
+ *
+ * This is sadly highly coupled with my hash table implementation
+ * since it does not (yet) have an iterable interface.
+ */
+static size_t scope_size(struct hasht *t)
+{
+	if (t == NULL)
+		return 0;
+
+	size_t total = 0;
+	for (size_t i = 0; i < t->size; ++i) {
+		struct hash_node *slot = t->table[i];
+		if (slot && !hash_node_deleted(slot)) {
+			total += typeinfo_size(slot->value);
+		}
+	}
+	return total;
 }
 
 /*
