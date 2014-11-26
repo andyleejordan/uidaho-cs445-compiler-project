@@ -89,6 +89,11 @@ void *hasht_insert(struct hasht *self, void *key, void *value)
 		return NULL;
 	}
 
+	if (key == NULL) {
+		fprintf(stderr, "hasht_insert(): key was null\n");
+		return NULL;
+	}
+
 	if (self->grow && (self->used > self->size / 2))
 		hasht_resize(self, self->size * 2);
 
