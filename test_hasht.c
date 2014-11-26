@@ -66,8 +66,8 @@ struct hasht *test_hasht_new(size_t size) {
 
 void test_hasht_insert(struct hasht *t, char *k, char *v)
 {
-	void *test_v = hasht_insert(t, k, v);
-	assert(test_v == v);
+	struct hash_node *slot = hasht_insert(t, k, v);
+	assert(slot->value == v);
 }
 
 void test_hasht_search(struct hasht *t, char *k, char *v)

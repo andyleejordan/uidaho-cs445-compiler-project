@@ -103,7 +103,7 @@ void *hasht_insert(struct hasht *self, void *key, void *value)
 		if (*slot == NULL || hash_node_deleted(*slot)) {
 			++self->used;
 			*slot = hash_node_new(*slot, key, value);
-			return value;
+			return *slot;
 		} else if (self->compare(key, (*slot)->key)) {
 			return NULL;
 		}
