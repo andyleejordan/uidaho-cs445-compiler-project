@@ -58,6 +58,7 @@ static struct argp argp = { options, parse_opt, args_doc, doc };
 struct tree *yyprogram;
 struct list *yyscopes;
 struct list *yyfiles;
+struct hasht *yyincludes;
 struct hasht *yytypes;
 
 static void parse_program(char *filename);
@@ -97,6 +98,9 @@ void parse_program(char *filename)
 	yyfiles = list_new(NULL, &free);
 	log_assert(yyfiles);
 	list_push_back(yyfiles, filename);
+
+	yyincludes = hasht_new(8, true, NULL, NULL, NULL);
+	log_assert(yyincludes);
 
 	/* open file for lexer */
 	yyin = fopen(filename, "r");

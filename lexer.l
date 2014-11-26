@@ -26,6 +26,7 @@ IS       (u|U|l|L)*
 #include <stdlib.h>
 #include <libgen.h>
 
+#include "args.h"
 #include "logger.h"
 #include "token.h"
 #include "libs.h"
@@ -42,6 +43,7 @@ IS       (u|U|l|L)*
 
 /* from main */
 extern struct list *yyfiles;
+extern struct hasht *yyincludes;
 extern struct hasht *yytypes;
 
 /* from parser */
@@ -53,10 +55,12 @@ static void prepare_token(int category);
 
 /* handle #include libraries */
 static void handle_fstream();
+static void handle_iostream();
 static void handle_string();
 
 /* handle #include files */
-static void handle_include(const char *s);
+static void handle_include(char *filename);
+static void handle_quoted_include(const char *s);
 
 /* typenames data */
 void insert_typename(char *k, int c);
@@ -88,28 +92,18 @@ static int check_identifier(const char *s);
         "<cmath>"       { libs.cmath    = true; BEGIN(INITIAL); }
         "<ctime>"       { libs.ctime    = true; BEGIN(INITIAL); }
         "<cstring>"     { libs.cstring  = true; BEGIN(INITIAL); }
-        "<fstream>"     { libs.fstream  = true;
-                          if (libs.usingstd)
-                                  handle_fstream();
-                          BEGIN(INITIAL); }
-        "<iostream>"    { libs.iostream = true; BEGIN(INITIAL); }
-        "<string>"      { libs.string   = true;
-                          if (libs.usingstd)
-                                  handle_string();
-                          BEGIN(INITIAL); }
+        "<fstream>"     { libs.fstream  = true; handle_fstream(); BEGIN(INITIAL); }
+        "<iostream>"    { libs.iostream = true; handle_iostream(); BEGIN(INITIAL); }
+        "<string>"      { libs.string   = true; handle_string(); BEGIN(INITIAL); }
         "<iomanip>"     { libs.iomanip  = true; BEGIN(INITIAL); }
-        \"[^\"]+\"      { handle_include(yytext); BEGIN(INITIAL); }
+        \"[^\"]+\"      { handle_quoted_include(yytext); BEGIN(INITIAL); }
         "<"[^<>]*">"    { log_lexical("unrecognized library: %s", yytext); }
         <<EOF>>         { log_lexical("unexpected EOF"); }
         .               { log_lexical("unrecognized token: %s"); }
 }
 
   /* only allowed namespace directive */
-"using namespace std;"  { libs.usingstd = true;
-                          if (libs.fstream)
-                                  handle_fstream();
-                          if (libs.string)
-                                  handle_string(); }
+"using namespace std;"  { libs.usingstd = true; }
 
   /* keywords */
 "bool"                  { TOKEN(BOOL); }
@@ -305,15 +299,10 @@ void prepare_token(int category)
 /*
  * Given yytext of the literal form "somefile.h", this extracts the
  * substring corresponding to the path, determines the full path to
- * the file, pushes that path to the yyfiles list, opens the file into
- * yyin, resets the line number count to 1, and pushes a new Flex
- * buffer for the file.
+ * the file, and sends the resolved path to the delegate function.
  */
-void handle_include(const char *s)
+static void handle_quoted_include(const char *s)
 {
-	/* restart line numbering count */
-	yylineno = 1;
-
 	/* size without surrounding quotes */
 	size_t len = strlen(s) - 2;
 
@@ -341,12 +330,33 @@ void handle_include(const char *s)
 	log_debug("resolved: %s", resolved);
 
 	/* resolve abosolute path name */
-	char *filename = realpath(resolved, NULL);
-	if (filename == NULL)
-		log_error("could not find included file: %s\n"
-		          "included from: %s", include, current);
+	handle_include(resolved);
+
 	free(resolved);
 	free(include);
+}
+
+/*
+ * Given the path to a file, this pushes the path to the yyfiles list,
+ * opens the file into yyin, resets the line number count to 1, and
+ * pushes a new Flex buffer for the file.
+ */
+static void handle_include(char *s)
+{
+	/* restart line numbering count */
+	yylineno = 1;
+
+	char *current = list_back(yyfiles);
+
+	char *filename = realpath(s, NULL);
+	if (filename == NULL)
+		log_error("could not find included file: %s\n"
+		          "included from: %s", s, current);
+
+	if (hasht_search(yyincludes, filename)) {
+		log_debug("Flex: already included %s", filename);
+		return;
+	}
 
 	/* open file */
 	yyin = fopen(filename, "r");
@@ -356,28 +366,53 @@ void handle_include(const char *s)
 
 	/* push filename and buffer state */
 	list_push_back(yyfiles, filename);
-	log_debug("filename: %s", filename);
 	yypush_buffer_state(yy_create_buffer(yyin, YY_BUF_SIZE));
+
+	/* record filename in yyincludes set */
+	hasht_insert(yyincludes, filename, filename);
+	log_debug("filename: %s", filename);
 }
 
 /*
- * Insert "ifstream" and "ofstream" into yytypes hash table.
+ * Insert "ifstream" and "ofstream" types.
  */
-void handle_fstream()
+static void handle_fstream()
 {
-	if (!hasht_search(yytypes, "ifstream")) {
-		insert_typename("ifstream", CLASS_NAME);
-		insert_typename("ofstream", CLASS_NAME);
-	}
+	char *header = "include_fstream.h";
+	char *buffer = calloc(strlen(header) + strlen(arguments.include) + 2, sizeof(char));
+	strcpy(buffer, arguments.include);
+	strcpy(buffer, "/");
+	strcpy(buffer, header);
+	handle_include(buffer);
+	free(buffer);
 }
 
 /*
- * Insert "string" into yytypes hash table.
+ * Insert "cin", "cout", and "endl" symbols.
  */
-void handle_string()
+static void handle_iostream()
 {
-	if (!hasht_search(yytypes, "string"))
-		insert_typename("string", CLASS_NAME);
+	char *header = "include_iostream.h";
+	char *buffer = calloc(strlen(header) + strlen(arguments.include) + 2, sizeof(char));
+	strcpy(buffer, arguments.include);
+	strcpy(buffer, "/");
+	strcpy(buffer, header);
+	handle_include(buffer);
+	free(buffer);
+}
+
+/*
+ * Insert "string" type.
+ */
+static void handle_string()
+{
+	char *header = "include_string.h";
+	char *buffer = calloc(strlen(header) + strlen(arguments.include) + 2, sizeof(char));
+	strcpy(buffer, arguments.include);
+	strcpy(buffer, "/");
+	strcpy(buffer, header);
+	handle_include(buffer);
+	free(buffer);
 }
 
 /*
@@ -390,6 +425,7 @@ void handle_string()
  */
 void insert_typename(char *k, int c)
 {
+	log_debug("inserting typename %s", k);
 	char *key = strdup(k);
 	int *i = malloc(sizeof(*i));
 	log_assert(key && i);
@@ -423,7 +459,7 @@ void free_typename(struct hash_node *t)
  * Returns corresponding integer category for given identifier name
  * and creates the necessary token.
  */
-int check_identifier(const char *s)
+static int check_identifier(const char *s)
 {
 	int *c = hasht_search(yytypes, (void *)s);
 	if (c)
