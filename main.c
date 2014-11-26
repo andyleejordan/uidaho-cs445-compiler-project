@@ -76,7 +76,7 @@ int main(int argc, char **argv)
 	arguments.tree = false;
 	arguments.symbols = false;
 	arguments.checks = false;
-	arguments.include = getwd(NULL);
+	arguments.include = getcwd(NULL, 0);
 
 	argp_parse(&argp, argc, argv, 0, 0, &arguments);
 
