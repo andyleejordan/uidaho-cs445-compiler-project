@@ -15,6 +15,7 @@
 #include "args.h"
 #include "logger.h"
 
+#include "node.h"
 #include "token.h"
 #include "libs.h"
 #include "lexer.h"
@@ -34,19 +35,27 @@ extern struct list *yyscopes;
 #define scope_push(s) list_push_back(yyscopes, s)
 #define scope_pop() list_pop_back(yyscopes)
 
-static enum region region;
-static size_t offset;
-
 /* syntax tree helpers */
-#define get_rule(n) *(enum rule *)((struct tree *)n)->data
-#define get_token(n, i) ((struct token *)tree_index(n, i)->data)
+enum rule get_rule(struct tree *t)
+{
+	struct node *n = t->data;
+	return n->rule;
+}
+struct token *get_token(struct tree *t, size_t i)
+{
+	struct tree *tree = tree_index(t, i);
+	struct node *node = tree->data;
+	struct token *token = node->token;
+	/* if (token == NULL) */
+	/* 	log_semantic(t, "unexpected null token"); */
+	return token;
+}
 
 /* local functions */
 static enum type map_type(enum yytokentype t);
 static void set_type_comparators();
 static char *print_basetype(struct typeinfo *t);
 static void print_typeinfo(FILE *stream, char *k, struct typeinfo *v);
-static char *print_region(enum region r);
 
 static struct typeinfo *symbol_search(char *k);
 static void symbol_insert(char *k, struct typeinfo *v, struct tree *n, struct hasht *l);
@@ -164,9 +173,6 @@ static enum type map_type(enum yytokentype t)
  */
 void symbol_populate()
 {
-	offset = 0;
-	region = GLOBAL_R;
-
 	set_type_comparators();
 
 	/* do a top-down pre-order traversal to populate symbol tables */
@@ -214,18 +220,17 @@ static void symbol_insert(char *k, struct typeinfo *v, struct tree *n, struct ha
 
 	if (e == NULL) {
 		/* assign region and offset */
-		v->address.region = region;
-		v->address.offset = offset;
+		/* v->address.region = region; */
+		/* v->address.offset = offset; */
 
 		hasht_insert(scope_current(), k, v);
 		if (arguments.symbols) {
-			fprintf(stderr, "Inserting at %s - %zu: ",
-			        print_region(region), offset);
+			fprintf(stderr, "Inserting symbol: ");
 			print_typeinfo(stderr, k, v);
 		}
 
 		/* increment offset */
-		offset += typeinfo_size(v);
+		/* offset += typeinfo_size(v); */
 	} else if (e->base == FUNCTION_T && v->base == FUNCTION_T) {
 		if (!typeinfo_compare(e, v)) {
 			log_semantic(n, "function signatures for %s mismatched", k);
@@ -277,11 +282,11 @@ static struct tree *get_production(struct tree *n, enum rule r)
 /*
  * Wrapper to return null if token not found, else return token.
  */
-static struct token *get_category(struct tree *n, int target, int before)
+static struct token *get_category(struct tree *t, int target, int before)
 {
-	struct token *t = get_category_(n, target, before);
-	if (t && t->category == target)
-		return t;
+	struct token *token = get_category_(t, target, before);
+	if (token && token->category == target)
+		return token;
 	else
 		return NULL;
 }
@@ -289,21 +294,24 @@ static struct token *get_category(struct tree *n, int target, int before)
 /*
  * Walks tree returning first token matching category, else null.
  */
-static struct token *get_category_(struct tree *n, int target, int before)
+static struct token *get_category_(struct tree *t, int target, int before)
 {
-	log_assert(n);
+	log_assert(t);
 
-	if (tree_size(n) == 1) {
-		struct token *t = n->data;
-		if (t->category == target || t->category == before)
-			return t;
+	if (tree_size(t) == 1) {
+		struct node *node = t->data;
+		struct token *token = node->token;
+		log_assert(token);
+		if (token->category == target || token->category == before)
+			return token;
 	}
 
-	struct list_node *iter = list_head(n->children);
+	struct list_node *iter = list_head(t->children);
 	while (!list_end(iter)) {
-		struct token *t = get_category_(iter->data, target, before);
-		if (t && (t->category == target || t->category == before))
-			return t;
+		struct token *token = get_category_(iter->data, target, before);
+		if (token && (token->category == target
+		              || token->category == before))
+			return token;
 		iter = iter->next;
 	}
 
@@ -313,11 +321,11 @@ static struct token *get_category_(struct tree *n, int target, int before)
 /*
  * Returns true identifier if found, else null.
  */
-static char *get_identifier(struct tree *n)
+static char *get_identifier(struct tree *t)
 {
-	struct token *t = get_category(n, IDENTIFIER, -1);
-	if (t)
-		return t->text;
+	struct token *token = get_category(t, IDENTIFIER, -1);
+	if (token)
+		return token->text;
 	else
 		return NULL;
 }
@@ -325,19 +333,19 @@ static char *get_identifier(struct tree *n)
 /*
  * Returns if pointer is found in tree.
  */
-static bool get_pointer(struct tree *n)
+static bool get_pointer(struct tree *t)
 {
-	return get_category(n, '*', IDENTIFIER);
+	return get_category(t, '*', IDENTIFIER);
 }
 
 /*
  * Returns size of array if found, 0 if not given, -1 if not array.
  */
-static int get_array(struct tree *n)
+static int get_array(struct tree *t)
 {
-	if (get_category(n, '[', INTEGER)) {
-		struct token *t = get_category(n, INTEGER, ']');
-		return t ? t->ival : 0;
+	if (get_category(t, '[', INTEGER)) {
+		struct token *token = get_category(t, INTEGER, ']');
+		return token ? token->ival : 0;
 	}
 	return -1;
 }
@@ -345,33 +353,33 @@ static int get_array(struct tree *n)
 /*
  * Returns class name if found, else null.
  */
-static char *get_class(struct tree *n)
+static char *get_class(struct tree *t)
 {
-	struct token *t = get_category(n, CLASS_NAME, IDENTIFIER);
-	if (t)
-		return t->text;
+	struct token *token = get_category(t, CLASS_NAME, IDENTIFIER);
+	if (token)
+		return token->text;
 	else
 		return NULL;
 }
 
-static bool get_public(struct tree *n)
+static bool get_public(struct tree *t)
 {
-	return get_category(n, PUBLIC, PRIVATE);
+	return get_category(t, PUBLIC, PRIVATE);
 }
 
-static bool get_private(struct tree *n)
+static bool get_private(struct tree *t)
 {
-	return get_category(n, PRIVATE, PUBLIC);
+	return get_category(t, PRIVATE, PUBLIC);
 }
 
 /*
  * Returns class name only if like class::something
  */
-static char *class_member(struct tree *n)
+static char *class_member(struct tree *t)
 {
 	struct tree *prod = NULL;
-	if ((prod = get_production(n, DIRECT_DECL4))     /* class::ident */
-	    || (prod = get_production(n, DIRECT_DECL5))) /* class::class */
+	if ((prod = get_production(t, DIRECT_DECL4))     /* class::ident */
+	    || (prod = get_production(t, DIRECT_DECL5))) /* class::class */
 		return get_class(prod);
 	return NULL;
 }
@@ -379,6 +387,7 @@ static char *class_member(struct tree *n)
 /*
  * Constructs new empty typeinfo.
  */
+bool print_tree(struct tree *t, int d);
 static struct typeinfo *typeinfo_new(struct tree *n)
 {
 	log_assert(n);
@@ -386,6 +395,8 @@ static struct typeinfo *typeinfo_new(struct tree *n)
 	struct typeinfo *t = calloc(1, sizeof(*t));
 	log_assert(t);
 
+	fprintf(stderr, "printing!\n");
+	print_tree(n, 0);
 	t->base = (get_rule(n) == FUNCTION_DEF1)
 		? CLASS_T /* constructor return type is always class */
 		: map_type(get_token(n, 0)->category); /* TODO: factor out dependency */
@@ -446,8 +457,6 @@ static struct typeinfo *typeinfo_copy(struct typeinfo *t)
 	log_assert(t);
 
 	struct typeinfo *n = malloc(sizeof(*n));
-	log_assert(n);
-
 	n = memcpy(n, t, sizeof(*t));
 	log_assert(n);
 
@@ -555,7 +564,8 @@ static struct typeinfo *get_typeinfo(struct tree *n) {
 		return &class_type;
 	} else {
 		/* return global basic typeinfo for literal */
-		struct token *token = n->data;
+		struct token *token = ((struct node *)n->data)->token;
+		log_assert(token);
 
 		switch (map_type(token->category)) {
 		case INT_T:
@@ -1406,10 +1416,10 @@ static void handle_function(struct typeinfo *t, struct tree *n, char *k)
 	symbol_insert(k, v, n, v->function.symbols);
 
 	/* setup local region and offset */
-	enum region region_ = region;
-	size_t offset_ = offset;
-	region = LOCAL_R;
-	offset = 0;
+	/* enum region region_ = region; */
+	/* size_t offset_ = offset; */
+	/* region = LOCAL_R; */
+	/* offset = 0; */
 
 	/* recurse on children while in subscope */
 	log_debug("pushing function scope");
@@ -1422,8 +1432,8 @@ static void handle_function(struct typeinfo *t, struct tree *n, char *k)
 		scope_pop();
 
 	/* restore region and offset */
-	region = region_;
-	offset = offset_;
+	/* region = region_; */
+	/* offset = offset_; */
 }
 
 /*
@@ -1484,10 +1494,10 @@ static void handle_class(struct typeinfo *t, struct tree *n)
 	symbol_insert(k, t, n, NULL);
 
 	/* setup class region and offset */
-	enum region region_ = region;
-	size_t offset_ = offset;
-	region = CLASS_R;
-	offset = 0;
+	/* enum region region_ = region; */
+	/* size_t offset_ = offset; */
+	/* region = CLASS_R; */
+	/* offset = 0; */
 
 	handle_init_list(t, tree_index(n, 1));
 
@@ -1508,15 +1518,15 @@ static void handle_class(struct typeinfo *t, struct tree *n)
 	}
 
 	/* restore region and offset */
-	region = region_;
-	offset = offset_;
+	/* region = region_; */
+	/* offset = offset_; */
 }
 
-#define R(rule) case rule: return #rule
 
 /*
  * Given a type enum, returns its name as a static string.
  */
+#define R(rule) case rule: return #rule
 static char *print_basetype(struct typeinfo *t)
 {
 	switch (t->base) {
@@ -1535,23 +1545,6 @@ static char *print_basetype(struct typeinfo *t)
 
 	return NULL; /* error */
 }
-
-/*
- * Given a region enu, returns its name as a static string.
- */
-static char *print_region(enum region r)
-{
-	switch (r) {
-		R(GLOBAL_R);
-		R(LOCAL_R);
-		R(CLASS_R);
-		R(LABEL_R);
-		R(CONST_R);
-	};
-
-	return NULL; /* error */
-}
-
 #undef R
 
 /*
@@ -1619,5 +1612,3 @@ static void print_typeinfo(FILE *stream, char *k, struct typeinfo *v)
 #undef scope_current
 #undef scope_push
 #undef scope_pop
-#undef get_rule
-#undef get_token

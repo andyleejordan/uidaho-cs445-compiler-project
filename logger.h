@@ -19,7 +19,7 @@ void log_debug(const char *format, ...);
 void log_assert(bool p);
 
 void log_lexical(const char *format, ...);
-void log_semantic(struct tree *n, const char *format, ...);
+void log_semantic(struct tree *t, const char *format, ...);
 void log_check(const char *format, ...);
 void log_unsupported();
 

@@ -49,6 +49,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
+#include "node.h"
 #include "logger.h"
 #include "token.h"
 #include "rules.h"
@@ -69,10 +70,9 @@ void insert_typename_tree(struct tree *t, int category);
 /* syntax tree utilities */
 bool print_tree(struct tree *t, int d);
 void delete_tree(void *data, bool leaf);
-static int *copy_int(int i);
 
 /* semantic action helpers */
-#define P(name, ...) tree_new_group(NULL, (void *)copy_int(name), NULL, &delete_tree, __VA_ARGS__)
+#define P(name, ...) tree_new_group(NULL, (void *)node_new(name), NULL, &delete_tree, __VA_ARGS__)
 #define E() NULL
 
 /* Bison's error function */
@@ -761,13 +761,16 @@ SEMICOLON_opt:
  */
 bool print_tree(struct tree *t, int d)
 {
-	if (tree_size(t) == 1) /* holds a token */
+	struct node *node = t->data;
+	if (tree_size(t) == 1) { /* holds a token */
+		struct token *token = node->token;
 		printf("%*s %s (%d)\n", d*2, " ",
-                       (char *)((struct token *)t->data)->text,
-                       (int)((struct token *)t->data)->category);
-	else /* holds a production rule name */
+                       (char *)token->text,
+		       (int)token->category);
+	} else {/* holds a production rule name */
 		printf("%*s %s\n", d*2, " ",
-                       print_rule(*(int *)t->data));
+		       print_rule(node->rule));
+	}
 	return true;
 }
 
@@ -780,21 +783,6 @@ void delete_tree(void *data, bool leaf)
 		token_free(data);
 	else
 		free(data);
-}
-
-/*
- * Returns pointer to allocated space with copy of integer.
- *
- * Necessary because data structures take void *, but integers need to
- * be copied for this to work properly.
- */
-static int *copy_int(int i)
-{
-	int *p = malloc(sizeof(*p));
-	log_assert(p);
-
-	*p = i;
-	return p;
 }
 
 /*

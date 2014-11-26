@@ -13,6 +13,7 @@
 #include "logger.h"
 #include "args.h"
 
+#include "node.h"
 #include "token.h"
 #include "lexer.h"
 
@@ -113,7 +114,7 @@ void log_lexical(const char *format, ...)
 /*
  * Follow a node to a token, emit error, exit with 3.
  */
-void log_semantic(struct tree *n, const char *format, ...)
+void log_semantic(struct tree *t, const char *format, ...)
 {
 	va_list ap;
 	va_start(ap, format);
@@ -124,12 +125,13 @@ void log_semantic(struct tree *n, const char *format, ...)
 	va_end(ap);
 
 	fprintf(stderr, "\n");
-	if (n) {
-		while (tree_size(n) > 1)
-			n = list_front(n->children);
-		struct token *t = n->data;
+	if (t) {
+		while (tree_size(t) > 1)
+			t = list_front(t->children);
+		struct node *node = t->data;
+		struct token *token = node->token;
 		fprintf(stderr, "file: %s\n" "line: %d\n" "token: %s\n",
-		        t->filename, t->lineno, t->text);
+		        token->filename, token->lineno, token->text);
 	}
 
 	exit(3);

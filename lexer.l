@@ -27,6 +27,7 @@ IS       (u|U|l|L)*
 #include <libgen.h>
 
 #include "args.h"
+#include "node.h"
 #include "logger.h"
 #include "token.h"
 #include "libs.h"
@@ -292,8 +293,10 @@ void prepare_token(int category)
 {
 	yytoken = token_new(category, yylineno, yytext,
                             (const char *)list_back(yyfiles));
-	yylval.t = tree_new(NULL, yytoken, NULL,
-                            (void (*)(void *, bool))&delete_tree);
+	struct node *n = node_new(0);
+	n->token = yytoken;
+	yylval.t = tree_new(NULL, n, NULL,
+	                    (void (*)(void *, bool))&delete_tree);
 }
 
 /*
@@ -445,7 +448,11 @@ void insert_typename(char *k, int c)
  */
 void insert_typename_tree(struct tree *t, int category)
 {
-	char *key = ((struct token *)t->data)->text;
+	struct node *node = t->data;
+	log_assert(node);
+	struct token *token = node->token;
+	log_assert(token);
+	char *key = token->text;
 	insert_typename(key, category);
 }
 

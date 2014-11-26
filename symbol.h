@@ -20,19 +20,6 @@ void symbol_populate();
 struct typeinfo *type_check(struct tree *n);
 void symbol_free(struct hash_node *n);
 
-enum region {
-        GLOBAL_R,
-        LOCAL_R,
-        CLASS_R,
-        LABEL_R,
-        CONST_R
-};
-
-struct address {
-        enum region region;
-        size_t offset;
-};
-
 enum type {
 	INT_T,
 	DOUBLE_T,
@@ -48,8 +35,6 @@ enum type {
 struct typeinfo {
 	enum type base;
 	bool pointer;
-
-	struct address address;
 
 	union {
 		struct arrayinfo {
