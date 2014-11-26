@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include <argp.h>
 
 #include "args.h"
@@ -46,6 +47,7 @@ static struct argp_option options[] = {
 	{ "symbols", 's', 0,      0, "Print the populated symbols." },
 	{ "checks",  'c', 0,      0, "Print the performed type checks." },
 	{ "types",   'c', 0,      OPTION_ALIAS },
+	{ "include", 'I', "DIR",  0, "Search path for 'system' headers." },
 	{ 0 }
 };
 
@@ -73,6 +75,7 @@ int main(int argc, char **argv)
 	arguments.tree = false;
 	arguments.symbols = false;
 	arguments.checks = false;
+	arguments.include = getwd(NULL);
 
 	argp_parse(&argp, argc, argv, 0, 0, &arguments);
 
@@ -166,6 +169,9 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 		break;
 	case 'c':
 		arguments->checks = true;
+		break;
+	case 'I':
+		arguments->include = arg;
 		break;
 
 	case ARGP_KEY_NO_ARGS:
