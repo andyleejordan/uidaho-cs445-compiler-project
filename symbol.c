@@ -169,66 +169,6 @@ void symbol_populate()
 
 	set_type_comparators();
 
-	/* handle standard libraries */
-	if (libs.usingstd) {
-		/* iostream includes fstream */
-		if (libs.fstream || libs.iostream) {
-			struct typeinfo *ifstream = malloc(sizeof(*ifstream));
-			log_assert(ifstream);
-			ifstream->base = CLASS_T;
-			ifstream->pointer = false;
-			ifstream->class.type = "std::ifstream";
-			ifstream->class.public = hasht_new(2, true, NULL, NULL, &symbol_free);
-			symbol_insert("ifstream", ifstream, NULL, NULL);
-
-			/* adding ifstream.ignore() */
-			struct typeinfo *ignore = malloc(sizeof(*ignore));
-			log_assert(ignore);
-			ignore->base = FUNCTION_T;
-			ignore->pointer = false;
-			ignore->function.type = typeinfo_copy(&void_type);
-			ignore->function.parameters = list_new(NULL, NULL);
-			ignore->function.symbols = NULL;
-
-			scope_push(ifstream->class.public);
-			symbol_insert("ignore", ignore, NULL, NULL);
-			scope_pop();
-
-			struct typeinfo *ofstream = malloc(sizeof(*ofstream));
-			log_assert(ofstream);
-			ofstream->base = CLASS_T;
-			ofstream->pointer = false;
-			ofstream->class.type = "std::ofstream";
-			symbol_insert("ofstream", ofstream, NULL, NULL);
-		}
-		if (libs.iostream) {
-			struct typeinfo *cin = malloc(sizeof(*cin));
-			log_assert(cin);
-			cin->base = CLASS_T;
-			cin->pointer = false;
-			cin->class.type = "ifstream";
-			symbol_insert("cin", cin, NULL, NULL);
-
-			struct typeinfo *cout = malloc(sizeof(*cout));
-			log_assert(cout);
-			cout->base = CLASS_T;
-			cout->pointer = false;
-			cout->class.type = "ofstream";
-			symbol_insert("cout", cout, NULL, NULL);
-
-			struct typeinfo *endl = typeinfo_copy(&char_type);
-			symbol_insert("endl", endl, NULL, NULL);
-		}
-		if (libs.string) {
-			struct typeinfo *string = malloc(sizeof(*string));
-			log_assert(string);
-			string->base = CLASS_T;
-			string->pointer = false;
-			string->class.type = "std::string";
-			symbol_insert("string", string, NULL, NULL);
-		}
-	}
-
 	/* do a top-down pre-order traversal to populate symbol tables */
 	tree_preorder(yyprogram, 0, &handle_node);
 }
