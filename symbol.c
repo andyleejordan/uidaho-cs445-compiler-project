@@ -47,7 +47,6 @@ static struct token *get_token(struct tree *t, size_t i);
 static enum type map_type(enum yytokentype t);
 static void set_type_comparators();
 static char *print_basetype(struct typeinfo *t);
-static void print_typeinfo(FILE *stream, char *k, struct typeinfo *v);
 
 static struct typeinfo *symbol_search(char *k);
 static void symbol_insert(char *k, struct typeinfo *v, struct tree *n, struct hasht *l);
@@ -242,11 +241,7 @@ static void symbol_insert(char *k, struct typeinfo *v, struct tree *t, struct ha
 		n->place.offset = offset;
 
 		hasht_insert(scope_current(), k, v);
-		if (arguments.symbols) {
-			fprintf(stderr, "Inserting symbol into %s/%zu: ",
-			        print_region(region), offset);
-			print_typeinfo(stderr, k, v);
-		}
+		log_symbol(k, v);
 
 		/* increment offset */
 		offset += typeinfo_size(v);
@@ -677,6 +672,7 @@ struct typeinfo *type_check(struct tree *n)
 	enum rule production = get_rule(n);
 	switch (production) {
 	case LITERAL: {
+		/* assign place to constants */
 		struct tree *t = tree_index(n, 0);
 		struct typeinfo *v = get_typeinfo(t);
 
@@ -685,11 +681,7 @@ struct typeinfo *type_check(struct tree *n)
 		node->place.region = region;
 		node->place.offset = offset;
 
-		if (arguments.symbols) {
-			fprintf(stderr, "Inserting constant into %s/%zu: ",
-			        print_region(region), offset);
-			print_typeinfo(stderr, token->text, v);
-		}
+		log_symbol(token->text, v);
 
 		/* if string, get size, otherwise calculate for base type */
 		if (token->ssize)
@@ -1536,11 +1528,7 @@ static void handle_param(struct typeinfo *v, struct tree *t, struct hasht *s, st
 		n->place.region = region;
 		n->place.offset = offset;
 
-		if (arguments.symbols) {
-			fprintf(stderr, "Inserting parameter into %s/%zu: ",
-			        print_region(region), offset);
-			print_typeinfo(stderr, k, v);
-		}
+		log_symbol(k, v);
 
 		offset += typeinfo_size(v);
 	}
@@ -1644,7 +1632,7 @@ static char *print_basetype(struct typeinfo *t)
  *
  * Example: DOUBLE_T foobar(INT_T *, AClass)
  */
-static void print_typeinfo(FILE *stream, char *k, struct typeinfo *v)
+void print_typeinfo(FILE *stream, const char *k, struct typeinfo *v)
 {
 	if (v == NULL)
 		log_error("print_typeinfo(): type for %s was null", k);

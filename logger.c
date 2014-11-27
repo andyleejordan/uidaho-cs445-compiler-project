@@ -16,6 +16,7 @@
 #include "node.h"
 #include "token.h"
 #include "lexer.h"
+#include "symbol.h"
 
 #include "list.h"
 #include "tree.h"
@@ -150,4 +151,16 @@ void log_check(const char *format, ...)
 	fprintf(stderr, "\n");
 
 	va_end(ap);
+}
+
+extern enum region region;
+extern size_t offset;
+void log_symbol(const char *k, struct typeinfo *v)
+{
+	if (!arguments.symbols)
+		return;
+
+	fprintf(stderr, "Inserting symbol into %s/%zu: ",
+	        print_region(region), offset);
+	print_typeinfo(stderr, k, v);
 }

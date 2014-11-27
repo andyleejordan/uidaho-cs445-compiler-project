@@ -13,6 +13,7 @@
 #include <stdbool.h>
 
 struct tree;
+struct typeinfo;
 
 void log_error(const char *format, ...);
 void log_debug(const char *format, ...);
@@ -22,5 +23,6 @@ void log_lexical(const char *format, ...);
 void log_semantic(struct tree *t, const char *format, ...);
 void log_check(const char *format, ...);
 void log_unsupported();
+void log_symbol(const char *k, struct typeinfo *v);
 
 #endif /* LOGGER_H */

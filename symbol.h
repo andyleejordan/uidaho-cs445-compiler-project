@@ -12,6 +12,7 @@
 
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdio.h>
 
 struct tree;
 struct hash_node;
@@ -53,5 +54,7 @@ struct typeinfo {
 		} class;
 	};
 };
+
+void print_typeinfo(FILE *stream, const char *k, struct typeinfo *v);
 
 #endif /* SYMBOL_H */
