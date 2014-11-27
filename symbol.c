@@ -18,8 +18,9 @@
 #include "node.h"
 #include "token.h"
 #include "libs.h"
-#include "lexer.h"
 #include "rules.h"
+
+#include "lexer.h"
 #include "parser.tab.h"
 
 #include "list.h"
@@ -36,11 +37,13 @@ extern struct list *yyscopes;
 #define scope_push(s) list_push_back(yyscopes, s)
 #define scope_pop() list_pop_back(yyscopes)
 
-/* syntax tree helpers */
-static enum rule get_rule(struct tree *t);
-static struct token *get_token(struct tree *t, size_t i);
+/* memory addresses */
+enum region region;
+size_t offset;
 
 /* local functions */
+static enum rule get_rule(struct tree *t);
+static struct token *get_token(struct tree *t, size_t i);
 static enum type map_type(enum yytokentype t);
 static void set_type_comparators();
 static char *print_basetype(struct typeinfo *t);
@@ -184,6 +187,9 @@ static enum type map_type(enum yytokentype t)
  */
 void symbol_populate()
 {
+	region = GLOBAL_R;
+	offset = 0;
+
 	set_type_comparators();
 
 	/* do a top-down pre-order traversal to populate symbol tables */
@@ -216,7 +222,7 @@ static struct typeinfo *symbol_search(char *k)
  * will define the function with the given symbol table. Will error
  * for duplicate symbols or mismatched function declarations.
  */
-static void symbol_insert(char *k, struct typeinfo *v, struct tree *n, struct hasht *l)
+static void symbol_insert(char *k, struct typeinfo *v, struct tree *t, struct hasht *l)
 {
 	if (v == NULL)
 		log_error("symbol_insert(): type for %s was null", k);
@@ -231,31 +237,33 @@ static void symbol_insert(char *k, struct typeinfo *v, struct tree *n, struct ha
 
 	if (e == NULL) {
 		/* assign region and offset */
-		/* v->address.region = region; */
-		/* v->address.offset = offset; */
+		struct node *n = t->data;
+		n->place.region = region;
+		n->place.offset = offset;
 
 		hasht_insert(scope_current(), k, v);
 		if (arguments.symbols) {
-			fprintf(stderr, "Inserting symbol: ");
+			fprintf(stderr, "Inserting symbol into %s/%zu: ",
+			        print_region(region), offset);
 			print_typeinfo(stderr, k, v);
 		}
 
 		/* increment offset */
-		/* offset += typeinfo_size(v); */
+		offset += typeinfo_size(v);
 	} else if (e->base == FUNCTION_T && v->base == FUNCTION_T) {
 		if (!typeinfo_compare(e, v)) {
-			log_semantic(n, "function signatures for %s mismatched", k);
+			log_semantic(t, "function signatures for %s mismatched", k);
 		} else if (l) {
 			/* define the function */
 			if (e->function.symbols == NULL) {
 				e->function.symbols = l;
 				log_check("function %s defined", k);
 			} else {
-				log_semantic(n, "function %s already defined", k);
+				log_semantic(t, "function %s already defined", k);
 			}
 		}
 	} else {
-		log_semantic(n, "identifier %s already declared", k);
+		log_semantic(t, "identifier %s already declared", k);
 	}
 }
 
@@ -1435,10 +1443,10 @@ static void handle_function(struct typeinfo *t, struct tree *n, char *k)
 	symbol_insert(k, v, n, v->function.symbols);
 
 	/* setup local region and offset */
-	/* enum region region_ = region; */
-	/* size_t offset_ = offset; */
-	/* region = LOCAL_R; */
-	/* offset = 0; */
+	enum region region_ = region;
+	size_t offset_ = offset;
+	region = LOCAL_R;
+	offset = 0;
 
 	/* recurse on children while in subscope */
 	log_debug("pushing function scope");
@@ -1451,8 +1459,8 @@ static void handle_function(struct typeinfo *t, struct tree *n, char *k)
 		scope_pop();
 
 	/* restore region and offset */
-	/* region = region_; */
-	/* offset = offset_; */
+	region = region_;
+	offset = offset_;
 }
 
 /*
@@ -1513,10 +1521,10 @@ static void handle_class(struct typeinfo *t, struct tree *n)
 	symbol_insert(k, t, n, NULL);
 
 	/* setup class region and offset */
-	/* enum region region_ = region; */
-	/* size_t offset_ = offset; */
-	/* region = CLASS_R; */
-	/* offset = 0; */
+	enum region region_ = region;
+	size_t offset_ = offset;
+	region = CLASS_R;
+	offset = 0;
 
 	handle_init_list(t, tree_index(n, 1));
 
@@ -1532,13 +1540,13 @@ static void handle_class(struct typeinfo *t, struct tree *n)
 		ret->class.type = k;
 		struct typeinfo *ctor = typeinfo_new_function(n, ret, false);
 		scope_push(t->class.public);
-		symbol_insert(k, ctor, NULL, NULL);
+		symbol_insert(k, ctor, n, NULL);
 		scope_pop();
 	}
 
 	/* restore region and offset */
-	/* region = region_; */
-	/* offset = offset_; */
+	region = region_;
+	offset = offset_;
 }
 
 

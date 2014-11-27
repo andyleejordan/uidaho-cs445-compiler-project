@@ -22,6 +22,8 @@ enum region {
         UNKNOWN_R
 };
 
+char *print_region(enum region r);
+
 struct address {
         enum region region;
         size_t offset;

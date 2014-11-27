@@ -13,6 +13,25 @@
 #include "logger.h"
 
 /*
+ * Given a region enum, returns its name as a static string.
+ */
+#define R(rule) case rule: return #rule
+char *print_region(enum region r)
+{
+	switch (r) {
+		R(GLOBAL_R);
+		R(LOCAL_R);
+		R(CLASS_R);
+		R(LABEL_R);
+		R(CONST_R);
+		R(UNKNOWN_R);
+	};
+
+	return NULL; /* error */
+}
+#undef R
+
+/*
  * Allocates a new blank node.
  *
  * Nodes hold semantic attributes, such as produciton rule, memory

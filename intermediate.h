@@ -10,6 +10,4 @@
 #ifndef INTERMEDIATE_H
 #define INTERMEDIATE_H
 
-void place_populate();
-
 #endif /* INTERMEDIATE_H */
