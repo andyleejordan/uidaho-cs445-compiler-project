@@ -614,52 +614,27 @@ static struct typeinfo *get_typeinfo(struct tree *t) {
 		struct token *token = n->token;
 		log_assert(token);
 
-		struct typeinfo *v = NULL;
 		enum type type = map_type(token->category);
 
 		/* for constants, break and assign place; otherwise return */
 		switch (type) {
 		case INT_T:
-			v = &int_type;
-			break;
+			return &int_type;
 		case DOUBLE_T:
-			v = &double_type;
-			break;
+			return &double_type;
 		case CHAR_T:
-			v = &char_type;
-			break;
+			return &char_type;
 		case ARRAY_T:
-			v = &string_type;
-			break;
+			return &string_type;
 		case BOOL_T:
-			v = &bool_type;
-			break;
+			return &bool_type;
 		case VOID_T:
-			v = &void_type;
-			return v;
+			return &void_type;
 		case FUNCTION_T:
 		case CLASS_T:
 		case UNKNOWN_T:
-			v = &unknown_type;
-			return v;
+			return &unknown_type;
 		}
-
-		n->place.region = region;
-		n->place.offset = offset;
-
-		if (arguments.symbols) {
-			fprintf(stderr, "Inserting constant into %s/%zu: ",
-			        print_region(region), offset);
-			print_typeinfo(stderr, token->text, v);
-		}
-
-		/* if string, get size, otherwise calculate for base type */
-		if (type == ARRAY_T)
-			offset += token->ssize;
-		else
-			offset += typeinfo_size(v);
-
-		return v;
 	}
 	return NULL;
 }
@@ -701,6 +676,29 @@ struct typeinfo *type_check(struct tree *n)
 
 	enum rule production = get_rule(n);
 	switch (production) {
+	case LITERAL: {
+		struct tree *t = tree_index(n, 0);
+		struct typeinfo *v = get_typeinfo(t);
+
+		struct node *node = t->data;
+		struct token *token = node->token;
+		node->place.region = region;
+		node->place.offset = offset;
+
+		if (arguments.symbols) {
+			fprintf(stderr, "Inserting constant into %s/%zu: ",
+			        print_region(region), offset);
+			print_typeinfo(stderr, token->text, v);
+		}
+
+		/* if string, get size, otherwise calculate for base type */
+		if (token->ssize)
+			offset += token->ssize;
+		else
+			offset += typeinfo_size(v);
+
+		return v;
+	}
 	case INITIALIZER: {
 		/* initialization of simple variable */
 		char *k = get_identifier(n->parent);

@@ -12,6 +12,7 @@
 
 enum rule {
 	PROGRAM,
+	LITERAL,
 	UNQUAL_ID2,
 	QUAL_ID,
 	NESTED_NAME1,

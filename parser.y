@@ -144,11 +144,11 @@ static void yyerror(const char *s);
  *----------------------------------------------------------------------*/
 
 literal:
-        INTEGER     { $$ = $1; }
-        | CHARACTER { $$ = $1; }
-        | FLOATING  { $$ = $1; }
-        | STRING    { $$ = $1; }
-        | boolean   { $$ = $1; }
+        INTEGER     { $$ = P(LITERAL, 1, $1); }
+        | CHARACTER { $$ = P(LITERAL, 1, $1); }
+        | FLOATING  { $$ = P(LITERAL, 1, $1); }
+        | STRING    { $$ = P(LITERAL, 1, $1); }
+        | boolean   { $$ = P(LITERAL, 1, $1); }
         ;
 
 boolean:
