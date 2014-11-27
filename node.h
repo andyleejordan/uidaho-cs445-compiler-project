@@ -16,6 +16,7 @@
 enum region {
         GLOBAL_R,
         LOCAL_R,
+        PARAM_R,
         CLASS_R,
         LABEL_R,
         CONST_R,

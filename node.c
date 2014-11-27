@@ -21,6 +21,7 @@ char *print_region(enum region r)
 	switch (r) {
 		R(GLOBAL_R);
 		R(LOCAL_R);
+		R(PARAM_R);
 		R(CLASS_R);
 		R(LABEL_R);
 		R(CONST_R);

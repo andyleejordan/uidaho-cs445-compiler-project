@@ -461,8 +461,17 @@ static struct typeinfo *typeinfo_new_function(struct tree *n, struct typeinfo *t
 	struct list *params = list_new(NULL, NULL);
 	log_assert(params);
 
+	/* setup local region and offset */
+	enum region region_ = region;
+	size_t offset_ = offset;
+	region = PARAM_R;
+	offset = 0;
+
 	handle_param_list(n, local, params);
-	/* TODO: mark end of parameters in region */
+
+	/* restore region and offset */
+	region = region_;
+	offset = offset_;
 
 	struct typeinfo *function = typeinfo_new(n);
 	function->base = FUNCTION_T;
@@ -1470,21 +1479,40 @@ static void handle_function(struct typeinfo *t, struct tree *n, char *k)
  * table and able to find an indentifier, inserts into the scope. If
  * given a parameters list, will insert into the list.
  */
-static void handle_param(struct typeinfo *v, struct tree *n, struct hasht *s, struct list *l)
+static void handle_param(struct typeinfo *v, struct tree *t, struct hasht *s, struct list *l)
 {
-	char *k = get_identifier(n);
+	char *k = get_identifier(t);
 
-	if (tree_size(n) > 3) { /* not a simple type */
-		struct tree *m = tree_index(n, 1);
-		enum rule r = get_rule(m);
+	if (tree_size(t) > 3) { /* not a simple type */
+		struct tree *t_ = tree_index(t, 1);
+		enum rule r = get_rule(t_);
 
 		/* array (with possible size) */
 		if (r == DIRECT_ABSTRACT_DECL4 || r == DIRECT_DECL6)
-			v = typeinfo_new_array(m, v);
+			v = typeinfo_new_array(t_, v);
 	}
 
+	/* assign place when defined */
+	if (t && s && v) {
+		/* assign region and offset */
+		struct node *n = t->data;
+		n->place.region = region;
+		n->place.offset = offset;
+
+		if (arguments.symbols) {
+			fprintf(stderr, "Inserting symbol into %s/%zu: ",
+			        print_region(region), offset);
+			print_typeinfo(stderr, k, v);
+		}
+
+		offset += typeinfo_size(v);
+	}
+
+	/* insert into list when declaring */
 	if (l && v)
 		list_push_back(l, v);
+
+	/* insert into table when defining */
 	if (s && k && v)
 		hasht_insert(s, k, v);
 }
