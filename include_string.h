@@ -1,3 +1,12 @@
+/*
+ * include_string.h - Faux system header for <string>.
+ *
+ * Copyright (C) 2014 Andrew Schwartzmeyer
+ *
+ * This file released under the AGPLv3.
+ *
+ */
+
 class string {
 public:
 	string(char *);

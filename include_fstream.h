@@ -1,3 +1,12 @@
+/*
+ * include_fstream.h - Faux system header for <fstream>.
+ *
+ * Copyright (C) 2014 Andrew Schwartzmeyer
+ *
+ * This file released under the AGPLv3.
+ *
+ */
+
 class ifstream {
 public:
 	bool is_open();
