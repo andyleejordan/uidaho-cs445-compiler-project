@@ -64,7 +64,7 @@ $(BIN): $(OBJS)
 .c.o:
 	$(CC) $(CFLAGS) $(CDEBUG) -o $@ -c $<
 
-main.o: args.h logger.h libs.h lexer.h list.h tree.h hasht.h
+main.o: args.h logger.h libs.h lexer.h symbol.h node.h list.h tree.h hasht.h
 
 logger.o: logger.h args.h node.h token.h lexer.h list.h tree.h
 

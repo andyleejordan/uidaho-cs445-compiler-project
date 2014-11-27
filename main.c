@@ -20,6 +20,7 @@
 #include "libs.h"
 #include "lexer.h"
 #include "symbol.h"
+#include "node.h"
 
 #include "list.h"
 #include "tree.h"
@@ -60,6 +61,9 @@ struct list *yyscopes;
 struct list *yyfiles;
 struct hasht *yyincludes;
 struct hasht *yytypes;
+
+enum region region;
+size_t offset;
 
 static void parse_program(char *filename);
 
@@ -147,7 +151,17 @@ void parse_program(char *filename)
 	symbol_populate();
 	log_debug("global scope had %zu symbols", hasht_used(global));
 
+	/* setup constant region and offset */
+	enum region region_ = region;
+	size_t offset_ = offset;
+	region = CONST_R;
+	offset = 0;
+
 	type_check(yyprogram);
+
+	/* restore region and offset */
+	region = region_;
+	offset = offset_;
 
 	/* clean up */
 	tree_free(yyprogram);

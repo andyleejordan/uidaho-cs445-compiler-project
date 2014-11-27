@@ -38,8 +38,8 @@ extern struct list *yyscopes;
 #define scope_pop() list_pop_back(yyscopes)
 
 /* memory addresses */
-enum region region;
-size_t offset;
+extern enum region region;
+extern size_t offset;
 
 /* local functions */
 static enum rule get_rule(struct tree *t);
@@ -461,7 +461,7 @@ static struct typeinfo *typeinfo_new_function(struct tree *n, struct typeinfo *t
 	struct list *params = list_new(NULL, NULL);
 	log_assert(params);
 
-	/* setup local region and offset */
+	/* setup parameter region and offset */
 	enum region region_ = region;
 	size_t offset_ = offset;
 	region = PARAM_R;
@@ -581,15 +581,15 @@ static size_t scope_size(struct hasht *t)
 /*
  * Get typeinfo for identifier or literal value.
  */
-static struct typeinfo *get_typeinfo(struct tree *n) {
-	log_assert(n);
+static struct typeinfo *get_typeinfo(struct tree *t) {
+	log_assert(t);
 
 	/* reset base type comparators */
 	set_type_comparators();
 
 	/* attempt to get identifier or class */
-	char *k = get_identifier(n);
-	char *c = get_class(n);
+	char *k = get_identifier(t);
+	char *c = get_class(t);
 
 	if (k) {
 		/* return function typeinfo */
@@ -600,27 +600,56 @@ static struct typeinfo *get_typeinfo(struct tree *n) {
 		return &class_type;
 	} else {
 		/* return global basic typeinfo for literal */
-		struct token *token = ((struct node *)n->data)->token;
+		struct node *n = t->data;
+		struct token *token = n->token;
 		log_assert(token);
 
-		switch (map_type(token->category)) {
+		struct typeinfo *v = NULL;
+		enum type type = map_type(token->category);
+
+		/* for constants, break and assign place; otherwise return */
+		switch (type) {
 		case INT_T:
-			return &int_type;
+			v = &int_type;
+			break;
 		case DOUBLE_T:
-			return &double_type;
+			v = &double_type;
+			break;
 		case CHAR_T:
-			return &char_type;
+			v = &char_type;
+			break;
 		case ARRAY_T:
-			return &string_type;
+			v = &string_type;
+			break;
 		case BOOL_T:
-			return &bool_type;
+			v = &bool_type;
+			break;
 		case VOID_T:
-			return &void_type;
+			v = &void_type;
+			return v;
 		case FUNCTION_T:
 		case CLASS_T:
 		case UNKNOWN_T:
-			return &unknown_type;
+			v = &unknown_type;
+			return v;
 		}
+
+		n->place.region = region;
+		n->place.offset = offset;
+
+		if (arguments.symbols) {
+			fprintf(stderr, "Inserting constant into %s/%zu: ",
+			        print_region(region), offset);
+			print_typeinfo(stderr, token->text, v);
+		}
+
+		/* if string, get size, otherwise calculate for base type */
+		if (type == ARRAY_T)
+			offset += token->ssize;
+		else
+			offset += typeinfo_size(v);
+
+		return v;
 	}
 	return NULL;
 }
@@ -1500,7 +1529,7 @@ static void handle_param(struct typeinfo *v, struct tree *t, struct hasht *s, st
 		n->place.offset = offset;
 
 		if (arguments.symbols) {
-			fprintf(stderr, "Inserting symbol into %s/%zu: ",
+			fprintf(stderr, "Inserting parameter into %s/%zu: ",
 			        print_region(region), offset);
 			print_typeinfo(stderr, k, v);
 		}
