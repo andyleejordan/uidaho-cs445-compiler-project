@@ -87,7 +87,7 @@ double *TestClass::hiddenData()
 	return pi;
 }
 
-TestClass::TestClass(int lkaja, double oiud): data("Hello world!\n")
-{
-	bool definingctor = true;
-}
+// TestClass::TestClass(int lkaja, double oiud)// : data("Hello world!\n")
+// {
+// 	bool definingctor = true;
+// }
