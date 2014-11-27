@@ -395,11 +395,19 @@ static struct typeinfo *typeinfo_new(struct tree *n)
 	struct typeinfo *t = calloc(1, sizeof(*t));
 	log_assert(t);
 
-	fprintf(stderr, "printing!\n");
-	print_tree(n, 0);
-	t->base = (get_rule(n) == FUNCTION_DEF1)
-		? CLASS_T /* constructor return type is always class */
-		: map_type(get_token(n, 0)->category); /* TODO: factor out dependency */
+	if (get_rule(n) == FUNCTION_DEF1) {
+		/* constructor return type is always class */
+		t->base = CLASS_T;
+	} else {
+		/* otherwise traverse to first leaf node (should be type) */
+		struct tree *iter = n;
+		while (tree_size(iter) > 1)
+			iter = list_front(iter->children);
+		struct node *node = iter->data;
+		struct token *token = node->token;
+		t->base = map_type(token->category);
+
+	}
 	t->pointer = get_pointer(n);
 
 	/* TODO: handle copying of scopes for class instances */
