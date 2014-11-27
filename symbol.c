@@ -26,30 +26,19 @@
 #include "hasht.h"
 #include "tree.h"
 
-/* stack of scopes */
+/* syntax tree and typenames table */
 extern struct tree *yyprogram;
 extern struct hasht *yytypes;
-extern struct list *yyscopes;
 
+/* stack of scopes */
+extern struct list *yyscopes;
 #define scope_current() (struct hasht *)list_back(yyscopes)
 #define scope_push(s) list_push_back(yyscopes, s)
 #define scope_pop() list_pop_back(yyscopes)
 
 /* syntax tree helpers */
-enum rule get_rule(struct tree *t)
-{
-	struct node *n = t->data;
-	return n->rule;
-}
-struct token *get_token(struct tree *t, size_t i)
-{
-	struct tree *tree = tree_index(t, i);
-	struct node *node = tree->data;
-	struct token *token = node->token;
-	/* if (token == NULL) */
-	/* 	log_semantic(t, "unexpected null token"); */
-	return token;
-}
+static enum rule get_rule(struct tree *t);
+static struct token *get_token(struct tree *t, size_t i);
 
 /* local functions */
 static enum type map_type(enum yytokentype t);
@@ -102,6 +91,28 @@ static struct typeinfo bool_type;
 static struct typeinfo void_type;
 static struct typeinfo class_type;
 static struct typeinfo unknown_type;
+
+/*
+ * Given a tree node, extract its production rule.
+ */
+static enum rule get_rule(struct tree *t)
+{
+	struct node *n = t->data;
+	return n->rule;
+}
+
+/*
+ * Given a leaf node, extract its token.
+ */
+static struct token *get_token(struct tree *t, size_t i)
+{
+	struct tree *tree = tree_index(t, i);
+	struct node *node = tree->data;
+	struct token *token = node->token;
+	if (token == NULL)
+		log_semantic(t, "unexpected null token");
+	return token;
+}
 
 /*
  * Initialize comparator types
