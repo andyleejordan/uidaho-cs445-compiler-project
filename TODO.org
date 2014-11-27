@@ -1,4 +1,4 @@
-* Tasks
+* Required tasks
 ** TODO Create interface for chosen opcode set
 #+begin_src C
   enum opcode {
@@ -30,30 +30,13 @@
           struct address a[3];
   };
 #+end_src
-** DONE Create type for memory addresses
-#+begin_src C
-  enum location {
-          LOCAL,
-          GLOBAL,
-          CONSTANT,
-          CLASS,
-          LABEL
-  };
-
-  struct address {
-          enum location location;
-          int offset;
-  };
-
-#+end_src
-** TODO Add place field to nodes which require it
-- symbols (like before)
-- constants
 ** TODO Expand hash library for deep table copies (for class instances)
+** TODO Fix accidental pointer in ctors with pointer params
 ** TODO Traversal to assign labels for jumps
 ** TODO Post-order traversal to assign code to expressions
 ** TODO Post-order traversal to create list from code nodes
 ** TODO Print out code
+* Additional tasks
 ** TODO Expand list library
 - =struct list *list_copy=
 - =struct list *list_concat=
@@ -65,4 +48,3 @@
 *** refactor for type promotion (=typeinfo_compatible(a, b)=)
 *** pass by reference
 *** ternary operator
-** TODO Fix accidental pointer in ctors with pointer params
