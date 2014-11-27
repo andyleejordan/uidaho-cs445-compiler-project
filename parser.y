@@ -775,14 +775,14 @@ bool print_tree(struct tree *t, int d)
 }
 
 /*
- * Destroys tokens contained in leaves of syntax tree.
+ * Destroys syntax tree nodes and their tokens.
  */
 void delete_tree(void *data, bool leaf)
 {
-	if (leaf)
-		token_free(data);
-	else
-		free(data);
+	struct node *n = data;
+	if (n->token)
+		token_free(n->token);
+	free(data);
 }
 
 /*

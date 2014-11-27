@@ -56,6 +56,7 @@ struct token *token_new(int category, int lineno,
 /* free internal values */
 void token_free(struct token *t)
 {
+	log_assert(t);
 	free(t->text);
 	free(t->filename);
 	if (t->category == STRING)
