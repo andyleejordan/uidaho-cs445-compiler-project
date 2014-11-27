@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
 
 void TestClass::writeMethod(ofstream file, char *message)
 {
-	// file << message;
+	file << message;
 	bool empty = false;
 	return;
 }

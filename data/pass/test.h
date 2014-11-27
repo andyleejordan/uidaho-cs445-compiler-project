@@ -6,4 +6,6 @@ public:
 	test *next;
 	test *prev;
 	int data;
+ private:
+	int internaldata;
 };
