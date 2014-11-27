@@ -1,9 +1,11 @@
 * Required tasks
 ** TODO Traversal to assign labels for jumps
-** TODO Post-order traversal to assign code to expressions
+** TODO Post-order traversal to assign code to expressions/statements/etc.
+*** TODO Create temporaries where required
 ** TODO Post-order traversal to create list from code nodes
 ** TODO Print out TAC list
 * Additional tasks
+** TODO Align memory addresses
 ** TODO Expand list library
 - =struct list *list_copy=
 - =struct list *list_concat=
