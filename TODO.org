@@ -30,7 +30,6 @@
           struct address a[3];
   };
 #+end_src
-** TODO Fix accidental pointer in ctors with pointer params
 ** TODO Traversal to assign labels for jumps
 ** TODO Post-order traversal to assign code to expressions
 ** TODO Post-order traversal to create list from code nodes

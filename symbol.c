@@ -351,10 +351,14 @@ static char *get_identifier(struct tree *t)
 
 /*
  * Returns if pointer is found in tree.
+ *
+ * Requires it to be found before both identifier and class name so
+ * that constructor return types are not made erroneously made
+ * pointers because of pointer parameters.
  */
 static bool get_pointer(struct tree *t)
 {
-	return get_category(t, '*', IDENTIFIER);
+	return get_category(t, '*', IDENTIFIER) && get_category(t, '*', CLASS_NAME);
 }
 
 /*
