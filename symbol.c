@@ -429,9 +429,15 @@ static struct typeinfo *typeinfo_new(struct tree *n)
 	}
 	t->pointer = get_pointer(n);
 
-	/* TODO: handle copying of scopes for class instances */
-	if (t->base == CLASS_T)
+	if (t->base == CLASS_T) {
 		t->class.type = get_class(n);
+		struct typeinfo *c = symbol_search(t->class.type);
+		/* if class has been defined, copy scopes */
+		if (c) {
+			t->class.private = c->class.private;
+			t->class.public = c->class.public;
+		}
+	}
 
 	return t;
 }
