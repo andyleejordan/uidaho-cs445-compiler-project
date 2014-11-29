@@ -41,4 +41,6 @@ struct op {
         struct address address[3];
 };
 
+void code_generate();
+
 #endif /* INTERMEDIATE_H */

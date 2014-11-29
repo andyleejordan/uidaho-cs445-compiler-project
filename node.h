@@ -37,6 +37,7 @@ struct address {
 struct node {
 	int rule;
 	struct address place;
+	struct list *code;
 	struct token *token;
 };
 

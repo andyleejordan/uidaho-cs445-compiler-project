@@ -37,8 +37,11 @@ char *print_region(enum region r)
 /*
  * Allocates a new blank node.
  *
- * Nodes hold semantic attributes, such as produciton rule, memory
- * address (.place field), and non-NULL token pointers if a leaf.
+ * Nodes hold semantic attributes, such as production rule, memory
+ * address (place field), and non-NULL token pointers if a leaf.
+ *
+ * TODO: add first/follow/true/false attributes; create list for code
+ * when necessary
  */
 struct node *node_new(int r)
 {
@@ -49,6 +52,7 @@ struct node *node_new(int r)
 	n->rule = r;
 	n->place.region = UNKNOWN_R;
 	n->place.offset = 0;
+	n->code = NULL;
 	n->token = NULL;
 
 	return n;
