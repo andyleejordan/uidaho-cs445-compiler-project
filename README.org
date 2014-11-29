@@ -1,11 +1,10 @@
 #+TITLE: Compiler and Translator Design Project
 #+OPTIONS: toc:nil num:nil
 
-* Compiler and Translator Design Project
-
 [[https://travis-ci.org/andschwa/uidaho-cs445][https://travis-ci.org/andschwa/uidaho-cs445.svg?branch=master]]
 /Andrew Schwartzmeyer/
 
+* Summary
 - University of Idaho - Department of Computer Science
 - [[http://www2.cs.uidaho.edu/~jeffery/courses/445/syllabus.html][CS 445]]: Compiler and Translator Design, by Dr. Clinton Jeffery
 
@@ -15,6 +14,7 @@ written in CS 120, including basic classes.
 
 This repo is located at: https://github.com/andschwa/uidaho-cs445
 
+* Assignments
 ** Assignment #1: A Lexical Analyzer
 
 Per the [[http://www2.cs.uidaho.edu/~jeffery/courses/445/hw1.html][requirements]], my initial goal was to create a lexical analyzer
