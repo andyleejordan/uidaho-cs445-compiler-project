@@ -84,7 +84,9 @@ char *print_rule(enum rule r)
 		R(ITER1);
 		R(ITER2);
 		R(ITER3);
-		R(JUMP3);
+		R(BREAK_STATEMENT);
+		R(CONTINUE_STATEMENT);
+		R(RETURN_STATEMENT);
 		R(DECL_SEQ2);
 		R(SIMPLE_DECL1);
 		R(DECL_SPEC_SEQ2);

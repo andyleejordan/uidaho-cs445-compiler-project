@@ -1165,7 +1165,7 @@ struct typeinfo *type_check(struct tree *n)
 		scope_push(function->function.symbols);
 
 		/* check return type of function */
-		struct tree *jump = get_production(n, JUMP3);
+		struct tree *jump = get_production(n, RETURN_STATEMENT);
 		struct typeinfo *ret = NULL;
 		if (production == FUNCTION_DEF1)
 			/* constructor always returns class */

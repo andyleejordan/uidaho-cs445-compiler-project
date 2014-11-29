@@ -413,9 +413,9 @@ for_init_statement:
         ;
 
 jump_statement:
-        BREAK ';'                   { $$ = $1; }
-        | CONTINUE ';'              { $$ = $1; }
-        | RETURN expression_opt ';' { $$ = P(JUMP3, 2, $1, $2); }
+        BREAK ';'                   { $$ = P(BREAK_STATEMENT, 1, $1); }
+        | CONTINUE ';'              { $$ = P(CONTINUE_STATEMENT, 1, $1); }
+        | RETURN expression_opt ';' { $$ = P(RETURN_STATEMENT, 2, $1, $2); }
         ;
 
 declaration_statement:
