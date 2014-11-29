@@ -14,6 +14,8 @@
 #include <stddef.h>
 #include <stdio.h>
 
+#include "node.h"
+
 struct tree;
 struct hash_node;
 
@@ -36,6 +38,7 @@ enum type {
 struct typeinfo {
 	enum type base;
 	bool pointer;
+	struct address place;
 
 	union {
 		struct arrayinfo {

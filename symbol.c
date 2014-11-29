@@ -208,10 +208,10 @@ static void symbol_insert(char *k, struct typeinfo *v, struct tree *t, struct ha
 		e = hasht_search(list_tail(yyscopes)->data, k);
 
 	if (e == NULL) {
-		/* assign region and offset */
+		/* assign region and offset to node AND symbol */
 		struct node *n = t->data;
-		n->place.region = region;
-		n->place.offset = offset;
+		v->place.region = n->place.region = region;
+		v->place.offset = n->place.offset = offset;
 
 		hasht_insert(scope_current(), k, v);
 		log_symbol(k, v);
