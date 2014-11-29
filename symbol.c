@@ -43,7 +43,7 @@ extern size_t offset;
 
 /* local functions */
 static enum rule get_rule(struct tree *t);
-static struct token *get_token(struct tree *t, size_t i);
+static struct token *get_token(struct node *n);
 static enum type map_type(enum yytokentype t);
 static void set_type_comparators();
 static char *print_basetype(struct typeinfo *t);
@@ -104,16 +104,14 @@ static enum rule get_rule(struct tree *t)
 }
 
 /*
- * Given a leaf node, extract its token.
+ * Given a leaf node, extract its token, checking for NULL.
  */
-static struct token *get_token(struct tree *t, size_t i)
+static struct token *get_token(struct node *n)
 {
-	struct tree *tree = tree_index(t, i);
-	struct node *node = tree->data;
-	struct token *token = node->token;
-	if (token == NULL)
-		log_semantic(t, "unexpected null token");
-	return token;
+	log_assert(n);
+	struct token *t = n->token;
+	log_assert(t);
+	return t;
 }
 
 /*
@@ -310,9 +308,7 @@ static struct token *get_category_(struct tree *t, int target, int before)
 	log_assert(t);
 
 	if (tree_size(t) == 1) {
-		struct node *node = t->data;
-		struct token *token = node->token;
-		log_assert(token);
+		struct token *token = get_token(t->data);
 		if (token->category == target || token->category == before)
 			return token;
 	}
@@ -418,8 +414,7 @@ static struct typeinfo *typeinfo_new(struct tree *n)
 		struct tree *iter = n;
 		while (tree_size(iter) > 1)
 			iter = list_front(iter->children);
-		struct node *node = iter->data;
-		struct token *token = node->token;
+		struct token *token = get_token(iter->data);
 		t->base = map_type(token->category);
 
 	}
@@ -602,9 +597,7 @@ static struct typeinfo *get_typeinfo(struct tree *t) {
 		return &class_type;
 	} else {
 		/* return global basic typeinfo for literal */
-		struct node *n = t->data;
-		struct token *token = n->token;
-		log_assert(token);
+		struct token *token = get_token(t->data);
 
 		enum type type = map_type(token->category);
 
@@ -818,7 +811,7 @@ struct typeinfo *type_check(struct tree *n)
 		struct typeinfo *l = get_left_type(n);
 		struct typeinfo *r = get_right_type(n);
 
-		switch (get_token(n, 1)->category) {
+		switch (get_token(get_node(n, 1))->category) {
 		case '=': {
 			break;
 		}
@@ -1092,7 +1085,7 @@ struct typeinfo *type_check(struct tree *n)
 		if (t == NULL)
 			log_semantic(n, "symbol undeclared");
 
-		switch (get_token(n, 0)->category) {
+		switch (get_token(get_node(n, 0))->category) {
 		case '+':
 		case '-':
 			if (!typeinfo_compare(t, &int_type))

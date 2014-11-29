@@ -12,6 +12,8 @@
 
 #include <stddef.h>
 
+struct tree;
+
 /* TODO: narrow these down */
 enum region {
         GLOBAL_R,
@@ -37,5 +39,6 @@ struct node {
 };
 
 struct node *node_new(int r);
+struct node *get_node(struct tree *t, size_t i);
 
 #endif /* NODE_H */

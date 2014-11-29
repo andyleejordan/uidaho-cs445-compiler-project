@@ -11,6 +11,7 @@
 
 #include "node.h"
 #include "logger.h"
+#include "tree.h"
 
 /*
  * Given a region enum, returns its name as a static string.
@@ -50,4 +51,14 @@ struct node *node_new(int r)
 	n->token = NULL;
 
 	return n;
+}
+
+struct node *get_node(struct tree *t, size_t i)
+{
+	log_assert(t);
+	struct tree *tree = tree_index(t, i);
+	log_assert(tree);
+	struct node *node = tree->data;
+	log_assert(node);
+	return node;
 }
