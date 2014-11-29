@@ -138,9 +138,8 @@ void parse_program(char *filename)
 	if (arguments.tree)
 		tree_traverse(yyprogram, 0, &print_tree, NULL, NULL);
 
-	log_debug("performing semantic analysis");
-
 	/* initialize scope stack */
+	log_debug("setting up for semantic analysis");
 	yyscopes = list_new(NULL, NULL);
 	log_assert(yyscopes);
 	struct hasht *global = hasht_new(32, true, NULL, NULL, &symbol_free);
@@ -148,20 +147,24 @@ void parse_program(char *filename)
 	list_push_back(yyscopes, global);
 
 	/* build the symbol tables */
+	log_debug("populating symbol tables");
 	region = GLOBAL_R;
 	offset = 0;
 	symbol_populate();
 	log_debug("global scope had %zu symbols", hasht_used(global));
 
 	/* setup constant region and offset */
+	log_debug("type checking");
 	region = CONST_R;
 	offset = 0;
 	type_check(yyprogram);
 
+	log_debug("cleaning up");
 	/* clean up */
 	tree_free(yyprogram);
 	yylex_destroy();
 	hasht_free(yytypes);
+	free(yyincludes); /* values all referenced elsewhere */
 	list_free(yyfiles);
 	list_free(yyscopes);
 }
