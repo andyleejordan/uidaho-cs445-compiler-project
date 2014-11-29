@@ -49,7 +49,7 @@ int main()
 	test_size(root, 5);
 
 	testing("printing:");
-	tree_preorder(root, 0, &print_tree);
+	tree_traverse(root, 0, &print_tree, NULL, NULL);
 	printf("\n");
 
 	tree_free(root);

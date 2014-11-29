@@ -753,7 +753,7 @@ SEMICOLON_opt:
 #undef E
 
 /*
- * Helper function passed to tree_preorder().
+ * Helper function passed to tree_traverse().
  *
  * Given a terminal tree node, prints its contained token's value.
  * Given a non-terminal tree node, prints its contained production

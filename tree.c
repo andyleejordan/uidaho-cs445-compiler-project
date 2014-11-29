@@ -92,27 +92,41 @@ size_t tree_size(struct tree *self)
 }
 
 /*
- * Pre-order traversal of tree. Takes a function and applies it to
- * each subtree.
+ * Traverse tree.
+ *
+ * Takes pre-, in-, and post-order functions and applies them to each
+ * subtree at the appropriate point.
+ *
+ * Pre-order function can stop further traversal by returning false.
+ *
+ * Pass NULL to ignore a function application.
  */
-void tree_preorder(struct tree *self, int d, bool (*f)(struct tree *t, int d))
+void tree_traverse(struct tree *self, int d,
+                   bool (*pre) (struct tree *t, int d),
+                   void (*in)  (struct tree *t, int d),
+                   void (*post)(struct tree *t, int d))
 {
 	if (self == NULL) {
-		fprintf(stderr, "tree_preorder(): self was null\n");
+		fprintf(stderr, "tree_traverse(): self was null\n");
 		return;
 	}
 
 	bool recurse = true;
-	if (f)
-		recurse = f(self, d);
+	if (pre)
+		recurse = pre(self, d);
 
 	if (recurse) {
 		struct list_node *iter = list_head(self->children);
 		while (!list_end(iter)) {
-			tree_preorder(iter->data, d+1, f);
+			tree_traverse(iter->data, d+1, pre, in, post);
+			if (in)
+				in(self, d);
 			iter = iter->next;
 		}
 	}
+
+	if (post)
+		post(self, d);
 }
 
 /*

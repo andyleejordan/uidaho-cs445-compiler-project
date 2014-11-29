@@ -136,7 +136,7 @@ void parse_program(char *filename)
 
 	/* print syntax tree */
 	if (arguments.tree)
-		tree_preorder(yyprogram, 0, &print_tree);
+		tree_traverse(yyprogram, 0, &print_tree, NULL, NULL);
 
 	log_debug("performing semantic analysis");
 

@@ -192,7 +192,7 @@ void symbol_populate()
 	set_type_comparators();
 
 	/* do a top-down pre-order traversal to populate symbol tables */
-	tree_preorder(yyprogram, 0, &handle_node);
+	tree_traverse(yyprogram, 0, &handle_node, NULL, NULL);
 }
 
 /*
@@ -1489,7 +1489,7 @@ static void handle_function(struct typeinfo *t, struct tree *n, char *k)
 	/* recurse on children while in subscope */
 	log_debug("pushing function scope");
 	scope_push(v->function.symbols);
-	tree_preorder(get_production(n, COMPOUND_STATEMENT), 0, &handle_node);
+	tree_traverse(get_production(n, COMPOUND_STATEMENT), 0, &handle_node, NULL, NULL);
 
 	log_debug("function scope had %zu symbols", hasht_used(v->function.symbols));
 	log_debug("popping scopes");
