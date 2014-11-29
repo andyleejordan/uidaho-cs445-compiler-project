@@ -1,20 +1,35 @@
 * Required tasks
-** TODO Traversal to assign labels for jumps
+** TODO Populate an implicit/constants symbol table(?)
+Where key is token->text and value is its basic typeinfo. For
+integers, the offset "should" be the integer value. For strings and
+floats, I think maybe the value should be stored in a "string region"
+array at the appropriate offset.
+
+Currently, explicit and implicit symbols' addresses are stored in
+their respective nodes. However, for explicit symbols, this node is
+where the symbol is declared, meaning the symbol should also contain
+its address information for reverse lookups when the symbol is
+referenced. This is not a problem for implicit symbols because they
+only exist in their respective nodes; however, for simplicitly, I may
+want to be able to treat them the same way lookup-wise, hence wanting
+to build the implicit table.
+** TODO Traversal to assign ".first/.follow/.true/.false" labels for jumps
+Figure out where/how to store labels. They would *seem* to be "empty"
+code instructions with a label instead of opcode with addresses.
 ** TODO Post-order traversal to assign code to expressions/statements/etc.
 *** TODO Create temporaries where required
-** TODO Post-order traversal to create list from code nodes
+*** TODO Concatenate code lists
 ** TODO Print out TAC list
 * Additional tasks
 ** TODO Align memory addresses
-** TODO Expand list library
-- =struct list *list_copy=
-- =struct list *list_concat=
-- =list_split=
-- =list_sort=
-** TODO Use flyweight pattern for repeated strings
-** TODO Respect include guards
+** TODO Support class instance initializers
 ** TODO Expand type checking
 *** refactor for type promotion (=typeinfo_compatible(a, b)=)
 *** pass by reference
 *** ternary operator
-** TODO Support class instance initializers
+** TODO Expand list library
+*** TODO =struct list *list_copy=
+*** TODO =list_split=
+*** TODO =list_sort=
+** TODO Respect include guards
+** TODO Use flyweight pattern for repeated strings

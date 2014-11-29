@@ -83,7 +83,7 @@ parser.y: node.h logger.h token.h rules.h list.h tree.h
 symbol.o: symbol.h args.h logger.h node.h token.h libs.h \
 	rules.h lexer.h parser.tab.h list.h hasht.h tree.h
 
-node.o: node.h logger.h tree.h
+node.o: node.h logger.h tree.h rules.h
 
 token.o: token.h logger.h parser.tab.h
 
