@@ -66,24 +66,24 @@ $(BIN): $(OBJS)
 
 main.o: args.h logger.h libs.h lexer.h symbol.h node.h list.h tree.h hasht.h
 
-logger.o: logger.h args.h node.h token.h lexer.h list.h tree.h
+logger.o: logger.h args.h node.h token.h lexer.h symbol.h list.h tree.h
 
 lexer.h: lex.yy.c
 
 lex.yy.c: lexer.l
 	$(FLEX) $(FLEXFLAGS) $<
 
-lexer.l: logger.h node.h token.h libs.h parser.tab.h list.h tree.h hasht.h
+lexer.l: args.h node.h logger.h token.h libs.h parser.tab.h list.h tree.h hasht.h
 
 parser.tab.h parser.tab.c: parser.y
 	$(BISON) $(BISONFLAGS) $<
 
-parser.y: logger.h node.h token.h rules.h list.h tree.h
+parser.y: node.h logger.h token.h rules.h list.h tree.h
 
 symbol.o: symbol.h args.h logger.h node.h token.h libs.h \
-	lexer.h rules.h parser.tab.h list.h hasht.h tree.h
+	rules.h lexer.h parser.tab.h list.h hasht.h tree.h
 
-node.o: node.h
+node.o: node.h logger.h tree.h
 
 token.o: token.h logger.h parser.tab.h
 
