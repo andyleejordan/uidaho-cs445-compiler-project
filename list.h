@@ -53,6 +53,7 @@ struct list_node *list_index(struct list *self, int pos);
 size_t list_size(struct list *self);
 bool list_empty(struct list *self);
 bool list_end(struct list_node *n);
+struct list *list_concat(struct list *a, struct list *b);
 
 void list_free(struct list *self);
 

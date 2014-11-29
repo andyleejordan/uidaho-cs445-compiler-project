@@ -40,26 +40,26 @@ int main()
 	test_empty_sentinel(list);
 	test_empty_ends(list);
 
-	testing("push back A");
-	char *a = strdup("A");
+	testing("push back (A)");
+	char *a = strdup("(A)");
 	list_push_back(list, a);
 
 	testing("head and tail");
 	test_head_data(list, a);
 	test_tail_data(list, a);
 
-	testing("search A");
-	test_search_data(list, "A");
+	testing("search (A)");
+	test_search_data(list, "(A)");
 
-	testing("not search B");
-	test_not_search_data(list, "B");
+	testing("not search (B)");
+	test_not_search_data(list, "(B)");
 
-	testing("push back B");
-	char *b = strdup("B");
+	testing("push back (B)");
+	char *b = strdup("(B)");
 	list_push_back(list, b);
 	test_tail_data(list, b);
 
-	testing("push front B");
+	testing("push front (B)");
 	list_push_front(list, b);
 	test_head_data(list, b);
 
@@ -79,9 +79,23 @@ int main()
 	list_pop_back(list);
 	test_empty(list);
 
-	testing("forward iteration:");
+	testing("(A) concat (B) (C)");
+	struct list *list_ = list_new(NULL, &free);
+	char *c = strdup("(C)");
 	list_push_back(list, a);
-	list_push_back(list, b);
+	list_push_back(list_, b);
+	list_push_back(list_, c);
+	test_size(list, 1);
+	test_size(list_, 2);
+	test_head_data(list, a);
+	test_head_data(list_, b);
+	test_tail_data(list_, c);
+	list_concat(list, list_);
+	test_head_data(list, a);
+	test_tail_data(list, c);
+	test_size(list, 3);
+
+	testing("forward iteration:");
 	test_iter_forward(list);
 	printf("\n");
 

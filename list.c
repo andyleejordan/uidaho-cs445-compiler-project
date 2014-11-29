@@ -230,6 +230,45 @@ bool list_end(struct list_node *n)
 }
 
 /*
+ * Concatenates list b to the end of list a destructively.
+ *
+ * List b (and its sentinel) will be freed. The nodes of list b will
+ * therefore be accessible only through their new place in list a.
+ *
+ * Require that compare and delete functions are the same. Relative
+ * assurance that lists contain same kinds of items.
+ *
+ * Returns list a on success, NULL on failure.
+ */
+struct list *list_concat(struct list *a, struct list *b)
+{
+	if (a->compare != b->compare) {
+		fprintf(stderr, "list_concat(): compare functions unequal\n");
+		return NULL;
+	}
+
+	if (a->delete != b->delete) {
+		fprintf(stderr, "list_concat(): delete functions unequal\n");
+		return NULL;
+	}
+
+	/* link head of b to tail of a */
+	list_tail(a)->next = list_head(b);
+	list_head(b)->prev = list_tail(a);
+
+	/* link tail of b to sentinal of a */
+	list_tail(b)->next = a->sentinel;
+	a->sentinel->prev = list_tail(b);
+
+	a->size += b->size;
+
+	free(b->sentinel);
+	free(b);
+
+	return a;
+}
+
+/*
  * Use function to free data of each node, then free said node,
  * finally free the sentinel and the list.
  */
