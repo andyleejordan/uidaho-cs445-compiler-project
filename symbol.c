@@ -42,8 +42,6 @@ extern enum region region;
 extern size_t offset;
 
 /* local functions */
-static enum rule get_rule(struct tree *t);
-static struct token *get_token(struct node *n);
 static enum type map_type(enum yytokentype t);
 static void set_type_comparators();
 static char *print_basetype(struct typeinfo *t);
@@ -93,26 +91,6 @@ static struct typeinfo bool_type;
 static struct typeinfo void_type;
 static struct typeinfo class_type;
 static struct typeinfo unknown_type;
-
-/*
- * Given a tree node, extract its production rule.
- */
-static enum rule get_rule(struct tree *t)
-{
-	struct node *n = t->data;
-	return n->rule;
-}
-
-/*
- * Given a leaf node, extract its token, checking for NULL.
- */
-static struct token *get_token(struct node *n)
-{
-	log_assert(n);
-	struct token *t = n->token;
-	log_assert(t);
-	return t;
-}
 
 /*
  * Initialize comparator types

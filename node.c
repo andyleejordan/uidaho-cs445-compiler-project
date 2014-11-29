@@ -12,6 +12,7 @@
 #include "node.h"
 #include "logger.h"
 #include "tree.h"
+#include "rules.h"
 
 /*
  * Given a region enum, returns its name as a static string.
@@ -53,6 +54,9 @@ struct node *node_new(int r)
 	return n;
 }
 
+/*
+ * Given a tree and position, returns subtree's node.
+ */
 struct node *get_node(struct tree *t, size_t i)
 {
 	log_assert(t);
@@ -61,4 +65,24 @@ struct node *get_node(struct tree *t, size_t i)
 	struct node *node = tree->data;
 	log_assert(node);
 	return node;
+}
+
+/*
+ * Given a tree node, extract its production rule.
+ */
+enum rule get_rule(struct tree *t)
+{
+	struct node *n = t->data;
+	return n->rule;
+}
+
+/*
+ * Given a leaf node, extract its token, checking for NULL.
+ */
+struct token *get_token(struct node *n)
+{
+	log_assert(n);
+	struct token *t = n->token;
+	log_assert(t);
+	return t;
 }

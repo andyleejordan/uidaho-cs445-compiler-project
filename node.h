@@ -12,6 +12,8 @@
 
 #include <stddef.h>
 
+#include "rules.h"
+
 struct tree;
 
 /* TODO: narrow these down */
@@ -40,5 +42,7 @@ struct node {
 
 struct node *node_new(int r);
 struct node *get_node(struct tree *t, size_t i);
+enum rule get_rule(struct tree *t);
+struct token *get_token(struct node *n);
 
 #endif /* NODE_H */
