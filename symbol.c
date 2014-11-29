@@ -186,9 +186,6 @@ static enum type map_type(enum yytokentype t)
  */
 void symbol_populate()
 {
-	region = GLOBAL_R;
-	offset = 0;
-
 	set_type_comparators();
 
 	/* do a top-down pre-order traversal to populate symbol tables */
