@@ -636,14 +636,12 @@ struct typeinfo *type_check(struct tree *n)
 	case LITERAL: {
 		/* assign place to constants */
 		struct tree *t = tree_index(n, 0);
-		struct typeinfo *v = get_typeinfo(t);
+		struct token *token = get_token(t->data);
+		struct typeinfo *v = typeinfo_copy(get_typeinfo(t));
 
-		struct node *node = t->data;
-		struct token *token = node->token;
-		node->place.region = region;
-		node->place.offset = offset;
-
-		log_symbol(token->text, v);
+		/* constants are only inserted on first appearance */
+		if (!scope_search(token->text))
+			symbol_insert(token->text, v, t, NULL);
 
 		/* if string, get size, otherwise calculate for base type */
 		if (token->ssize)

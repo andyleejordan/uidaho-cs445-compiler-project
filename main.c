@@ -142,6 +142,7 @@ void parse_program(char *filename)
 	log_debug("setting up for semantic analysis");
 	yyscopes = list_new(NULL, NULL);
 	log_assert(yyscopes);
+
 	struct hasht *global = hasht_new(32, true, NULL, NULL, &symbol_free);
 	log_assert(global);
 	list_push_back(yyscopes, global);
@@ -155,12 +156,21 @@ void parse_program(char *filename)
 
 	/* setup constant region and offset */
 	log_debug("type checking");
+
+	struct hasht *constant = hasht_new(32, true, NULL, NULL, &symbol_free);
+	log_assert(constant);
+	list_push_back(yyscopes, constant);
+
 	region = CONST_R;
 	offset = 0;
 	type_check(yyprogram);
 
-	log_debug("cleaning up");
+	/* generating intermediate code */
+	list_pop_back(yyscopes);
+	list_push_front(yyscopes, constant);
+
 	/* clean up */
+	log_debug("cleaning up");
 	tree_free(yyprogram);
 	yylex_destroy();
 	hasht_free(yytypes);
