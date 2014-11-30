@@ -7,6 +7,7 @@
  *
  */
 
+#include <errno.h>
 #include <stdarg.h>
 #include <stdio.h>
 
@@ -38,7 +39,7 @@ void log_error(const char *format, ...)
 
 	va_end(ap);
 
-	if (arguments.debug)
+	if (arguments.debug && errno)
 		perror("");
 
 	exit(EXIT_FAILURE);
