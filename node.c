@@ -11,6 +11,7 @@
 
 #include "node.h"
 #include "logger.h"
+#include "list.h"
 #include "tree.h"
 #include "rules.h"
 
@@ -40,8 +41,7 @@ char *print_region(enum region r)
  * Nodes hold semantic attributes, such as production rule, memory
  * address (place field), and non-NULL token pointers if a leaf.
  *
- * TODO: add first/follow/true/false attributes; create list for code
- * when necessary
+ * TODO: add first/follow/true/false attributes
  */
 struct node *node_new(int r)
 {
