@@ -537,15 +537,14 @@ struct address get_address(struct tree *t)
 {
 	/* attempt to get address of identifier */
 	char *k = get_identifier(t);
-	if (k) {
-		struct typeinfo *s = symbol_search(k);
-		if (s)
-			return s->place;
-		else
-			return NULL;
-	}
-	/* get address of constant */
-	return NULL;
+	if (!k)
+		log_semantic(t, "identifier not found");
+
+	struct typeinfo *s = scope_search(k);
+	if (!s)
+		log_semantic(t, "symbol not found for %s", k);
+
+	return s->place;
 }
 
 /*
