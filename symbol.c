@@ -46,7 +46,6 @@ static void symbol_insert(char *k, struct typeinfo *v, struct tree *n, struct ha
 static struct tree *get_production(struct tree *n, enum rule r);
 static struct token *get_category(struct tree *n, int target, int before);
 static struct token *get_category_(struct tree *n, int target, int before);
-static char *get_identifier(struct tree *n);
 static bool get_pointer(struct tree *n);
 static int get_array(struct tree *n);
 static char *get_class(struct tree *n);
@@ -280,9 +279,11 @@ static struct token *get_category_(struct tree *t, int target, int before)
 }
 
 /*
- * Returns true identifier if found, else null.
+ * Returns identifier if found, else null.
+ *
+ * TODO: refactor to return token->text for literals.
  */
-static char *get_identifier(struct tree *n)
+char *get_identifier(struct tree *n)
 {
 	struct token *token = get_category(n, IDENTIFIER, -1);
 	if (token)

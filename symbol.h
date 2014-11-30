@@ -20,10 +20,11 @@ struct tree;
 struct hash_node;
 
 void symbol_populate();
-struct typeinfo *type_check(struct tree *t);
-
 void symbol_free(struct hash_node *n);
 
+struct typeinfo *type_check(struct tree *t);
+
+char *get_identifier(struct tree *n);
 struct address get_address(struct tree *t);
 
 enum type {
