@@ -19,6 +19,7 @@
 #include "token.h"
 #include "libs.h"
 #include "rules.h"
+#include "scope.h"
 
 #include "lexer.h"
 #include "parser.tab.h"
@@ -31,12 +32,6 @@
 extern struct tree *yyprogram;
 extern struct hasht *yytypes;
 
-/* stack of scopes */
-extern struct list *yyscopes;
-#define scope_current() (struct hasht *)list_back(yyscopes)
-#define scope_push(s) list_push_back(yyscopes, s)
-#define scope_pop() list_pop_back(yyscopes)
-
 /* memory addresses */
 extern enum region region;
 extern size_t offset;
@@ -46,7 +41,6 @@ static enum type map_type(enum yytokentype t);
 static void set_type_comparators();
 static char *print_basetype(struct typeinfo *t);
 
-static struct typeinfo *symbol_search(char *k);
 static void symbol_insert(char *k, struct typeinfo *v, struct tree *n, struct hasht *l);
 
 static struct tree *get_production(struct tree *n, enum rule r);
@@ -169,24 +163,6 @@ void symbol_populate()
 }
 
 /*
- * Search the stack of scopes for a given identifier.
- */
-static struct typeinfo *symbol_search(char *k)
-{
-	if (k == NULL)
-		return NULL;
-
-	struct list_node *iter = list_tail(yyscopes);
-	while (!list_end(iter)) {
-		struct typeinfo *t = hasht_search(iter->data, k);
-		if (t)
-			return t;
-		iter = iter->prev;
-	}
-	return NULL;
-}
-
-/*
  * Insert symbol as ident/typeinfo pair.
  *
  * Tree used to find token on error. If attempting to insert a
@@ -202,7 +178,7 @@ static void symbol_insert(char *k, struct typeinfo *v, struct tree *t, struct ha
 	struct typeinfo *e = NULL;
 	if (l && v->base == FUNCTION_T)
 		/* search for function declaration to define */
-		e = symbol_search(k);
+		e = scope_search(k);
 	else
 		/* search just current scope */
 		e = hasht_search(list_tail(yyscopes)->data, k);
@@ -400,7 +376,7 @@ static struct typeinfo *typeinfo_new(struct tree *n)
 
 	if (t->base == CLASS_T) {
 		t->class.type = get_class(n);
-		struct typeinfo *c = symbol_search(t->class.type);
+		struct typeinfo *c = scope_search(t->class.type);
 		/* if class has been defined, copy scopes */
 		if (c) {
 			t->class.private = c->class.private;
@@ -586,7 +562,7 @@ static struct typeinfo *get_typeinfo(struct tree *t) {
 
 	if (k) {
 		/* return function typeinfo */
-		return symbol_search(k);
+		return scope_search(k);
 	} else if (c) {
 		/* return class typeinfo comparator */
 		class_type.class.type = c;
@@ -683,7 +659,7 @@ struct typeinfo *type_check(struct tree *n)
 		if (k == NULL)
 			log_semantic(n, "could not get identifier in init");
 
-		struct typeinfo *l = symbol_search(k);
+		struct typeinfo *l = scope_search(k);
 		if (l == NULL)
 			log_semantic(n, "could not get symbol for %s in init", k);
 
@@ -710,7 +686,7 @@ struct typeinfo *type_check(struct tree *n)
 		if (k == NULL)
 			log_semantic(n, "could not get identifier in initializer list");
 
-		struct typeinfo *l = symbol_search(k);
+		struct typeinfo *l = scope_search(k);
 		if (l == NULL)
 			log_semantic(n, "could not get symbol for %s in initializer list", k);
 
@@ -744,14 +720,14 @@ struct typeinfo *type_check(struct tree *n)
 			size_t scopes = list_size(yyscopes);
 
 			char *c = type->class.type;
-			struct typeinfo *class = symbol_search(c);
+			struct typeinfo *class = scope_search(c);
 			if (class) {
 				log_debug("pushing class scopes");
 				scope_push(class->class.public);
 				scope_push(class->class.private);
 			}
 
-			struct typeinfo *l = symbol_search(c);
+			struct typeinfo *l = scope_search(c);
 			if (l == NULL)
 				log_semantic(n, "could not find constructor for %s", c);
 
@@ -928,7 +904,7 @@ struct typeinfo *type_check(struct tree *n)
 		/* array indexing: check identifier is an array and index is an int */
 		char *k = get_identifier(n);
 
-		struct typeinfo *l = symbol_search(k);
+		struct typeinfo *l = scope_search(k);
 		if (l == NULL)
 			log_semantic(n, "array %s not declared", k);
 		if (l->base != ARRAY_T)
@@ -977,14 +953,14 @@ struct typeinfo *type_check(struct tree *n)
 		char *f = get_identifier(tree_index(n, 2));
 		log_assert(k && f);
 
-		struct typeinfo *l = symbol_search(k);
+		struct typeinfo *l = scope_search(k);
 		if (l == NULL)
 			log_semantic(n, "symbol %s undeclared", k);
 		if (l->base != CLASS_T || l->pointer)
 			log_semantic(n, "expected %s to be a class instance", k);
 
 		char *c = l->class.type;
-		struct typeinfo *class = symbol_search(c);
+		struct typeinfo *class = scope_search(c);
 		if (class == NULL)
 			log_semantic(n, " symbol %s undeclared", c);
 
@@ -1002,14 +978,14 @@ struct typeinfo *type_check(struct tree *n)
 		char *f = get_identifier(tree_index(n, 2));
 		log_assert(k && f);
 
-		struct typeinfo *l = symbol_search(k);
+		struct typeinfo *l = scope_search(k);
 		if (l == NULL)
 			log_semantic(n, "symbol %s undeclared", k);
 		if (l->base != CLASS_T || !l->pointer)
 			log_semantic(n, "expected %s to be a class pointer", k);
 
 		char *c = l->class.type;
-		struct typeinfo *class = symbol_search(c);
+		struct typeinfo *class = scope_search(c);
 		if (class == NULL)
 			log_semantic(n, "symbol %s undeclared", c);
 
@@ -1045,7 +1021,7 @@ struct typeinfo *type_check(struct tree *n)
 		char *k = get_identifier(n);
 		log_assert(k);
 
-		struct typeinfo *t = symbol_search(k);
+		struct typeinfo *t = scope_search(k);
 		if (t == NULL)
 			log_semantic(n, "symbol %s undeclared", k);
 
@@ -1063,7 +1039,7 @@ struct typeinfo *type_check(struct tree *n)
 		char *k = get_identifier(n);
 		log_assert(k);
 
-		struct typeinfo *t = symbol_search(k);
+		struct typeinfo *t = scope_search(k);
 		if (t == NULL)
 			log_semantic(n, "symbol %s undeclared", k);
 
@@ -1163,7 +1139,7 @@ struct typeinfo *type_check(struct tree *n)
 		size_t scopes = list_size(yyscopes);
 
 		/* retrieve class scopes */
-		struct typeinfo *class = symbol_search(class_member(n));
+		struct typeinfo *class = scope_search(class_member(n));
 		if (class) {
 			log_debug("pushing class scopes");
 			scope_push(class->class.public);
@@ -1175,7 +1151,7 @@ struct typeinfo *type_check(struct tree *n)
 			? get_class(n) /* ctor function name is class name */
 			: get_identifier(n);
 
-		struct typeinfo *function = symbol_search(k);
+		struct typeinfo *function = scope_search(k);
 		if (function == NULL)
 			log_semantic(n, "symbol %s undeclared", k);
 
@@ -1457,7 +1433,7 @@ static void handle_function(struct typeinfo *t, struct tree *n, char *k)
 
 	size_t scopes = list_size(yyscopes);
 
-	struct typeinfo *class = symbol_search(class_member(n));
+	struct typeinfo *class = scope_search(class_member(n));
 	if (class) {
 		log_debug("pushing class scopes");
 		scope_push(class->class.public);
@@ -1674,7 +1650,3 @@ void print_typeinfo(FILE *stream, const char *k, struct typeinfo *v)
 	if (k)
 		fprintf(stream, " %s%s\n", (v->pointer) ? "*" : "", k);
 }
-
-#undef scope_current
-#undef scope_push
-#undef scope_pop

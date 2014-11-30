@@ -27,7 +27,7 @@ GITREF = $(shell git tag | tail -n 1)
 -include local.mk
 
 # files
-SRCS = main.c logger.c symbol.c node.c token.c rules.c \
+SRCS = main.c logger.c symbol.c node.c token.c rules.c scope.c \
 	list.c tree.c hasht.c lookup3.c \
 	lex.yy.c parser.tab.c
 OBJS = $(SRCS:.c=.o)
@@ -81,11 +81,13 @@ parser.tab.h parser.tab.c: parser.y
 parser.y: node.h logger.h token.h rules.h list.h tree.h
 
 symbol.o: symbol.h args.h logger.h node.h token.h libs.h \
-	rules.h lexer.h parser.tab.h list.h hasht.h tree.h
+	rules.h scope.h lexer.h parser.tab.h list.h hasht.h tree.h
 
 node.o: node.h logger.h tree.h rules.h
 
 token.o: token.h logger.h parser.tab.h
+
+scope.o: scope.h symbol.h list.h hasht.h
 
 list.o: list.h
 
