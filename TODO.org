@@ -1,25 +1,31 @@
 * Required tasks
-** TODO Populate an implicit/constants symbol table(?)
-Where key is token->text and value is its basic typeinfo. For
-integers, the offset "should" be the integer value. For strings and
-floats, I think maybe the value should be stored in a "string region"
-array at the appropriate offset.
-
-Currently, explicit and implicit symbols' addresses are stored in
-their respective nodes. However, for explicit symbols, this node is
-where the symbol is declared, meaning the symbol should also contain
-its address information for reverse lookups when the symbol is
-referenced. This is not a problem for implicit symbols because they
-only exist in their respective nodes; however, for simplicitly, I may
-want to be able to treat them the same way lookup-wise, hence wanting
-to build the implicit table.
 ** TODO Traversal to assign ".first/.follow/.true/.false" labels for jumps
 Figure out where/how to store labels. They would *seem* to be "empty"
 code instructions with a label instead of opcode with addresses.
 ** TODO Post-order traversal to assign code to expressions/statements/etc.
 *** TODO Create temporaries where required
-*** TODO Concatenate code lists
+*** TODO Retrieve address of constants
+- build implicit symbol table, traverse to node with literal, and search
+- build a new function which traverses to the node with the literal
+  rule and return its address
+- redo =tree_traverse()= (again) to accept variadic functions and use
+  this to do the former much more easily
+
+Every way is going to require handling the scopes to find an explicit
+symbol the current way. This could be negated with the generic
+function as it could traverse to the node containing an identifier
+token and return its address. Since the type check procedure already
+checked that each symbol was defined (i.e. in the scope), it would be
+easier to skip checking it again, but honestly, we will want those
+types eventually. So I am going with the implicit symbol table, and
+refactoring =get_identifier()= to return =token->text= for literals
+(which are their keys, same as identifier names for explicit symbols).
+
 ** TODO Print out TAC list
+** TODO Adjust constant offsets
+For integers, the offset "should" be the integer value. For strings
+and floats, I think maybe the value should be stored in a "string
+region" array at the appropriate offset.
 * Additional tasks
 ** TODO Align memory addresses
 ** TODO Support class instance initializers
