@@ -232,16 +232,31 @@ bool list_end(struct list_node *n)
 /*
  * Concatenates list b to the end of list a destructively.
  *
+ * usage: a = list_concat(a, b);
+ *
  * List b (and its sentinel) will be freed. The nodes of list b will
  * therefore be accessible only through their new place in list a.
  *
  * Require that compare and delete functions are the same. Relative
  * assurance that lists contain same kinds of items.
  *
+ * If either is an empty list, the other is returned. Hence the
+ * recommended usage with assignment.
+ *
  * Returns list a on success, NULL on failure.
  */
 struct list *list_concat(struct list *a, struct list *b)
 {
+	if (a && !b)
+		return a;
+	if (b && !a)
+		return b;
+
+	if (!a && !b) {
+		fprintf(stderr, "list_concat(): no list given\n");
+		return NULL;
+	}
+
 	if (a->compare != b->compare) {
 		fprintf(stderr, "list_concat(): compare functions unequal\n");
 		return NULL;
