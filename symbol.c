@@ -306,9 +306,9 @@ static struct token *get_category_(struct tree *t, int target, int before)
 /*
  * Returns true identifier if found, else null.
  */
-static char *get_identifier(struct tree *t)
+static char *get_identifier(struct tree *n)
 {
-	struct token *token = get_category(t, IDENTIFIER, -1);
+	struct token *token = get_category(n, IDENTIFIER, -1);
 	if (token)
 		return token->text;
 	else
@@ -551,6 +551,24 @@ static size_t scope_size(struct hasht *t)
 		}
 	}
 	return total;
+}
+
+/*
+ * Return address of first symbol in subtree.
+ */
+struct address get_address(struct tree *t)
+{
+	/* attempt to get address of identifier */
+	char *k = get_identifier(t);
+	if (k) {
+		struct typeinfo *s = symbol_search(k);
+		if (s)
+			return s->place;
+		else
+			return NULL;
+	}
+	/* get address of constant */
+	return NULL;
 }
 
 /*
