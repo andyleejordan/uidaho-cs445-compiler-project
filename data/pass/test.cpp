@@ -24,6 +24,18 @@ private:
 	double *hiddenData();
 };
 
+void lots_o_types(bool p, int i)
+{
+	bool is = p;
+	short quick = i;
+	long big = i;
+	double pi = 3.14159;
+	double zero = .0000000001;
+	float one = 1.;
+
+	string empty = "";
+}
+
 int main(int argc, char *argv[])
 {
 	/*
@@ -56,14 +68,7 @@ int main(int argc, char *argv[])
 		break;
 	}
 
-	bool is = false;
-	short quick = 2;
-	long big = 123234;
-	double pi = 3.14159;
-	double zero = .0000000001;
-	float one = 1.;
-
-	string empty = "";
+	lots_o_types(false, 2);
 
 	delete myclass;
 
