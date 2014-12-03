@@ -41,7 +41,8 @@ static enum type map_type(enum yytokentype t);
 static void set_type_comparators();
 static char *print_basetype(struct typeinfo *t);
 
-static void symbol_insert(char *k, struct typeinfo *v, struct tree *t, struct hasht *l);
+static void symbol_insert(char *k, struct typeinfo *v, struct tree *t,
+                          struct hasht *l, bool constant);
 
 static struct tree *get_production(struct tree *n, enum rule r);
 static struct token *get_category(struct tree *n, int target, int before);
@@ -169,7 +170,8 @@ void symbol_populate()
  * will define the function with the given symbol table. Will error
  * for duplicate symbols or mismatched function declarations.
  */
-static void symbol_insert(char *k, struct typeinfo *v, struct tree *t, struct hasht *l)
+static void symbol_insert(char *k, struct typeinfo *v, struct tree *t,
+                          struct hasht *l, bool constant)
 {
 	if (v == NULL)
 		log_error("symbol_insert(): type for %s was null", k);
@@ -188,7 +190,7 @@ static void symbol_insert(char *k, struct typeinfo *v, struct tree *t, struct ha
 		v->place.region = n->place.region = region;
 		v->place.offset = n->place.offset = offset;
 
-		hasht_insert(scope_current(), k, v);
+		hasht_insert(constant ? scope_constant() : scope_current(), k, v);
 		log_symbol(k, v);
 
 		/* increment offset */
@@ -644,7 +646,7 @@ struct typeinfo *type_check(struct tree *n)
 
 		/* constants are only inserted on first appearance */
 		if (!scope_search(token->text)) {
-			symbol_insert(token->text, v, t, NULL);
+			symbol_insert(token->text, v, t, NULL, true);
 
 			/* if string, get size, otherwise calculate for type */
 			if (token->ssize)
@@ -1377,7 +1379,7 @@ static void handle_init(struct typeinfo *v, struct tree *n)
 	}
 
 	if (k && v) {
-		symbol_insert(k, v, n, NULL);
+		symbol_insert(k, v, n, NULL, false);
 	} else {
 		log_semantic(n, "failed to get init declarator symbol");
 	}
@@ -1442,7 +1444,7 @@ static void handle_function(struct typeinfo *t, struct tree *n, char *k)
 		scope_push(class->class.private);
 	}
 
-	symbol_insert(k, v, n, v->function.symbols);
+	symbol_insert(k, v, n, v->function.symbols, false);
 
 	/* setup local region and offset */
 	enum region region_ = region;
@@ -1533,7 +1535,7 @@ static void handle_class(struct typeinfo *t, struct tree *n)
 	char *k = get_identifier(n);
 	t->base = CLASS_T; /* class definition is still a class */
 
-	symbol_insert(k, t, n, NULL);
+	symbol_insert(k, t, n, NULL, false);
 
 	/* setup class region and offset */
 	enum region region_ = region;
@@ -1555,7 +1557,7 @@ static void handle_class(struct typeinfo *t, struct tree *n)
 		ret->class.type = k;
 		struct typeinfo *ctor = typeinfo_new_function(n, ret, false);
 		scope_push(t->class.public);
-		symbol_insert(k, ctor, n, NULL);
+		symbol_insert(k, ctor, n, NULL, false);
 		scope_pop();
 	}
 

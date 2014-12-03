@@ -13,6 +13,7 @@
 /* stack of scopes */
 extern struct list *yyscopes;
 #define scope_current() (struct hasht *)list_back(yyscopes)
+#define scope_constant() (struct hasht *)list_front(yyscopes)
 #define scope_push(s) list_push_back(yyscopes, s)
 #define scope_pop() list_pop_back(yyscopes)
 struct typeinfo *scope_search(char *k);

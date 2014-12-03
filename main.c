@@ -157,17 +157,16 @@ void parse_program(char *filename)
 	/* setup constant region and offset */
 	log_debug("type checking");
 
+	/* constant symbol table put in front of stack for known location */
 	struct hasht *constant = hasht_new(32, true, NULL, NULL, &symbol_free);
 	log_assert(constant);
-	list_push_back(yyscopes, constant);
+	list_push_front(yyscopes, constant);
 
 	region = CONST_R;
 	offset = 0;
 	type_check(yyprogram);
 
 	/* generating intermediate code */
-	list_pop_back(yyscopes);
-	list_push_front(yyscopes, constant);
 
 	/* clean up */
 	log_debug("cleaning up");

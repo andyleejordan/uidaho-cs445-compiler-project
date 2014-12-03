@@ -28,7 +28,6 @@ and floats, I think maybe the value should be stored in a "string
 region" array at the appropriate offset.
 * Additional tasks
 ** TODO Align memory addresses
-** TODO Fix bug with constants in function calls being inserted multiple times
 ** TODO Support class instance initializers
 ** TODO Expand type checking
 *** refactor for type promotion (=typeinfo_compatible(a, b)=)
