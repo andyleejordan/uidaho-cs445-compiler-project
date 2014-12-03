@@ -1474,6 +1474,7 @@ static void handle_function(struct typeinfo *t, struct tree *n, char *k)
  */
 static void handle_param(struct typeinfo *v, struct tree *t, struct hasht *s, struct list *l)
 {
+	log_assert(t);
 	char *k = get_identifier(t);
 
 	if (tree_size(t) > 3) { /* not a simple type */
@@ -1485,25 +1486,22 @@ static void handle_param(struct typeinfo *v, struct tree *t, struct hasht *s, st
 			v = typeinfo_new_array(t_, v);
 	}
 
-	/* assign place when defined */
-	if (t && s && v) {
-		/* assign region and offset */
-		struct node *n = t->data;
-		n->place.region = region;
-		n->place.offset = offset;
-
-		log_symbol(k, v);
-
-		offset += typeinfo_size(v);
-	}
-
 	/* insert into list when declaring */
 	if (l && v)
 		list_push_back(l, v);
 
 	/* insert into table when defining */
-	if (s && k && v)
+	if (s && k && v) {
+		/* assign region and offset */
+		struct node *n = t->data;
+		v->place.region = n->place.region = region;
+		v->place.offset = n->place.offset = offset;
+
 		hasht_insert(s, k, v);
+		log_symbol(k, v);
+
+		offset += typeinfo_size(v);
+	}
 }
 
 /*
