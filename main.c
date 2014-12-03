@@ -21,6 +21,7 @@
 #include "lexer.h"
 #include "symbol.h"
 #include "node.h"
+#include "intermediate.h"
 
 #include "list.h"
 #include "tree.h"
@@ -167,6 +168,8 @@ void parse_program(char *filename)
 	type_check(yyprogram);
 
 	/* generating intermediate code */
+	struct list *code = code_generate(yyprogram);
+	print_code(stderr, code);
 
 	/* clean up */
 	log_debug("cleaning up");

@@ -73,6 +73,17 @@ int main(int argc, char *argv[])
 	bool myfalse = false;
 	lots_o_types(false, 2);
 
+	if (myfalse)
+		myfalse = true;
+
+	if (!myfalse) {
+		myfalse = false;
+	} else if (two != 2) {
+		two = 2;
+	} else {
+		tick = '`';
+	}
+
 	delete myclass;
 
 	return 0;

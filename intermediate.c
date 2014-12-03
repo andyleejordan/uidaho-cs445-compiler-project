@@ -9,17 +9,18 @@
 
 #include <stdlib.h>
 #include <stddef.h>
+#include <stdio.h>
 
 #include "intermediate.h"
+#include "symbol.h"
 #include "logger.h"
 #include "node.h"
 #include "list.h"
 #include "tree.h"
 
-extern struct tree *yyprogram;
+extern enum region region;
+extern size_t offset;
 
-static void handle_node(struct tree *t, int d);
-static struct op *op_new(enum opcode code, const char *name,
 extern struct typeinfo int_type;
 extern struct typeinfo double_type;
 extern struct typeinfo char_type;
@@ -28,38 +29,91 @@ extern struct typeinfo bool_type;
 extern struct typeinfo void_type;
 extern struct typeinfo class_type;
 extern struct typeinfo unknown_type;
+
+static struct op *op_new(enum opcode code, char *name,
                          struct address a, struct address b, struct address c);
 static void push_op(struct node *n, struct op *op);
+static struct op *label_new();
+static struct address temp_new(struct typeinfo *t);
+static struct list *get_code(struct tree *t, int i);
+static struct address get_place(struct tree *t, int i);
+static struct address get_label(struct op *op);
 
-void code_generate()
-{
-	tree_traverse(yyprogram, 0, NULL, NULL, &handle_node);
-}
+struct address empty;
 
-static void handle_node(struct tree *t, int d)
+
+struct list *code_generate(struct tree *t)
 {
 	struct node *n = t->data;
-	switch(get_rule(t)) {
-	case COMPOUND_STATEMENT:
-		n->code = list_concat(n->code, get_node(t, 1)->code);
-		break;
-	case STATEMENT_SEQ1:
-		n->code = list_concat(n->code, get_node(t, 0)->code);
-		break;
-	case STATEMENT_SEQ2:
-		n->code = list_concat(get_node(t, 0)->code, get_node(t, 1)->code);
-		n->code = list_concat(n->code, get_node(t, 0)->code);
-		break;
-	default:
+	/** pre-order **/
+	/* TODO: manage scopes and memory regions */
+	/* function invocation; public class member/function access; private
+	   class member/function access when inside n-1 */
+
+	/* recurse through children */
+	struct list_node *iter = list_head(t->children);
+	while (!list_end(iter)) {
+		code_generate(iter->data);
+		iter = iter->next;
+	}
+
+	/** post-order **/
+	switch(n->rule) {
+	case TOKEN: {
+		log_assert(n->token);
+		return NULL;
+	}
+	case INITIALIZER: {
+		/* ASN(left, right, empty) */
 		break;
 	}
+	case SELECT1: { /* IF */
+		struct address temp = temp_new(&bool_type);
+		struct op *first = label_new();
+		struct op *follow = label_new();
+		push_op(n, op_new(ASN, NULL, temp, get_place(t, 1), empty));
+		push_op(n, op_new(BIF, NULL, temp, get_label(first), empty));
+		/* TODO: backpatch this follow with parent's follow */
+		push_op(n, op_new(GOTO, NULL, get_label(follow), empty, empty));
+		break;
+	}
+	case SELECT2: { /* IF-ELSE chains */
+		/* ASN(temp, condition) -> BIF(temp, first) -> GOTO(follow) ->
+		   LABEL(first) -> get_code(n, 2) ->
+		   LABEL(FOLLOW) -> get_code(n, 4) */
+		struct address temp = temp_new(&bool_type);
+		struct op *first = label_new();
+		struct op *follow = label_new();
+		push_op(n, op_new(ASN, NULL, temp, get_place(t, 1), empty));
+		push_op(n, op_new(BIF, NULL, temp, get_label(first), empty));
+		push_op(n, op_new(GOTO, NULL, get_label(follow), empty, empty));
+		push_op(n, first);
+		list_concat(n->code, get_code(t, 2));
+		push_op(n, follow);
+		list_concat(n->code, get_code(t, 4));
+		break;
+	}
+	default: {
+		/* concatenate all children code */
+		iter = list_head(t->children);
+		while (!list_end(iter)) {
+			struct node *child = iter->data;
+			/* noop for NULL code */
+			n->code = list_concat(n->code, child->code);
+			iter = iter->next;
+		}
+		break;
+	}
+	}
+	return n->code;
 }
 
-static struct op *op_new(enum opcode code, const char *name,
-                         struct address a, struct address b, struct address c);
+static struct op *op_new(enum opcode code, char *name,
+                         struct address a, struct address b, struct address c)
 {
 	struct op *op = malloc(sizeof(*op));
-	log_assert(op);
+	if (op == NULL)
+		log_error("op_new(): could not malloc op");
 
 	op->code = code;
 	op->name = name;
@@ -76,4 +130,102 @@ static void push_op(struct node *n, struct op *op)
 		n->code = list_new(NULL, NULL);
 	log_assert(n->code);
 	list_push_back(n->code, op);
+}
+
+/*
+ * Return a new op with the LABEL pseudo code.
+ *
+ * Keeps track of the number of labels created. Labels are 0 indexed
+ * in address region LABEL_R.
+ */
+static struct op *label_new()
+{
+	static size_t labels = 0;
+	struct address place = { LABEL_R, labels };
+	++labels;
+	return op_new(LABEL, NULL, place, empty, empty);
+}
+
+/*
+ * Given a type for size reference, return an address for a temporary
+ * of the size of that type (incrementing the global offset).
+ */
+static struct address temp_new(struct typeinfo *t)
+{
+	struct address place = { region, offset };
+	offset += typeinfo_size(t);
+	return place;
+}
+
+static struct list *get_code(struct tree *t, int i)
+{
+	struct node *n = get_node(t, i);
+	if (n)
+		return n->code;
+	else
+		return NULL;
+}
+
+static struct address get_place(struct tree *t, int i)
+{
+	struct node *n = get_node(t, i);
+	if (n)
+		return n->place;
+	else
+		return empty;
+}
+
+static struct address get_label(struct op *op)
+{
+	log_assert(op->code == LABEL);
+	return op->address[0];
+}
+
+#define R(rule) case rule: return #rule
+static char *print_opcode(enum opcode code)
+{
+	switch (code) {
+		R(GLOBAL);
+		R(PROC);
+		R(LOCAL);
+		R(LABEL);
+		R(ADD);
+		R(SUB);
+		R(MUL);
+		R(DIV);
+		R(NEG);
+		R(ASN);
+		R(ADDR);
+		R(LCONT);
+		R(SCONT);
+		R(GOTO);
+		R(BLT);
+		R(BLE);
+		R(BGT);
+		R(BGE);
+		R(BEQ);
+		R(BNE);
+		R(BIF);
+		R(BNIF);
+		R(PARM);
+		R(CALL);
+		R(RET);
+	}
+	return NULL;
+}
+#undef R
+
+static void print_op(FILE *stream, struct op *op)
+{
+	fprintf(stream, "%s\n", print_opcode(op->code));
+}
+
+void print_code(FILE *stream, struct list *code)
+{
+	struct list_node *iter = list_head(code);
+	while (!list_end(iter)) {
+		if (iter->data)
+			print_op(stream, iter->data);
+		iter = iter->next;
+	}
 }

@@ -10,6 +10,8 @@
 #ifndef INTERMEDIATE_H
 #define INTERMEDIATE_H
 
+#include <stdio.h>
+
 #include "node.h"
 
 enum opcode {
@@ -48,6 +50,7 @@ struct op {
 	struct address address[3];
 };
 
-void code_generate();
+struct list *code_generate(struct tree *t);
+void print_code(FILE *stream, struct list *code);
 
 #endif /* INTERMEDIATE_H */
