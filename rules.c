@@ -137,6 +137,7 @@ char *print_rule(enum rule r)
 		R(MEM_INIT);
 		R(MEM_INIT_ID1);
 		R(MEM_INIT_ID3);
+		R(TOKEN);
 	default:
 		return "Rule not found";
 	}

@@ -31,20 +31,17 @@ char *print_region(enum region r);
 
 struct address {
 	enum region region;
-	union {
-		size_t offset;
-		size_t size;
-	};
+	size_t offset;
 };
 
 struct node {
-	int rule;
+	enum rule rule;
 	struct address place;
 	struct list *code;
 	struct token *token;
 };
 
-struct node *node_new(int r);
+struct node *node_new(enum rule r);
 struct node *get_node(struct tree *t, size_t i);
 enum rule get_rule(struct tree *t);
 struct token *get_token(struct node *n);

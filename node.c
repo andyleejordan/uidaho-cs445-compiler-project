@@ -43,7 +43,7 @@ char *print_region(enum region r)
  *
  * TODO: add first/follow/true/false attributes
  */
-struct node *node_new(int r)
+struct node *node_new(enum rule r)
 {
 	struct node *n = malloc(sizeof(*n));
 	if (n == NULL)

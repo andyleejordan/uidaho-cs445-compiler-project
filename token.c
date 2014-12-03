@@ -20,7 +20,7 @@ static const int TEXT_CHUNK_SIZE = 128;
 
 static size_t token_sval_size;
 
-static char *print_category(enum yytokentype t);
+static char *print_category(int t);
 static void token_realloc_sval(struct token *t);
 static void token_realloc_text(struct token *t, const char *s);
 
@@ -29,7 +29,8 @@ struct token *token_new(int category, int lineno,
                         const char *text, const char* filename)
 {
 	struct token *t = malloc(sizeof(*t));
-	log_assert(t);
+	if (t == NULL)
+		log_error("token_new(): could not malloc token");
 
 	t->category = category;
 	t->lineno = lineno;
@@ -173,7 +174,7 @@ static void token_realloc_text(struct token *t, const char *s)
 
 
 #define R(rule) case rule: return #rule
-static char *print_category(enum yytokentype t)
+static char *print_category(int t)
 {
 	switch(t) {
 		R(IDENTIFIER);

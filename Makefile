@@ -73,7 +73,8 @@ lexer.h: lex.yy.c
 lex.yy.c: lexer.l
 	$(FLEX) $(FLEXFLAGS) $<
 
-lexer.l: args.h node.h logger.h token.h libs.h parser.tab.h list.h tree.h hasht.h
+lexer.l: args.h node.h logger.h token.h libs.h parser.tab.h rules.h \
+	list.h tree.h hasht.h
 
 parser.tab.h parser.tab.c: parser.y
 	$(BISON) $(BISONFLAGS) $<

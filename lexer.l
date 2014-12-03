@@ -32,13 +32,14 @@ IS       (u|U|l|L)*
 #include "token.h"
 #include "libs.h"
 #include "parser.tab.h"
+#include "rules.h"
 
 #include "list.h"
 #include "tree.h"
 #include "hasht.h"
 
 /* syntactic action helpers */
-#define TOKEN(name) do { prepare_token(name); return name; } while(0)
+#define T(name) do { prepare_token(name); return name; } while(0)
 #define YYAPPENDTEXT() token_push_text(yytoken, yytext)
 #define YYAPPENDCHAR(character) token_push_sval_char(yytoken, character)
 
@@ -107,37 +108,37 @@ static int check_identifier(const char *s);
 "using namespace std;"  { libs.usingstd = true; }
 
   /* keywords */
-"bool"                  { TOKEN(BOOL); }
-"break"                 { TOKEN(BREAK); }
-"case"                  { TOKEN(CASE); }
-"char"                  { TOKEN(CHAR); }
-"class"                 { TOKEN(CLASS); }
-"continue"              { TOKEN(CONTINUE); }
-"default"               { TOKEN(DEFAULT); }
-"delete"                { TOKEN(DELETE); }
-"do"                    { TOKEN(DO); }
-"double"                { TOKEN(DOUBLE); }
-"else"                  { TOKEN(ELSE); }
-"false"                 { TOKEN(FALSE); }
-"float"                 { TOKEN(FLOAT); }
-"for"                   { TOKEN(FOR); }
-"if"                    { TOKEN(IF); }
-"int"                   { TOKEN(INT); }
-"long"                  { TOKEN(LONG); }
-"new"                   { TOKEN(NEW); }
-"private"               { TOKEN(PRIVATE); }
-"protected"             { TOKEN(PROTECTED); }
-"public"                { TOKEN(PUBLIC); }
-"return"                { TOKEN(RETURN); }
-"short"                 { TOKEN(SHORT); }
-"signed"                { TOKEN(SIGNED); }
-"sizeof"                { TOKEN(SIZEOF); }
-"struct"                { TOKEN(STRUCT); }
-"switch"                { TOKEN(SWITCH); }
-"true"                  { TOKEN(TRUE); }
-"unsigned"              { TOKEN(UNSIGNED); }
-"void"                  { TOKEN(VOID); }
-"while"                 { TOKEN(WHILE); }
+"bool"                  { T(BOOL); }
+"break"                 { T(BREAK); }
+"case"                  { T(CASE); }
+"char"                  { T(CHAR); }
+"class"                 { T(CLASS); }
+"continue"              { T(CONTINUE); }
+"default"               { T(DEFAULT); }
+"delete"                { T(DELETE); }
+"do"                    { T(DO); }
+"double"                { T(DOUBLE); }
+"else"                  { T(ELSE); }
+"false"                 { T(FALSE); }
+"float"                 { T(FLOAT); }
+"for"                   { T(FOR); }
+"if"                    { T(IF); }
+"int"                   { T(INT); }
+"long"                  { T(LONG); }
+"new"                   { T(NEW); }
+"private"               { T(PRIVATE); }
+"protected"             { T(PROTECTED); }
+"public"                { T(PUBLIC); }
+"return"                { T(RETURN); }
+"short"                 { T(SHORT); }
+"signed"                { T(SIGNED); }
+"sizeof"                { T(SIZEOF); }
+"struct"                { T(STRUCT); }
+"switch"                { T(SWITCH); }
+"true"                  { T(TRUE); }
+"unsigned"              { T(UNSIGNED); }
+"void"                  { T(VOID); }
+"while"                 { T(WHILE); }
 
   /* unsupported keywords */
 "const"                 { /* const qualifier is discarded */ }
@@ -158,10 +159,10 @@ static int check_identifier(const char *s);
 "volatile"              { log_unsupported(); }
 
   /* integer and floating constants */
-{D}+{IS}?               { TOKEN(INTEGER); }
-{D}+{FS}?               { TOKEN(FLOATING); }
-{D}*"."{D}+{FS}?        { TOKEN(FLOATING); }
-{D}+"."{D}*{FS}?        { TOKEN(FLOATING); }
+{D}+{IS}?               { T(INTEGER); }
+{D}+{FS}?               { T(FLOATING); }
+{D}*"."{D}+{FS}?        { T(FLOATING); }
+{D}+"."{D}*{FS}?        { T(FLOATING); }
 
   /* character literal */
 \'                      { prepare_token(CHARACTER); BEGIN(CHR); }
@@ -220,53 +221,53 @@ static int check_identifier(const char *s);
 }
 
   /* operators */
-">>="                   { TOKEN(SREQ); }
-"<<="                   { TOKEN(SLEQ); }
-"+="                    { TOKEN(ADDEQ); }
-"-="                    { TOKEN(SUBEQ); }
-"*="                    { TOKEN(MULEQ); }
-"/="                    { TOKEN(DIVEQ); }
-"%="                    { TOKEN(MODEQ); }
-"&="                    { TOKEN(ANDEQ); }
-"^="                    { TOKEN(XOREQ); }
-"|="                    { TOKEN(OREQ); }
-">>"                    { TOKEN(SR); }
-"<<"                    { TOKEN(SL); }
-"++"                    { TOKEN(PLUSPLUS); }
-"--"                    { TOKEN(MINUSMINUS); }
-"->"                    { TOKEN(ARROW); }
-"->*"                   { TOKEN(ARROWSTAR); }
-"&&"                    { TOKEN(ANDAND); }
-"||"                    { TOKEN(OROR); }
-"<="                    { TOKEN(LTEQ); }
-">="                    { TOKEN(GTEQ); }
-"=="                    { TOKEN(EQ); }
-"!="                    { TOKEN(NOTEQ); }
-";"                     { TOKEN(';'); }
-"{"                     { TOKEN('{'); }
-"}"                     { TOKEN('}'); }
-","                     { TOKEN(','); }
-"::"                    { TOKEN(COLONCOLON); }
-":"                     { TOKEN(':'); }
-"="                     { TOKEN('='); }
-"("                     { TOKEN('('); }
-")"                     { TOKEN(')'); }
-"["                     { TOKEN('['); }
-"]"                     { TOKEN(']'); }
-"."                     { TOKEN('.'); }
-"&"                     { TOKEN('&'); }
-"!"                     { TOKEN('!'); }
-"~"                     { TOKEN('~'); }
-"-"                     { TOKEN('-'); }
-"+"                     { TOKEN('+'); }
-"*"                     { TOKEN('*'); }
-"/"                     { TOKEN('/'); }
-"%"                     { TOKEN('%'); }
-"<"                     { TOKEN('<'); }
-">"                     { TOKEN('>'); }
-"^"                     { TOKEN('^'); }
-"|"                     { TOKEN('|'); }
-"?"                     { TOKEN('?'); }
+">>="                   { T(SREQ); }
+"<<="                   { T(SLEQ); }
+"+="                    { T(ADDEQ); }
+"-="                    { T(SUBEQ); }
+"*="                    { T(MULEQ); }
+"/="                    { T(DIVEQ); }
+"%="                    { T(MODEQ); }
+"&="                    { T(ANDEQ); }
+"^="                    { T(XOREQ); }
+"|="                    { T(OREQ); }
+">>"                    { T(SR); }
+"<<"                    { T(SL); }
+"++"                    { T(PLUSPLUS); }
+"--"                    { T(MINUSMINUS); }
+"->"                    { T(ARROW); }
+"->*"                   { T(ARROWSTAR); }
+"&&"                    { T(ANDAND); }
+"||"                    { T(OROR); }
+"<="                    { T(LTEQ); }
+">="                    { T(GTEQ); }
+"=="                    { T(EQ); }
+"!="                    { T(NOTEQ); }
+";"                     { T(';'); }
+"{"                     { T('{'); }
+"}"                     { T('}'); }
+","                     { T(','); }
+"::"                    { T(COLONCOLON); }
+":"                     { T(':'); }
+"="                     { T('='); }
+"("                     { T('('); }
+")"                     { T(')'); }
+"["                     { T('['); }
+"]"                     { T(']'); }
+"."                     { T('.'); }
+"&"                     { T('&'); }
+"!"                     { T('!'); }
+"~"                     { T('~'); }
+"-"                     { T('-'); }
+"+"                     { T('+'); }
+"*"                     { T('*'); }
+"/"                     { T('/'); }
+"%"                     { T('%'); }
+"<"                     { T('<'); }
+">"                     { T('>'); }
+"^"                     { T('^'); }
+"|"                     { T('|'); }
+"?"                     { T('?'); }
 
   /* identifer */
 {L}({L}|{D})*           { return check_identifier(yytext); }
@@ -293,7 +294,7 @@ void prepare_token(int category)
 {
 	yytoken = token_new(category, yylineno, yytext,
                             (const char *)list_back(yyfiles));
-	struct node *n = node_new(0);
+	struct node *n = node_new(TOKEN);
 	n->token = yytoken;
 	yylval.t = tree_new(NULL, n, NULL,
 	                    (void (*)(void *, bool))&delete_tree);
@@ -470,11 +471,11 @@ static int check_identifier(const char *s)
 {
 	int *c = hasht_search(yytypes, (void *)s);
 	if (c)
-		TOKEN(*c);
+		T(*c);
 	else
-		TOKEN(IDENTIFIER);
+		T(IDENTIFIER);
 }
 
-#undef TOKEN
+#undef T
 #undef YYAPPENDTEXT
 #undef YYAPPENDCHAR

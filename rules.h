@@ -131,7 +131,8 @@ enum rule {
 	MEM_INIT_LIST2,
 	MEM_INIT,
 	MEM_INIT_ID1,
-	MEM_INIT_ID3
+	MEM_INIT_ID3,
+	TOKEN
 };
 
 char *print_rule(enum rule r);
