@@ -18,13 +18,13 @@ struct tree;
 
 /* TODO: narrow these down */
 enum region {
-        GLOBAL_R,
-        LOCAL_R,
-        PARAM_R,
-        CLASS_R,
-        LABEL_R,
-        CONST_R,
-        UNKNOWN_R
+	GLOBAL_R,
+	LOCAL_R,
+	PARAM_R,
+	CLASS_R,
+	LABEL_R,
+	CONST_R,
+	UNKNOWN_R
 };
 
 char *print_region(enum region r);
