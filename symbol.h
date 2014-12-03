@@ -62,6 +62,7 @@ struct typeinfo {
 	};
 };
 
+size_t typeinfo_size(struct typeinfo *t);
 void print_typeinfo(FILE *stream, const char *k, struct typeinfo *v);
 
 #endif /* SYMBOL_H */

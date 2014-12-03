@@ -62,7 +62,6 @@ static struct typeinfo *typeinfo_new_array(struct tree *n, struct typeinfo *t);
 static struct typeinfo *typeinfo_new_function(struct tree *n, struct typeinfo *t, bool define);
 static struct typeinfo *typeinfo_copy(struct typeinfo *t);
 static struct typeinfo *typeinfo_return(struct typeinfo *t);
-static size_t typeinfo_size(struct typeinfo *t);
 static size_t scope_size(struct hasht *t);
 static void typeinfo_delete(struct typeinfo *t);
 static bool typeinfo_compare(struct typeinfo *a, struct typeinfo *b);
@@ -488,7 +487,7 @@ static struct typeinfo *typeinfo_return(struct typeinfo *t)
 /*
  * Returns calculated size for type. Assuming 64-bit.
  */
-static size_t typeinfo_size(struct typeinfo *t)
+size_t typeinfo_size(struct typeinfo *t)
 {
 	if (t->pointer)
 		return 8;
