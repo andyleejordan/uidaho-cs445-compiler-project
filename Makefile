@@ -36,14 +36,14 @@ TEST_DATA = data/pass/test.cpp
 # targets
 .PHONY: all test smoke dist clean distclean
 
-all: $(BIN) test
+all: $(BIN)
 
 test: $(TESTS)
 	./test-list
 	./test-tree
 	./test-hasht
 
-smoke: all
+smoke: test all
 	./$(BIN) $(TEST_DATA)
 
 TAGS: $(SRCS)
