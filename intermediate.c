@@ -20,6 +20,14 @@ extern struct tree *yyprogram;
 
 static void handle_node(struct tree *t, int d);
 static struct op *op_new(enum opcode code, const char *name,
+extern struct typeinfo int_type;
+extern struct typeinfo double_type;
+extern struct typeinfo char_type;
+extern struct typeinfo string_type;
+extern struct typeinfo bool_type;
+extern struct typeinfo void_type;
+extern struct typeinfo class_type;
+extern struct typeinfo unknown_type;
                          struct address a, struct address b, struct address c);
 static void push_op(struct node *n, struct op *op);
 

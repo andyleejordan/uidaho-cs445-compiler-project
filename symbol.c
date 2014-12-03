@@ -76,14 +76,14 @@ static void handle_param_list(struct tree *n, struct hasht *s, struct list *l);
 static void handle_class(struct typeinfo *t, struct tree *n);
 
 /* basic type comparators */
-static struct typeinfo int_type;
-static struct typeinfo double_type;
-static struct typeinfo char_type;
-static struct typeinfo string_type;
-static struct typeinfo bool_type;
-static struct typeinfo void_type;
-static struct typeinfo class_type;
-static struct typeinfo unknown_type;
+struct typeinfo int_type;
+struct typeinfo double_type;
+struct typeinfo char_type;
+struct typeinfo string_type;
+struct typeinfo bool_type;
+struct typeinfo void_type;
+struct typeinfo class_type;
+struct typeinfo unknown_type;
 
 /*
  * Initialize comparator types
