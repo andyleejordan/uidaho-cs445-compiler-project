@@ -281,16 +281,29 @@ static struct token *get_category_(struct tree *t, int target, int before)
 
 /*
  * Returns identifier if found, else null.
- *
- * TODO: refactor to return token->text for literals.
  */
 char *get_identifier(struct tree *n)
 {
-	struct token *token = get_category(n, IDENTIFIER, -1);
-	if (token)
-		return token->text;
-	else
-		return NULL;
+	enum yytokentype types[] = {
+		IDENTIFIER,
+		CHAR,
+		BOOL,
+		SHORT,
+		INT,
+		LONG,
+		SIGNED,
+		UNSIGNED,
+		FLOAT,
+		DOUBLE,
+	};
+
+	for (int i = 0; i < sizeof(types) / sizeof(types[0]); ++i) {
+		struct token *t = get_category(n, IDENTIFIER, -1);
+		if (t)
+			return t->text;
+	}
+
+	return NULL;
 }
 
 /*
