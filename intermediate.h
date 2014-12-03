@@ -13,6 +13,11 @@
 #include "node.h"
 
 enum opcode {
+	/* pseudo opcodes */
+	GLOBAL, /* name, address 1 offset, address 2 size */
+	LABEL,  /* name, address 1 label */
+	PROC,   /* name, */
+	/* actual opcodes */
 	ADD,    /* x := y op z  store result of binary operation on y and z to x */
 	SUB,
 	MUL,
@@ -38,6 +43,7 @@ enum opcode {
 
 struct op {
 	enum opcode code;
+	char *name;
 	struct address address[3];
 };
 

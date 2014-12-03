@@ -19,7 +19,7 @@
 extern struct tree *yyprogram;
 
 static void handle_node(struct tree *t, int d);
-static struct op *op_new(enum opcode code,
+static struct op *op_new(enum opcode code, const char *name,
                          struct address a, struct address b, struct address c);
 static void push_op(struct node *n, struct op *op);
 
@@ -47,16 +47,18 @@ static void handle_node(struct tree *t, int d)
 	}
 }
 
-static struct op *op_new(enum opcode code,
-                         struct address a, struct address b, struct address c)
+static struct op *op_new(enum opcode code, const char *name,
+                         struct address a, struct address b, struct address c);
 {
 	struct op *op = malloc(sizeof(*op));
-	if (op == NULL)
-		log_error("");
+	log_assert(op);
+
 	op->code = code;
+	op->name = name;
 	op->address[0] = a;
 	op->address[1] = b;
 	op->address[2] = c;
+
 	return op;
 }
 

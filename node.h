@@ -30,8 +30,11 @@ enum region {
 char *print_region(enum region r);
 
 struct address {
-        enum region region;
-        size_t offset;
+	enum region region;
+	union {
+		size_t offset;
+		size_t size;
+	};
 };
 
 struct node {
