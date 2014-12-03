@@ -41,7 +41,7 @@ static enum type map_type(enum yytokentype t);
 static void set_type_comparators();
 static char *print_basetype(struct typeinfo *t);
 
-static void symbol_insert(char *k, struct typeinfo *v, struct tree *n, struct hasht *l);
+static void symbol_insert(char *k, struct typeinfo *v, struct tree *t, struct hasht *l);
 
 static struct tree *get_production(struct tree *n, enum rule r);
 static struct token *get_category(struct tree *n, int target, int before);

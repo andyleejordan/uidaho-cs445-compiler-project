@@ -54,6 +54,8 @@ int main(int argc, char *argv[])
 
 	// the /* c */ is a char
 	char c = 'C';
+	char c_ = 'C';
+	int two = 2;
 	char newline = '\n';
 	char backslash = '\\';
 	char tick = '\'';
@@ -68,6 +70,7 @@ int main(int argc, char *argv[])
 		break;
 	}
 
+	bool myfalse = false;
 	lots_o_types(false, 2);
 
 	delete myclass;
