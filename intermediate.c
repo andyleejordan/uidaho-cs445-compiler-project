@@ -130,17 +130,21 @@ void code_generate(struct tree *t)
 			push_op(n, op_new(PARAM, NULL, get_place(iter->data, -1), e, e));
 			iter = iter->next;
 		}
-		return;
+		goto done;
 	}
 	case SELECT1: { /* IF */
 		struct address temp = temp_new(&bool_type);
 		struct op *first = label_new();
 		struct op *follow = label_new();
+		append_code(1);
 		push_op(n, op_new(ASN, NULL, temp, get_place(t, 1), e));
 		push_op(n, op_new(BIF, NULL, temp, get_label(first), e));
 		/* TODO: backpatch this follow with parent's follow */
 		push_op(n, op_new(GOTO, NULL, get_label(follow), e, e));
-		break;
+		push_op(n, first);
+		append_code(2);
+		push_op(n, follow);
+		goto done;
 	}
 	case SELECT2: { /* IF-ELSE chains */
 		/* ASN(temp, condition) -> BIF(temp, first) -> GOTO(follow) ->
@@ -149,47 +153,60 @@ void code_generate(struct tree *t)
 		struct address temp = temp_new(&bool_type);
 		struct op *first = label_new();
 		struct op *follow = label_new();
+		append_code(1);
 		push_op(n, op_new(ASN, NULL, temp, get_place(t, 1), e));
 		push_op(n, op_new(BIF, NULL, temp, get_label(first), e));
 		push_op(n, op_new(GOTO, NULL, get_label(follow), e, e));
 		push_op(n, first);
-		list_concat(n->code, get_code(t, 2));
+		append_code(2);
 		push_op(n, follow);
-		list_concat(n->code, get_code(t, 4));
-		break;
+		append_code(4);
+		goto done;
 	}
+	case REL_EXPR2:
+	case REL_EXPR3:
+	case REL_EXPR4:
+	case REL_EXPR5:
+	case EQUAL_EXPR3:
 	case EQUAL_EXPR2: {
 		/* TODO: handle short circuiting */
 		n->place = temp_new(&bool_type);
 		struct address l = get_place(t, 0);
+		append_code(0);
 		struct address r = get_place(t, 2);
-		push_op(n, op_new(BEQ, NULL, n->place, l, r));
-		break;
+		append_code(2);
+		push_op(n, op_new(map_code(n->rule), NULL, n->place, l, r));
+		goto done;
 	}
-	case ADD_EXPR2: {
-		n->place = temp_new(&int_type);
-		struct address l = get_place(t, 0);
-		struct address r = get_place(t, 2);
-		push_op(n, op_new(ADD, NULL, n->place, l, r));
-		break;
-	}
+	case ADD_EXPR2:
 	case ADD_EXPR3: {
 		n->place = temp_new(&int_type);
 		struct address l = get_place(t, 0);
+		append_code(0);
 		struct address r = get_place(t, 2);
-		push_op(n, op_new(SUB, NULL, n->place, l, r));
-		break;	}
+		append_code(2);
+		push_op(n, op_new(map_code(n->rule), NULL, n->place, l, r));
+		goto done;
+	}
 	case RETURN_STATEMENT: {
 		struct node *ret = get_node(t, 1);
 		if (ret == NULL)
 			break;
 		n->place = ret->place;
 		push_op(n, op_new(RET, NULL, n->place, e, e));
-		break;
+		append_code(1);
+		goto done;
 	}
-	default: {
-		break;
+	case FUNCTION_DEF2: {
+		/* TODO: get procedure parameter and local sizes */
+		push_op(n, label_new());
+		push_op(n, op_new(PROC, get_identifier(t), e, e, e));
+		append_code(2);
+		push_op(n, op_new(END, NULL, e, e, e));
+		goto done;
 	}
+	default:
+		break;
 	}
 	/* concatenate all children code to build list */
 	iter = list_head(t->children);
@@ -200,6 +217,7 @@ void code_generate(struct tree *t)
 		n->code = list_concat(n->code, n_->code);
 		iter = iter->next;
 	}
+ done:
 	if (scoped) {
 		while (list_size(yyscopes) != scopes) {
 			log_debug("popping scope");
