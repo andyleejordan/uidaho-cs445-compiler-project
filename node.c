@@ -60,12 +60,15 @@ struct node *node_new(enum rule r)
 
 /*
  * Given a tree and position, returns subtree's node.
+ *
+ * Returns NULL if child tree not found.
  */
 struct node *get_node(struct tree *t, size_t i)
 {
 	log_assert(t);
 	struct tree *tree = tree_index(t, i);
-	log_assert(tree);
+	if (tree == NULL)
+		return NULL;
 	struct node *node = tree->data;
 	log_assert(node);
 	return node;
