@@ -20,6 +20,7 @@ enum opcode {
 	PROC,   /* name, address in GLOBAL_R */
 	LOCAL,  /* name, address in LOCAL_R */
 	LABEL,  /* name (optional), address in LABEL_R */
+	END,    /* declares end of current procedure */
 	/* actual opcodes */
 	ADD,    /* x := y op z  store result of binary operation on y and z to x */
 	SUB,
@@ -41,7 +42,8 @@ enum opcode {
 	BNIF,   /* if !x then goto L  unary negative conditional jump to L */
 	PARAM,  /* param x        store x as a parameter */
 	CALL,   /* call p, x, n   call procedure p with n parameters, store result in x */
-	RET     /* return x       return from procedure, use x as the result */
+	RET,    /* return x       return from procedure, use x as the result */
+	ERRC,
 };
 
 struct op {

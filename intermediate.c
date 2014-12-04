@@ -33,6 +33,7 @@ extern struct typeinfo void_type;
 extern struct typeinfo class_type;
 extern struct typeinfo unknown_type;
 
+static enum opcode map_code(enum rule r);
 static struct op *op_new(enum opcode code, char *name,
                          struct address a, struct address b, struct address c);
 static void push_op(struct node *n, struct op *op);
@@ -199,6 +200,27 @@ void code_generate(struct tree *t)
 	while (scoped && list_size(yyscopes) != scopes) {
 		log_debug("popping scope");
 		scope_pop();
+static enum opcode map_code(enum rule r)
+{
+	switch (r) {
+	case REL_EXPR2:   /* < */
+		return BLT;
+	case REL_EXPR3:   /* > */
+		return BGT;
+	case REL_EXPR4:   /* <= */
+		return BLE;
+	case REL_EXPR5:   /* >= */
+		return BGE;
+	case EQUAL_EXPR2: /* == */
+		return BEQ;
+	case EQUAL_EXPR3: /* != */
+		return BNE;
+	case ADD_EXPR2:
+		return ADD;
+	case ADD_EXPR3:
+		return SUB;
+	default:
+		return ERRC;
 	}
 }
 
@@ -294,6 +316,7 @@ static char *print_opcode(enum opcode code)
 		R(PROC);
 		R(LOCAL);
 		R(LABEL);
+		R(END);
 		R(ADD);
 		R(SUB);
 		R(MUL);
@@ -315,6 +338,7 @@ static char *print_opcode(enum opcode code)
 		R(PARAM);
 		R(CALL);
 		R(RET);
+		R(ERRC);
 	}
 	return NULL;
 }
