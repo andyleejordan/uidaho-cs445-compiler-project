@@ -121,8 +121,9 @@ void code_generate(struct tree *t)
 		char *k = get_identifier(t);
 		n->place = temp_new(scope_search(k));
 		/* TODO: count number of parameters */
+		append_code(1); /* parameters */
 		push_op(n, op_new(CALL, k, n->place, e, e));
-		break;
+		goto done;
 	}
 	case EXPR_LIST: {
 		iter = list_head(t->children);
@@ -136,13 +137,13 @@ void code_generate(struct tree *t)
 		struct address temp = temp_new(&bool_type);
 		struct op *first = label_new();
 		struct op *follow = label_new();
-		append_code(1);
+		append_code(1); /* condition */
 		push_op(n, op_new(ASN, NULL, temp, get_place(t, 1), e));
 		push_op(n, op_new(BIF, NULL, temp, get_label(first), e));
 		/* TODO: backpatch this follow with parent's follow */
 		push_op(n, op_new(GOTO, NULL, get_label(follow), e, e));
 		push_op(n, first);
-		append_code(2);
+		append_code(2); /* true */
 		push_op(n, follow);
 		goto done;
 	}
@@ -153,14 +154,14 @@ void code_generate(struct tree *t)
 		struct address temp = temp_new(&bool_type);
 		struct op *first = label_new();
 		struct op *follow = label_new();
-		append_code(1);
+		append_code(1); /* condition */
 		push_op(n, op_new(ASN, NULL, temp, get_place(t, 1), e));
 		push_op(n, op_new(BIF, NULL, temp, get_label(first), e));
 		push_op(n, op_new(GOTO, NULL, get_label(follow), e, e));
 		push_op(n, first);
-		append_code(2);
+		append_code(2); /* true */
 		push_op(n, follow);
-		append_code(4);
+		append_code(4); /* false */
 		goto done;
 	}
 	case REL_EXPR2:
@@ -172,9 +173,9 @@ void code_generate(struct tree *t)
 		/* TODO: handle short circuiting */
 		n->place = temp_new(&bool_type);
 		struct address l = get_place(t, 0);
-		append_code(0);
+		append_code(0); /* left */
 		struct address r = get_place(t, 2);
-		append_code(2);
+		append_code(2); /* right */
 		push_op(n, op_new(map_code(n->rule), NULL, n->place, l, r));
 		goto done;
 	}
@@ -182,9 +183,9 @@ void code_generate(struct tree *t)
 	case ADD_EXPR3: {
 		n->place = temp_new(&int_type);
 		struct address l = get_place(t, 0);
-		append_code(0);
+		append_code(0); /* left */
 		struct address r = get_place(t, 2);
-		append_code(2);
+		append_code(2); /* right */
 		push_op(n, op_new(map_code(n->rule), NULL, n->place, l, r));
 		goto done;
 	}
