@@ -49,11 +49,13 @@ void code_generate(struct tree *t)
 {
 	struct node *n = t->data;
 	/** pre-order **/
-	/* TODO: manage scopes and memory regions */
 	/* function invocation; public class member/function access; private
 	   class member/function access when inside n-1 */
 	size_t scopes = list_size(yyscopes);
 	bool scoped = false;
+	enum region region_;
+	size_t offset_;
+
 	switch (n->rule) {
 	case FUNCTION_DEF1:
 	case FUNCTION_DEF2: {
@@ -65,6 +67,12 @@ void code_generate(struct tree *t)
 		log_debug("pushing function %s scope", k);
 		scope_push(f->function.symbols);
 		log_assert(list_size(yyscopes) == scopes + 1);
+		/* manage memory regions */
+		region_ = region;
+		offset_ = offset;
+		region = LOCAL_R;
+		offset = scope_size(f->function.symbols);
+
 		break;
 	}
 	default: {
@@ -196,10 +204,18 @@ void code_generate(struct tree *t)
 		n->code = list_concat(n->code, n_->code);
 		iter = iter->next;
 	}
+	if (scoped) {
+		while (list_size(yyscopes) != scopes) {
+			log_debug("popping scope");
+			scope_pop();
+		}
 
-	while (scoped && list_size(yyscopes) != scopes) {
-		log_debug("popping scope");
-		scope_pop();
+		/* restore region and offset */
+		region = region_;
+		offset = offset_;
+	}
+}
+
 static enum opcode map_code(enum rule r)
 {
 	switch (r) {
