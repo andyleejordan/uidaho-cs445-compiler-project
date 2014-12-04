@@ -8,12 +8,14 @@
  */
 
 #include <stdlib.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
 
 #include "list.h"
 
-bool list_default_compare(void *a, void *b);
+static void list_debug(const char *format, ...);
+static bool list_default_compare(void *a, void *b);
 
 /*
  * Returns allocated list with uncounted sentinel element.
@@ -144,7 +146,7 @@ void *list_front(struct list *self)
 struct list_node *list_head(struct list *self)
 {
 	if (self == NULL) {
-		fprintf(stderr, "list_head(): self was null\n");
+		list_debug("list_head(): self was null");
 		return NULL;
 	}
 
@@ -157,7 +159,7 @@ struct list_node *list_head(struct list *self)
 struct list_node *list_tail(struct list *self)
 {
 	if (self == NULL) {
-		fprintf(stderr, "list_tail(): self was null\n");
+		list_debug("list_tail(): self was null");
 		return NULL;
 	}
 
@@ -198,7 +200,7 @@ struct list_node *list_index(struct list *self, int pos)
 size_t list_size(struct list *self)
 {
 	if (self == NULL) {
-		fprintf(stderr, "list_size(): self was null\n");
+		list_debug("list_size(): self was null");
 		return 0;
 	}
 
@@ -222,7 +224,7 @@ bool list_empty(struct list *self)
 bool list_end(struct list_node *n)
 {
 	if (n == NULL) {
-		fprintf(stderr, "list_end(): n was null\n");
+		list_debug("list_end(): n was null");
 		return false;
 	}
 
@@ -253,17 +255,17 @@ struct list *list_concat(struct list *a, struct list *b)
 		return b;
 
 	if (!a && !b) {
-		fprintf(stderr, "list_concat(): no list given\n");
+		list_debug("list_concat(): no list given");
 		return NULL;
 	}
 
 	if (a->compare != b->compare) {
-		fprintf(stderr, "list_concat(): compare functions unequal\n");
+		list_debug("list_concat(): compare functions unequal");
 		return NULL;
 	}
 
 	if (a->delete != b->delete) {
-		fprintf(stderr, "list_concat(): delete functions unequal\n");
+		list_debug("list_concat(): delete functions unequal");
 		return NULL;
 	}
 
@@ -302,7 +304,7 @@ void list_free(struct list *self)
 /*
  * Default comparison for list of strings.
  */
-bool list_default_compare(void *a, void *b)
+static bool list_default_compare(void *a, void *b)
 {
 	return (strcmp((char *)a, (char *)b) == 0);
 }
@@ -337,7 +339,7 @@ struct list_node *list_node_new(void *data)
 void list_node_link(struct list *self, struct list_node *b, struct list_node *c)
 {
 	if (self == NULL) {
-		fprintf(stderr, "list_node_link(): self was null\n");
+		list_debug("list_node_link(): self was null");
 		return;
 	}
 
@@ -358,7 +360,7 @@ void list_node_link(struct list *self, struct list_node *b, struct list_node *c)
 void *list_node_unlink(struct list *self, struct list_node *b)
 {
 	if (self == NULL) {
-		fprintf(stderr, "list_node_unlink(): self was null\n");
+		list_debug("list_node_unlink(): self was null");
 		return NULL;
 	}
 
@@ -377,4 +379,19 @@ void *list_node_unlink(struct list *self, struct list_node *b)
 	free(b);
 
 	return data;
+}
+
+static void list_debug(const char *format, ...)
+{
+	if (!LIST_DEBUG)
+		return;
+
+	va_list ap;
+	va_start(ap, format);
+
+	fprintf(stderr, "debug: ");
+	vfprintf(stderr, format, ap);
+	fprintf(stderr, "\n");
+
+	va_end(ap);
 }

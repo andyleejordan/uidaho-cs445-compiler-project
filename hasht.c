@@ -7,6 +7,7 @@
  *
  */
 
+#include <stdarg.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -18,10 +19,11 @@
 /* from lookup3.c */
 void hashlittle2(const void *key, size_t length, uint32_t *pc, uint32_t *pb);
 
+static void hasht_debug(const char *format, ...);
 static size_t hasht_hash(struct hasht *self, void *key, int perm);
-uint32_t hasht_default_hash(char *key, int perm);
-bool hasht_default_compare(void *a, void *b);
-void hasht_default_delete(struct hash_node *n);
+static uint32_t hasht_default_hash(char *key, int perm);
+static bool hasht_default_compare(void *a, void *b);
+static void hasht_default_delete(struct hash_node *n);
 
 /*
  * Dynamically allocate n array of null hash_node pointers.
@@ -36,7 +38,7 @@ struct hasht *hasht_new(size_t size,
 {
 	/* ensure size is a power of 2 if using default hash */
 	if (size != 0 && hash == NULL && (size & (size - 1))) {
-		fprintf(stderr, "hasht_new(): default hash requires size to be power of 2\n");
+		hasht_debug("hasht_new(): default hash requires size to be power of 2");
 		return NULL;
 	}
 
@@ -85,12 +87,12 @@ struct hasht *hasht_new(size_t size,
 void *hasht_insert(struct hasht *self, void *key, void *value)
 {
 	if (self == NULL) {
-		fprintf(stderr, "hasht_insert(): self was null\n");
+		hasht_debug("hasht_insert(): self was null");
 		return NULL;
 	}
 
 	if (key == NULL) {
-		fprintf(stderr, "hasht_insert(): key was null\n");
+		hasht_debug("hasht_insert(): key was null");
 		return NULL;
 	}
 
@@ -109,7 +111,7 @@ void *hasht_insert(struct hasht *self, void *key, void *value)
 		}
 	}
 
-	fprintf(stderr, "hasht_insert(): failed (table full?)\n");
+	hasht_debug("hasht_insert(): failed (table full?)");
 	return NULL;
 }
 
@@ -158,7 +160,7 @@ void *hasht_delete(struct hasht *self, void *key)
 size_t hasht_size(struct hasht *self)
 {
 	if (self == NULL) {
-		fprintf(stderr, "hasht_size(): self was null\n");
+		hasht_debug("hasht_size(): self was null");
 		return 0;
 	}
 	return self->size;
@@ -170,7 +172,7 @@ size_t hasht_size(struct hasht *self)
 size_t hasht_used(struct hasht *self)
 {
 	if (self == NULL) {
-		fprintf(stderr, "hasht_used(): self was null\n");
+		hasht_debug("hasht_used(): self was null");
 		return 0;
 	}
 	return self->used;
@@ -186,7 +188,7 @@ size_t hasht_used(struct hasht *self)
 void hasht_resize(struct hasht *self, size_t size)
 {
 	if (self->used > size) {
-		fprintf(stderr, "hasht_resize(): requested size too small\n");
+		hasht_debug("hasht_resize(): requested size too small");
 		return;
 	}
 
@@ -234,7 +236,7 @@ void hasht_free(struct hasht *self)
 static size_t hasht_hash(struct hasht *self, void *key, int perm)
 {
 	if (self == NULL) {
-		fprintf(stderr, "hasht_hash(): self was null\n");
+		hasht_debug("hasht_hash(): self was null");
 		return perm;
 	}
 	return self->hash(key, perm) % hasht_size(self);
@@ -245,7 +247,7 @@ static size_t hasht_hash(struct hasht *self, void *key, int perm)
  *
  * Gets h1 and h2 from Jenkins' hashlittle2().
  */
-uint32_t hasht_default_hash(char *key, int perm)
+static uint32_t hasht_default_hash(char *key, int perm)
 {
 	uint32_t h1 = 0;
 	uint32_t h2 = 0;
@@ -262,7 +264,7 @@ uint32_t hasht_default_hash(char *key, int perm)
 /*
  * Default comparison for string keys.
  */
-bool hasht_default_compare(void *a, void *b)
+static bool hasht_default_compare(void *a, void *b)
 {
 	return (strcmp((char *)a, (char *)b) == 0);
 }
@@ -270,10 +272,10 @@ bool hasht_default_compare(void *a, void *b)
 /*
  * Default function for freeing a node.
  */
-void hasht_default_delete(struct hash_node *n)
+static void hasht_default_delete(struct hash_node *n)
 {
 	if (n == NULL) {
-		fprintf(stderr, "hasht_default_delete(): node was null\n");
+		hasht_debug("hasht_default_delete(): node was null");
 		return;
 	}
 	if (n->key) {
@@ -291,7 +293,7 @@ struct hash_node *hash_node_new(struct hash_node *n, void *key, void *value)
 	if (n == NULL) {
 		n = malloc(sizeof(*n));
 		if (n == NULL) {
-			fprintf(stderr, "hasht_node_new(): couldn't allocate new node\n");
+			hasht_debug("hasht_node_new(): couldn't allocate new node");
 			return NULL;
 		}
 	}
@@ -308,8 +310,23 @@ struct hash_node *hash_node_new(struct hash_node *n, void *key, void *value)
 bool hash_node_deleted(struct hash_node *n)
 {
 	if (n == NULL) {
-		fprintf(stderr, "hasht_node_deleted(): node was null\n");
+		hasht_debug("hash_node_deleted(): node was null");
 		return true;
 	}
 	return (n->key == NULL);
+}
+
+static void hasht_debug(const char *format, ...)
+{
+	if (!HASHT_DEBUG)
+		return;
+
+	va_list ap;
+	va_start(ap, format);
+
+	fprintf(stderr, "debug: ");
+	vfprintf(stderr, format, ap);
+	fprintf(stderr, "\n");
+
+	va_end(ap);
 }

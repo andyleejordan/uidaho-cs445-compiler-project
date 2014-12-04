@@ -1,5 +1,4 @@
 * Required tasks
-** TODO In data structures, only print error if =LIST_DEBUG= is true etc.
 ** TODO Traversal to assign ".first/.follow/.true/.false" labels for jumps
 Figure out where/how to store labels. They would *seem* to be "empty"
 code instructions with a label instead of opcode with addresses.

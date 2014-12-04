@@ -8,6 +8,7 @@
  */
 
 #include <stdlib.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
@@ -15,7 +16,8 @@
 #include "tree.h"
 #include "list.h"
 
-bool tree_default_compare(void *a, void *b);
+static void tree_debug(const char *format, ...);
+static bool tree_default_compare(void *a, void *b);
 
 /*
  * Initializes tree with reference to parent and data, and an empty
@@ -76,7 +78,7 @@ struct tree *tree_new_group(struct tree *parent, void *data,
 size_t tree_size(struct tree *self)
 {
 	if (self == NULL) {
-		fprintf(stderr, "tree_size(): self was null\n");
+		tree_debug("tree_size(): self was null");
 		return 0;
 	}
 
@@ -107,7 +109,7 @@ void tree_traverse(struct tree *self, int d,
                    void (*post)(struct tree *t, int d))
 {
 	if (self == NULL) {
-		fprintf(stderr, "tree_traverse(): self was null\n");
+		tree_debug("tree_traverse(): self was null");
 		return;
 	}
 
@@ -135,7 +137,7 @@ void tree_traverse(struct tree *self, int d,
 struct tree *tree_leaf(struct tree *self, void *data)
 {
 	if (self == NULL) {
-		fprintf(stderr, "tree_leaf(): self was null\n");
+		tree_debug("tree_leaf(): self was null");
 		return NULL;
 	}
 
@@ -179,7 +181,7 @@ struct tree *tree_push_back(struct tree *self, void *data)
 struct tree *tree_push_child(struct tree *self, struct tree *child)
 {
 	if (self == NULL) {
-		fprintf(stderr, "tree_push_child(): self was null\n");
+		tree_debug("tree_push_child(): self was null");
 		return NULL;
 	}
 
@@ -212,7 +214,7 @@ struct tree *tree_index(struct tree *self, int pos)
 void tree_free(struct tree *self)
 {
 	if (self == NULL) {
-		fprintf(stderr, "tree_free(): self was null\n");
+		tree_debug("tree_free(): self was null");
 		return;
 	}
 
@@ -231,7 +233,22 @@ void tree_free(struct tree *self)
 /*
  * Default comparison for string keys.
  */
-bool tree_default_compare(void *a, void *b)
+static bool tree_default_compare(void *a, void *b)
 {
 	return (strcmp((char *)a, (char *)b) == 0);
+}
+
+static void tree_debug(const char *format, ...)
+{
+	if (!TREE_DEBUG)
+		return;
+
+	va_list ap;
+	va_start(ap, format);
+
+	fprintf(stderr, "debug: ");
+	vfprintf(stderr, format, ap);
+	fprintf(stderr, "\n");
+
+	va_end(ap);
 }

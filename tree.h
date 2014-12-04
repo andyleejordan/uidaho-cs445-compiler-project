@@ -13,6 +13,8 @@
 #include <stddef.h>
 #include <stdbool.h>
 
+bool TREE_DEBUG;
+
 struct list;
 
 struct tree {

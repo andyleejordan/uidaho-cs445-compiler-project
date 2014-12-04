@@ -13,6 +13,8 @@
 #include <stddef.h>
 #include <stdbool.h>
 
+bool HASHT_DEBUG;
+
 struct hash_node {
 	void *key;
 	void *value;

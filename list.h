@@ -13,6 +13,8 @@
 #include <stddef.h>
 #include <stdbool.h>
 
+bool LIST_DEBUG;
+
 struct list_node
 {
 	struct list_node *next;
