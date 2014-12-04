@@ -39,8 +39,8 @@ enum opcode {
 	BNE,
 	BIF,    /* if x then goto L   unary conditional jump to L */
 	BNIF,   /* if !x then goto L  unary negative conditional jump to L */
-	PARM,   /* param x        store x as a parameter */
-	CALL,   /* call p, n, x   call procedure p with n parameters, store result in x */
+	PARAM,  /* param x        store x as a parameter */
+	CALL,   /* call p, x, n   call procedure p with n parameters, store result in x */
 	RET     /* return x       return from procedure, use x as the result */
 };
 

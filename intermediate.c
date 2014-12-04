@@ -39,8 +39,7 @@ static struct list *get_code(struct tree *t, int i);
 static struct address get_place(struct tree *t, int i);
 static struct address get_label(struct op *op);
 
-struct address empty;
-
+struct address e;
 
 void code_generate(struct tree *t)
 {
@@ -142,7 +141,7 @@ static struct op *label_new()
 	static size_t labels = 0;
 	struct address place = { LABEL_R, labels };
 	++labels;
-	return op_new(LABEL, NULL, place, empty, empty);
+	return op_new(LABEL, NULL, place, e, e);
 }
 
 /*
@@ -171,7 +170,7 @@ static struct address get_place(struct tree *t, int i)
 	if (n)
 		return n->place;
 	else
-		return empty;
+		return e;
 }
 
 static struct address get_label(struct op *op)
@@ -206,7 +205,7 @@ static char *print_opcode(enum opcode code)
 		R(BNE);
 		R(BIF);
 		R(BNIF);
-		R(PARM);
+		R(PARAM);
 		R(CALL);
 		R(RET);
 	}
