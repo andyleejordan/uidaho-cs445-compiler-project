@@ -89,19 +89,53 @@ void code_generate(struct tree *t)
 
 	/** post-order **/
 	switch(n->rule) {
-	}
-	case INITIALIZER: {
-		/* ASN(left, right, empty) */
+	case INITIALIZER:
+	case LITERAL: {
+		/* this passes up place for symbols, but get_address()
+		   may make it unnecessary */
+		/* TODO: get ident, search, get address */
+		n->place = get_node(t, 0)->place;
 		break;
+	}
+	case INIT_DECL: {
+		n->place = get_node(t, 0)->place;
+
+		struct node *init = get_node(t, 1);
+		if (init == NULL)
+			break;
+
+		push_op(n, op_new(ASN, get_identifier(t), n->place, init->place, e));
+		break;
+	}
+	case DIRECT_DECL2: {
+		/* TODO: get procedure parameter and local sizes */
+		push_op(n, op_new(PROC, get_identifier(t), e, e, e));
+		break;
+	}
+	case POSTFIX_EXPR3: {
+		char *k = get_identifier(t);
+		n->place = temp_new(scope_search(k));
+		/* TODO: count number of parameters */
+		push_op(n, op_new(CALL, k, n->place, e, e));
+		break;
+	}
+	case EXPR_LIST: {
+		iter = list_head(t->children);
+		while (!list_end(iter)) {
+			struct node *param = iter->data;
+			push_op(n, op_new(PARAM, NULL, param->place, e, e));
+			iter = iter->next;
+		}
+		return;
 	}
 	case SELECT1: { /* IF */
 		struct address temp = temp_new(&bool_type);
 		struct op *first = label_new();
 		struct op *follow = label_new();
-		push_op(n, op_new(ASN, NULL, temp, get_place(t, 1), empty));
-		push_op(n, op_new(BIF, NULL, temp, get_label(first), empty));
+		push_op(n, op_new(ASN, NULL, temp, get_place(t, 1), e));
+		push_op(n, op_new(BIF, NULL, temp, get_label(first), e));
 		/* TODO: backpatch this follow with parent's follow */
-		push_op(n, op_new(GOTO, NULL, get_label(follow), empty, empty));
+		push_op(n, op_new(GOTO, NULL, get_label(follow), e, e));
 		break;
 	}
 	case SELECT2: { /* IF-ELSE chains */
@@ -111,13 +145,42 @@ void code_generate(struct tree *t)
 		struct address temp = temp_new(&bool_type);
 		struct op *first = label_new();
 		struct op *follow = label_new();
-		push_op(n, op_new(ASN, NULL, temp, get_place(t, 1), empty));
-		push_op(n, op_new(BIF, NULL, temp, get_label(first), empty));
-		push_op(n, op_new(GOTO, NULL, get_label(follow), empty, empty));
+		push_op(n, op_new(ASN, NULL, temp, get_place(t, 1), e));
+		push_op(n, op_new(BIF, NULL, temp, get_label(first), e));
+		push_op(n, op_new(GOTO, NULL, get_label(follow), e, e));
 		push_op(n, first);
 		list_concat(n->code, get_code(t, 2));
 		push_op(n, follow);
 		list_concat(n->code, get_code(t, 4));
+		break;
+	}
+	case EQUAL_EXPR2: {
+		/* TODO: handle short circuiting */
+		n->place = temp_new(&bool_type);
+		struct address l = get_address(tree_index(t, 0));
+		struct address r = get_address(tree_index(t, 2));
+		push_op(n, op_new(BEQ, NULL, n->place, l, r));
+		break;
+	}
+	case ADD_EXPR2: {
+		n->place = temp_new(&int_type);
+		struct address l = get_address(tree_index(t, 0));
+		struct address r = get_address(tree_index(t, 2));
+		push_op(n, op_new(ADD, NULL, n->place, l, r));
+		break;
+	}
+	case ADD_EXPR3: {
+		n->place = temp_new(&int_type);
+		struct address l = get_address(tree_index(t, 0));
+		struct address r = get_address(tree_index(t, 2));
+		push_op(n, op_new(SUB, NULL, n->place, l, r));
+		break;	}
+	case RETURN_STATEMENT: {
+		struct node *ret = get_node(t, 1);
+		if (ret == NULL)
+			break;
+		n->place = ret->place;
+		push_op(n, op_new(RET, NULL, n->place, e, e));
 		break;
 	}
 	default: {
