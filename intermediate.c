@@ -254,6 +254,7 @@ static struct address temp_new(struct typeinfo *t)
 static struct list *get_code(struct tree *t, int i)
 {
 	struct node *n = get_node(t, i);
+
 	if (n)
 		return n->code;
 	else
@@ -262,12 +263,7 @@ static struct list *get_code(struct tree *t, int i)
 
 static struct address get_place(struct tree *t, int i)
 {
-	struct node *n = NULL;
-
-	if (tree_size(t) == 1)
-		n = t->data;
-	else
-		n = get_node(t, i);
+	struct node *n = get_node(t, i);
 
 	if (n)
 		return n->place;

@@ -67,12 +67,17 @@ struct node *node_new(enum rule r)
 struct node *get_node(struct tree *t, size_t i)
 {
 	log_assert(t);
-	struct tree *tree = tree_index(t, i);
-	if (tree == NULL)
+
+	if (tree_size(t) > 1)
+		t = tree_index(t, i);
+
+	if (t == NULL)
 		return NULL;
-	struct node *node = tree->data;
-	log_assert(node);
-	return node;
+
+	struct node *n = t->data;
+	log_assert(n);
+
+	return n;
 }
 
 /*
@@ -80,6 +85,8 @@ struct node *get_node(struct tree *t, size_t i)
  */
 enum rule get_rule(struct tree *t)
 {
+	log_assert(t);
+
 	struct node *n = t->data;
 	return n->rule;
 }
