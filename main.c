@@ -168,8 +168,9 @@ void parse_program(char *filename)
 	type_check(yyprogram);
 
 	/* generating intermediate code */
-	struct list *code = code_generate(yyprogram);
-	print_code(stderr, code);
+	log_debug("generating intermediate code");
+	code_generate(yyprogram);
+	print_code(stderr, ((struct node *)yyprogram->data)->code);
 
 	/* clean up */
 	log_debug("cleaning up");

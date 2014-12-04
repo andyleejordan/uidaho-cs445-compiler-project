@@ -50,7 +50,7 @@ struct op {
 	struct address address[3];
 };
 
-struct list *code_generate(struct tree *t);
+void code_generate(struct tree *t);
 void print_code(FILE *stream, struct list *code);
 
 #endif /* INTERMEDIATE_H */

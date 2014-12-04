@@ -42,7 +42,7 @@ static struct address get_label(struct op *op);
 struct address empty;
 
 
-struct list *code_generate(struct tree *t)
+void code_generate(struct tree *t)
 {
 	struct node *n = t->data;
 	/** pre-order **/
@@ -105,7 +105,6 @@ struct list *code_generate(struct tree *t)
 		break;
 	}
 	}
-	return n->code;
 }
 
 static struct op *op_new(enum opcode code, char *name,
