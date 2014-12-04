@@ -94,11 +94,11 @@ void code_generate(struct tree *t)
 		/* this passes up place for symbols, but get_address()
 		   may make it unnecessary */
 		/* TODO: get ident, search, get address */
-		n->place = get_node(t, 0)->place;
+		n->place = get_place(t, 0);
 		break;
 	}
 	case INIT_DECL: {
-		n->place = get_node(t, 0)->place;
+		n->place = get_place(t, 0);
 
 		struct node *init = get_node(t, 1);
 		if (init == NULL)
@@ -157,22 +157,22 @@ void code_generate(struct tree *t)
 	case EQUAL_EXPR2: {
 		/* TODO: handle short circuiting */
 		n->place = temp_new(&bool_type);
-		struct address l = get_address(tree_index(t, 0));
-		struct address r = get_address(tree_index(t, 2));
+		struct address l = get_place(t, 0);
+		struct address r = get_place(t, 2);
 		push_op(n, op_new(BEQ, NULL, n->place, l, r));
 		break;
 	}
 	case ADD_EXPR2: {
 		n->place = temp_new(&int_type);
-		struct address l = get_address(tree_index(t, 0));
-		struct address r = get_address(tree_index(t, 2));
+		struct address l = get_place(t, 0);
+		struct address r = get_place(t, 2);
 		push_op(n, op_new(ADD, NULL, n->place, l, r));
 		break;
 	}
 	case ADD_EXPR3: {
 		n->place = temp_new(&int_type);
-		struct address l = get_address(tree_index(t, 0));
-		struct address r = get_address(tree_index(t, 2));
+		struct address l = get_place(t, 0);
+		struct address r = get_place(t, 2);
 		push_op(n, op_new(SUB, NULL, n->place, l, r));
 		break;	}
 	case RETURN_STATEMENT: {
@@ -263,7 +263,13 @@ static struct list *get_code(struct tree *t, int i)
 
 static struct address get_place(struct tree *t, int i)
 {
-	struct node *n = get_node(t, i);
+	struct node *n = NULL;
+
+	if (tree_size(t) == 1)
+		n = t->data;
+	else
+		n = get_node(t, i);
+
 	if (n)
 		return n->place;
 	else
