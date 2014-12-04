@@ -45,6 +45,7 @@ static struct address get_label(struct op *op);
 
 const struct address e = { UNKNOWN_R, 0 };
 
+#define append_code(i) do { n->code = list_concat(n->code, get_code(t, i)); } while (0)
 void code_generate(struct tree *t)
 {
 	struct node *n = t->data;
@@ -210,6 +211,7 @@ void code_generate(struct tree *t)
 		offset = offset_;
 	}
 }
+#undef append_code
 
 static enum opcode map_code(enum rule r)
 {
