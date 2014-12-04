@@ -13,6 +13,8 @@
 
 #include "intermediate.h"
 #include "symbol.h"
+#include "scope.h"
+
 #include "logger.h"
 #include "node.h"
 #include "list.h"
@@ -48,6 +50,25 @@ void code_generate(struct tree *t)
 	/* TODO: manage scopes and memory regions */
 	/* function invocation; public class member/function access; private
 	   class member/function access when inside n-1 */
+	size_t scopes = list_size(yyscopes);
+	bool scoped = false;
+	switch (n->rule) {
+	case FUNCTION_DEF1:
+	case FUNCTION_DEF2: {
+		/* manage scopes for function recursion */
+		scoped = true;
+		char *k = get_identifier(t);
+		struct typeinfo *f = scope_search(k);
+		log_assert(f);
+		log_debug("pushing function %s scope", k);
+		scope_push(f->function.symbols);
+		log_assert(list_size(yyscopes) == scopes + 1);
+		break;
+	}
+	default: {
+		break;
+	}
+	}
 
 	/* recurse through children */
 	struct list_node *iter = list_head(t->children);
@@ -103,6 +124,11 @@ void code_generate(struct tree *t)
 		}
 		break;
 	}
+	}
+
+	while (scoped && list_size(yyscopes) != scopes) {
+		log_debug("popping scope");
+		scope_pop();
 	}
 }
 
