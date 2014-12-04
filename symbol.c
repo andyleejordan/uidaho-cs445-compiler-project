@@ -62,7 +62,6 @@ static struct typeinfo *typeinfo_new_array(struct tree *n, struct typeinfo *t);
 static struct typeinfo *typeinfo_new_function(struct tree *n, struct typeinfo *t, bool define);
 static struct typeinfo *typeinfo_copy(struct typeinfo *t);
 static struct typeinfo *typeinfo_return(struct typeinfo *t);
-static size_t scope_size(struct hasht *t);
 static void typeinfo_delete(struct typeinfo *t);
 static bool typeinfo_compare(struct typeinfo *a, struct typeinfo *b);
 static bool typeinfo_list_compare(struct list *a, struct list *b);
@@ -521,27 +520,6 @@ size_t typeinfo_size(struct typeinfo *t)
 	default:
 		return 0;
 	}
-}
-
-/*
- * Returns sum of sizes of symbols in scope.
- *
- * This is sadly highly coupled with my hash table implementation
- * since it does not (yet) have an iterable interface.
- */
-static size_t scope_size(struct hasht *t)
-{
-	if (t == NULL)
-		return 0;
-
-	size_t total = 0;
-	for (size_t i = 0; i < t->size; ++i) {
-		struct hasht_node *slot = t->table[i];
-		if (slot && !hasht_node_deleted(slot)) {
-			total += typeinfo_size(slot->value);
-		}
-	}
-	return total;
 }
 
 /*
