@@ -31,7 +31,8 @@ SRCS = main.c logger.c symbol.c node.c token.c rules.c scope.c intermediate.c \
 	list.c tree.c hasht.c lookup3.c \
 	lex.yy.c parser.tab.c
 OBJS = $(SRCS:.c=.o)
-TEST_DATA = data/pass/test.cpp
+TESTDATA = data/pass/test.cpp
+TESTFLAGS = -t
 
 # targets
 .PHONY: all test smoke dist clean distclean
@@ -44,7 +45,7 @@ test: $(TESTS)
 	./test-hasht
 
 smoke: test all
-	./$(BIN) $(TEST_DATA)
+	./$(BIN) $(TESTFLAGS) $(TESTDATA)
 
 TAGS: $(SRCS)
 	etags $(SRCS)
