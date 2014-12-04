@@ -266,10 +266,19 @@ static struct address get_place(struct tree *t, int i)
 {
 	struct node *n = get_node(t, i);
 
-	if (n)
-		return n->place;
-	else
-		return e;
+	if (n) {
+		if (n->place.region != UNKNOWN_R)
+			return n->place;
+
+		/* perform lookup if necessary */
+		if (n->rule == TOKEN) {
+			struct typeinfo *s = scope_search(n->token->text);
+			if (s && s->place.region != UNKNOWN_R)
+				return s->place;
+		}
+	}
+
+	return e;
 }
 
 static struct address get_label(struct op *op)
