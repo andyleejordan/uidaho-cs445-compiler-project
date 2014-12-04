@@ -14,6 +14,7 @@
 #include "intermediate.h"
 #include "symbol.h"
 #include "scope.h"
+#include "token.h"
 
 #include "logger.h"
 #include "node.h"
@@ -41,7 +42,7 @@ static struct list *get_code(struct tree *t, int i);
 static struct address get_place(struct tree *t, int i);
 static struct address get_label(struct op *op);
 
-struct address e;
+const struct address e = { UNKNOWN_R, 0 };
 
 void code_generate(struct tree *t)
 {
@@ -257,8 +258,8 @@ static struct list *get_code(struct tree *t, int i)
 
 	if (n)
 		return n->code;
-	else
-		return NULL;
+
+	return NULL;
 }
 
 static struct address get_place(struct tree *t, int i)
@@ -313,7 +314,16 @@ static char *print_opcode(enum opcode code)
 
 static void print_op(FILE *stream, struct op *op)
 {
-	fprintf(stream, "%s\n", print_opcode(op->code));
+	fprintf(stream, "%-8s", print_opcode(op->code));
+	fprintf(stream, "%-10s", op->name ? op->name : "");
+	for (int i = 0; i < 3; ++i) {
+		struct address a = op->address[i];
+		if (a.region != UNKNOWN_R) {
+			print_address(stream, a);
+			fprintf(stream, " ");
+		}
+	}
+	fprintf(stream, "\n");
 }
 
 void print_code(FILE *stream, struct list *code)
