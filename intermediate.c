@@ -131,7 +131,7 @@ void code_generate(struct tree *t)
 	case EXPR_LIST: {
 		iter = list_head(t->children);
 		while (!list_end(iter)) {
-			push_op(n, op_new(PARAM, NULL, get_place(iter->data, 0), e, e));
+			push_op(n, op_new(PARAM, NULL, get_place(iter->data, -1), e, e));
 			iter = iter->next;
 		}
 		return;
@@ -301,7 +301,7 @@ static struct list *get_code(struct tree *t, int i)
 
 static struct address get_place(struct tree *t, int i)
 {
-	struct node *n = get_node(t, i);
+	struct node *n = i > -1 ? get_node(t, i) : t->data;
 
 	if (n) {
 		if (n->place.region != UNKNOWN_R)
