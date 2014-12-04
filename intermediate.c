@@ -128,7 +128,10 @@ void code_generate(struct tree *t)
 	case EXPR_LIST: {
 		iter = list_head(t->children);
 		while (!list_end(iter)) {
-			push_op(n, op_new(PARAM, NULL, get_place(iter->data, -1), e, e));
+			struct tree *child = iter->data;
+			struct node *n_ = child->data;
+			n->code = list_concat(n->code, n_->code);
+			push_op(n, op_new(PARAM, NULL, get_place(child, -1), e, e));
 			iter = iter->next;
 		}
 		goto done;
