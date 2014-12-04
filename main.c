@@ -69,7 +69,7 @@ size_t offset;
 static void parse_program(char *filename);
 
 /* from lexer */
-void free_typename(struct hash_node *t);
+void free_typename(struct hasht_node *t);
 
 /* from parser */
 int yyparse();

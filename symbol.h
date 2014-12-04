@@ -17,10 +17,10 @@
 #include "node.h"
 
 struct tree;
-struct hash_node;
+struct hasht_node;
 
 void symbol_populate();
-void symbol_free(struct hash_node *n);
+void symbol_free(struct hasht_node *n);
 
 struct typeinfo *type_check(struct tree *t);
 

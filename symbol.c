@@ -214,7 +214,7 @@ static void symbol_insert(char *k, struct typeinfo *v, struct tree *t,
 /*
  * Frees key and deletes value.
  */
-void symbol_free(struct hash_node *n)
+void symbol_free(struct hasht_node *n)
 {
 	log_assert(n);
 
@@ -536,8 +536,8 @@ static size_t scope_size(struct hasht *t)
 
 	size_t total = 0;
 	for (size_t i = 0; i < t->size; ++i) {
-		struct hash_node *slot = t->table[i];
-		if (slot && !hash_node_deleted(slot)) {
+		struct hasht_node *slot = t->table[i];
+		if (slot && !hasht_node_deleted(slot)) {
 			total += typeinfo_size(slot->value);
 		}
 	}

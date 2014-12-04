@@ -457,7 +457,7 @@ void insert_typename_tree(struct tree *t, int category)
 	insert_typename(key, category);
 }
 
-void free_typename(struct hash_node *t)
+void free_typename(struct hasht_node *t)
 {
 	free(t->key);
 	free(t->value);

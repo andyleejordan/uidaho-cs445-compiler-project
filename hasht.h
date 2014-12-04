@@ -15,26 +15,26 @@
 
 bool HASHT_DEBUG;
 
-struct hash_node {
+struct hasht_node {
 	void *key;
 	void *value;
 };
 
 struct hasht {
-	struct hash_node **table;
+	struct hasht_node **table;
 	size_t size;
 	size_t used;
 	bool grow;
 	size_t (*hash)(void *key, int perm);
 	bool (*compare)(void *a, void *b);
-	void (*delete)(struct hash_node *n);
+	void (*delete)(struct hasht_node *n);
 };
 
 struct hasht *hasht_new(size_t size,
                         bool grow,
                         size_t (*hash)(void *key, int perm),
                         bool (*compare)(void *a, void *b),
-                        void (*delete)(struct hash_node *n));
+                        void (*delete)(struct hasht_node *n));
 
 void *hasht_insert(struct hasht *self, void *key, void *value);
 void *hasht_search(struct hasht *self, void *key);
@@ -46,7 +46,7 @@ size_t hasht_used(struct hasht *self);
 void hasht_resize(struct hasht *self, size_t size);
 void hasht_free(struct hasht *self);
 
-struct hash_node *hash_node_new(struct hash_node *n, void *key, void *value);
-bool hash_node_deleted(struct hash_node *n);
+struct hasht_node *hasht_node_new(struct hasht_node *n, void *key, void *value);
+bool hasht_node_deleted(struct hasht_node *n);
 
 #endif /* HASHT_H */

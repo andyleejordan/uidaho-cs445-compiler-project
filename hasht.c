@@ -23,10 +23,10 @@ static void hasht_debug(const char *format, ...);
 static size_t hasht_hash(struct hasht *self, void *key, int perm);
 static uint32_t hasht_default_hash(char *key, int perm);
 static bool hasht_default_compare(void *a, void *b);
-static void hasht_default_delete(struct hash_node *n);
+static void hasht_default_delete(struct hasht_node *n);
 
 /*
- * Dynamically allocate n array of null hash_node pointers.
+ * Dynamically allocate n array of null hasht_node pointers.
  *
  * If given null for hash, compare, or delete functions, uses default.
  */
@@ -34,7 +34,7 @@ struct hasht *hasht_new(size_t size,
                         bool grow,
                         size_t (*hash)(void *key, int perm),
                         bool (*compare)(void *a, void *b),
-                        void (*delete)(struct hash_node *n))
+                        void (*delete)(struct hasht_node *n))
 {
 	/* ensure size is a power of 2 if using default hash */
 	if (size != 0 && hash == NULL && (size & (size - 1))) {
@@ -81,7 +81,7 @@ struct hasht *hasht_new(size_t size,
  * Inserts value into slot corresponding to key and availability.
  *
  * Collisions are handled with open-addressing. Nodes marked deleted
- * are reused by hash_node_new(). Returns null if key already present
+ * are reused by hasht_node_new(). Returns null if key already present
  * or table is full.
  */
 void *hasht_insert(struct hasht *self, void *key, void *value)
@@ -101,10 +101,10 @@ void *hasht_insert(struct hasht *self, void *key, void *value)
 
 	for(size_t i = 0; i < hasht_size(self); ++i) {
 		size_t index = hasht_hash(self, key, i);
-		struct hash_node **slot = &self->table[index];
-		if (*slot == NULL || hash_node_deleted(*slot)) {
+		struct hasht_node **slot = &self->table[index];
+		if (*slot == NULL || hasht_node_deleted(*slot)) {
 			++self->used;
-			*slot = hash_node_new(*slot, key, value);
+			*slot = hasht_node_new(*slot, key, value);
 			return *slot;
 		} else if (self->compare(key, (*slot)->key)) {
 			return NULL;
@@ -125,7 +125,7 @@ void *hasht_search(struct hasht *self, void *key)
 {
 	for(size_t i = 0; i < hasht_size(self); ++i) {
 		size_t index = hasht_hash(self, key, i);
-		struct hash_node *slot = self->table[index];
+		struct hasht_node *slot = self->table[index];
 		if (slot == NULL)
 			return NULL;
 		else if (self->compare(key, slot->key))
@@ -143,7 +143,7 @@ void *hasht_delete(struct hasht *self, void *key)
 {
 	for(size_t i = 0; i < hasht_size(self); ++i) {
 		size_t index = hasht_hash(self, key, i);
-		struct hash_node *slot = self->table[index];
+		struct hasht_node *slot = self->table[index];
 		if (slot == NULL) {
 			return NULL; /* key not in table */
 		} else if (self->compare(key, slot->key)) {
@@ -193,8 +193,8 @@ void hasht_resize(struct hasht *self, size_t size)
 	}
 
 	size_t old_size = self->size;
-	struct hash_node **old_table = self->table;
-	struct hash_node **new_table = calloc(size, sizeof(*new_table));
+	struct hasht_node **old_table = self->table;
+	struct hasht_node **new_table = calloc(size, sizeof(*new_table));
 	if (new_table == NULL) {
 		perror("hasht_resize()");
 		return;
@@ -205,9 +205,9 @@ void hasht_resize(struct hasht *self, size_t size)
 	self->used = 0; /* reset used count since insert increments it */
 
 	for (size_t i = 0; i < old_size; ++i) {
-		struct hash_node *slot = old_table[i];
+		struct hasht_node *slot = old_table[i];
 		if (slot) {
-			if (hash_node_deleted(slot))
+			if (hasht_node_deleted(slot))
 				self->delete(slot);
 			else
 				hasht_insert(self, slot->key, slot->value);
@@ -222,7 +222,7 @@ void hasht_resize(struct hasht *self, size_t size)
 void hasht_free(struct hasht *self)
 {
 	for (size_t i = 0; i < hasht_size(self); ++i) {
-		struct hash_node *slot = self->table[i];
+		struct hasht_node *slot = self->table[i];
 		if (slot)
 			self->delete(slot);
 	}
@@ -272,7 +272,7 @@ static bool hasht_default_compare(void *a, void *b)
 /*
  * Default function for freeing a node.
  */
-static void hasht_default_delete(struct hash_node *n)
+static void hasht_default_delete(struct hasht_node *n)
 {
 	if (n == NULL) {
 		hasht_debug("hasht_default_delete(): node was null");
@@ -286,9 +286,9 @@ static void hasht_default_delete(struct hash_node *n)
 }
 
 /*
- * Allocates hash_node for key / value pair.
+ * Allocates hasht_node for key / value pair.
  */
-struct hash_node *hash_node_new(struct hash_node *n, void *key, void *value)
+struct hasht_node *hasht_node_new(struct hasht_node *n, void *key, void *value)
 {
 	if (n == NULL) {
 		n = malloc(sizeof(*n));
@@ -307,10 +307,10 @@ struct hash_node *hash_node_new(struct hash_node *n, void *key, void *value)
 /*
  * Returns true if key is null, thus marked as deleted.
  */
-bool hash_node_deleted(struct hash_node *n)
+bool hasht_node_deleted(struct hasht_node *n)
 {
 	if (n == NULL) {
-		hasht_debug("hash_node_deleted(): node was null");
+		hasht_debug("hasht_node_deleted(): node was null");
 		return true;
 	}
 	return (n->key == NULL);
