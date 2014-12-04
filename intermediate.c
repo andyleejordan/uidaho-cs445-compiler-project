@@ -180,7 +180,10 @@ void code_generate(struct tree *t)
 		goto done;
 	}
 	case ADD_EXPR2:
-	case ADD_EXPR3: {
+	case ADD_EXPR3:
+	case MULT_EXPR2:
+	case MULT_EXPR3:
+	case MULT_EXPR4: {
 		n->place = temp_new(&int_type);
 		struct address l = get_place(t, 0);
 		append_code(0); /* left */
@@ -235,24 +238,30 @@ void code_generate(struct tree *t)
 static enum opcode map_code(enum rule r)
 {
 	switch (r) {
-	case REL_EXPR2:   /* < */
-		return BLT;
-	case REL_EXPR3:   /* > */
-		return BGT;
-	case REL_EXPR4:   /* <= */
-		return BLE;
-	case REL_EXPR5:   /* >= */
-		return BGE;
-	case EQUAL_EXPR2: /* == */
-		return BEQ;
-	case EQUAL_EXPR3: /* != */
-		return BNE;
+	case REL_EXPR2:
+		return BLT; /* < */
+	case REL_EXPR3:
+		return BGT; /* > */
+	case REL_EXPR4:
+		return BLE; /* <= */
+	case REL_EXPR5:
+		return BGE; /* >= */
+	case EQUAL_EXPR2:
+		return BEQ; /* == */
+	case EQUAL_EXPR3:
+		return BNE; /* != */
 	case ADD_EXPR2:
-		return ADD;
+		return ADD; /* + */
 	case ADD_EXPR3:
-		return SUB;
+		return SUB; /* - */
+	case MULT_EXPR2:
+		return MUL; /* * */
+	case MULT_EXPR3:
+		return DIV; /* / */
+	case MULT_EXPR4:
+		return MOD; /* % */
 	default:
-		return ERRC;
+		return ERRC; /* unknown */
 	}
 }
 
@@ -353,6 +362,7 @@ static char *print_opcode(enum opcode code)
 		R(SUB);
 		R(MUL);
 		R(DIV);
+		R(MOD);
 		R(NEG);
 		R(ASN);
 		R(ADDR);

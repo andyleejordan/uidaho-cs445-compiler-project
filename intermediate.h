@@ -26,6 +26,7 @@ enum opcode {
 	SUB,
 	MUL,
 	DIV,
+	MOD,
 	NEG,    /* x := op y    store result of unary operation on y to x */
 	ASN,    /* x := y       store y to x */
 	ADDR,   /* x := &y      store address of y to x */

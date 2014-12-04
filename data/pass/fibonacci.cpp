@@ -2,8 +2,10 @@ int fibonacci(int n);
 
 int main(int argc, char *argv[])
 {
-	int i = 4;
-	fibonacci(i);
+	int i = 2;
+	if (i == 2)
+		i = i * 2;
+	fibonacci(i % 8);
 
 	return 0;
 }
