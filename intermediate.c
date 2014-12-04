@@ -116,11 +116,6 @@ void code_generate(struct tree *t)
 		push_op(n, op_new(ASN, get_identifier(t), n->place, init->place, e));
 		break;
 	}
-	case DIRECT_DECL2: {
-		/* TODO: get procedure parameter and local sizes */
-		push_op(n, op_new(PROC, get_identifier(t), e, e, e));
-		break;
-	}
 	case POSTFIX_EXPR3: {
 		char *k = get_identifier(t);
 		n->place = temp_new(scope_search(k));
