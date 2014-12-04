@@ -8,6 +8,7 @@
  */
 
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "node.h"
 #include "logger.h"
@@ -22,7 +23,7 @@
 char *print_region(enum region r)
 {
 	switch (r) {
-		R(GLOBAL_R);
+		R(GLOBE_R);
 		R(LOCAL_R);
 		R(PARAM_R);
 		R(CLASS_R);
@@ -92,4 +93,9 @@ struct token *get_token(struct node *n)
 	struct token *t = n->token;
 	log_assert(t);
 	return t;
+}
+
+void print_address(FILE *stream, struct address a)
+{
+	fprintf(stream, "%s:%-8zu", print_region(a.region), a.offset);
 }

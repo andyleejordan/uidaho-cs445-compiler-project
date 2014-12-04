@@ -150,7 +150,7 @@ void parse_program(char *filename)
 
 	/* build the symbol tables */
 	log_debug("populating symbol tables");
-	region = GLOBAL_R;
+	region = GLOBE_R;
 	offset = 0;
 	symbol_populate();
 	log_debug("global scope had %zu symbols", hasht_used(global));
