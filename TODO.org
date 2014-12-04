@@ -1,4 +1,5 @@
 * Required tasks
+** TODO Generate TAC for code inside function calls
 ** TODO Traversal to assign ".first/.follow/.true/.false" labels for jumps
 Figure out where/how to store labels. They would *seem* to be "empty"
 code instructions with a label instead of opcode with addresses.
@@ -21,7 +22,6 @@ types eventually. So I am going with the implicit symbol table, and
 refactoring =get_identifier()= to return =token->text= for literals
 (which are their keys, same as identifier names for explicit symbols).
 
-** TODO Print out TAC list
 ** TODO Adjust constant offsets
 For integers, the offset "should" be the integer value. For strings
 and floats, I think maybe the value should be stored in a "string
