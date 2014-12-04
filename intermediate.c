@@ -77,11 +77,18 @@ void code_generate(struct tree *t)
 		iter = iter->next;
 	}
 
+	/* leaf nodes have no code associated with them since all uses of
+	   symbols are handled in higher nodes */
+	if (tree_size(t) == 1) {
+		/* this step should already be handled in type_check() */
+		/* n->place = scope_search(n->token->text)->place; */
+		log_assert(n->rule == TOKEN);
+		log_assert(n->token);
+		return;
+	}
+
 	/** post-order **/
 	switch(n->rule) {
-	case TOKEN: {
-		log_assert(n->token);
-		return NULL;
 	}
 	case INITIALIZER: {
 		/* ASN(left, right, empty) */
