@@ -121,16 +121,17 @@ void code_generate(struct tree *t)
 		break;
 	}
 	default: {
-		/* concatenate all children code */
-		iter = list_head(t->children);
-		while (!list_end(iter)) {
-			struct node *child = iter->data;
-			/* noop for NULL code */
-			n->code = list_concat(n->code, child->code);
-			iter = iter->next;
-		}
 		break;
 	}
+	}
+	/* concatenate all children code to build list */
+	iter = list_head(t->children);
+	while (!list_end(iter)) {
+		struct tree *child = iter->data;
+		struct node *n_ = child->data;
+		/* noop for NULL code */
+		n->code = list_concat(n->code, n_->code);
+		iter = iter->next;
 	}
 
 	while (scoped && list_size(yyscopes) != scopes) {
