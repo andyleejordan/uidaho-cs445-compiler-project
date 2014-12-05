@@ -54,8 +54,8 @@ void code_generate(struct tree *t)
 	   class member/function access when inside n-1 */
 	size_t scopes = list_size(yyscopes);
 	bool scoped = false;
-	enum region region_;
-	size_t offset_;
+	enum region region_ = region;
+	size_t offset_ = offset;
 
 	switch (n->rule) {
 	case FUNCTION_DEF1:
@@ -69,8 +69,6 @@ void code_generate(struct tree *t)
 		scope_push(f->function.symbols);
 		log_assert(list_size(yyscopes) == scopes + 1);
 		/* manage memory regions */
-		region_ = region;
-		offset_ = offset;
 		region = LOCAL_R;
 		offset = scope_size(f->function.symbols);
 
