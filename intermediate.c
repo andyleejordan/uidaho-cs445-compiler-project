@@ -120,7 +120,7 @@ void code_generate(struct tree *t)
 	case POSTFIX_EXPR3: {
 		char *k = get_identifier(t);
 		n->place = temp_new(scope_search(k));
-		/* TODO: count number of parameters */
+		/* TODO: count number of parameters: list_size(type->function.list) */
 		append_code(1); /* parameters */
 		push_op(n, op_new(CALL, k, n->place, e, e));
 		goto done;
@@ -195,6 +195,14 @@ void code_generate(struct tree *t)
 		push_op(n, op_new(map_code(n->rule), NULL, n->place, l, r));
 		goto done;
 	}
+	case ASSIGN_EXPR2: {
+		char *k = get_identifier(t);
+		n->place = get_place(t, 0);
+		struct address r = get_place(t, 2);
+		append_code(2); /* right */
+		push_op(n, op_new(map_code(n->rule), k, n->place, r, e));
+		goto done;
+	}
 	case RETURN_STATEMENT: {
 		struct node *ret = get_node(t, 1);
 		if (ret == NULL)
@@ -263,6 +271,8 @@ static enum opcode map_code(enum rule r)
 		return DIV; /* / */
 	case MULT_EXPR4:
 		return MOD; /* % */
+	case ASSIGN_EXPR2:
+		return ASN;
 	default:
 		return ERRC; /* unknown */
 	}
