@@ -167,6 +167,22 @@ void code_generate(struct tree *t)
 		append_code(4); /* false */
 		break;
 	}
+	case ITER3: { /* for (expr1; expr2; expr3) { body; } */
+		append_code(1); /* expr 1 */
+		struct op *first = label_new();
+		struct op *body = label_new();
+		struct op *follow = label_new();
+		push_op(n, first); /* before condition */
+		append_code(2); /* expr 2 */
+		push_op(n, op_new(BIF, NULL, get_place(t, 2), get_label(body), e));
+		push_op(n, op_new(GOTO, NULL, get_label(follow), e, e));
+		push_op(n, body);
+		append_code(4); /* body */
+		append_code(3); /* expr3 */
+		push_op(n, op_new(GOTO, NULL, get_label(first), e, e));
+		push_op(n, follow);
+		break;
+	}
 	case REL_EXPR2:
 	case REL_EXPR3:
 	case REL_EXPR4:
