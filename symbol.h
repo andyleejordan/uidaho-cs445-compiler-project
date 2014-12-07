@@ -19,7 +19,7 @@
 struct tree;
 struct hasht_node;
 
-void symbol_populate();
+void symbol_populate(struct tree *t);
 void symbol_free(struct hasht_node *n);
 
 struct typeinfo *type_check(struct tree *t);

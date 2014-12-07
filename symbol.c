@@ -28,10 +28,6 @@
 #include "hasht.h"
 #include "tree.h"
 
-/* syntax tree and typenames table */
-extern struct tree *yyprogram;
-extern struct hasht *yytypes;
-
 /* memory addresses */
 extern enum region region;
 extern size_t offset;
@@ -152,12 +148,12 @@ static enum type map_type(enum yytokentype t)
 /*
  * Populate a global symbol table given the root of a syntax tree.
  */
-void symbol_populate()
+void symbol_populate(struct tree *t)
 {
 	set_type_comparators();
 
 	/* do a top-down pre-order traversal to populate symbol tables */
-	tree_traverse(yyprogram, 0, &handle_node, NULL, NULL);
+	tree_traverse(t, 0, &handle_node, NULL, NULL);
 }
 
 /*
