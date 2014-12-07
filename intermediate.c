@@ -45,6 +45,11 @@ static struct address get_label(struct op *op);
 
 const struct address e = { UNKNOWN_R, 0 };
 
+/*
+ * Tree traversal to generate a list of three-address code
+ * instructions given a parse tree. Handles scopes in pre-order,
+ * instructions in post-order.
+ */
 #define append_code(i) do { n->code = list_concat(n->code, get_code(t, i)); } while (0)
 void code_generate(struct tree *t)
 {
@@ -244,6 +249,9 @@ void code_generate(struct tree *t)
 }
 #undef append_code
 
+/*
+ * Maps a production rule to an opcode if supported.
+ */
 static enum opcode map_code(enum rule r)
 {
 	switch (r) {
@@ -276,6 +284,10 @@ static enum opcode map_code(enum rule r)
 	}
 }
 
+/*
+ * Allocates a new op, assigns code, name, and 3 addresses. Pass 'e'
+ * address for 'empty' address slots.
+ */
 static struct op *op_new(enum opcode code, char *name,
                          struct address a, struct address b, struct address c)
 {
@@ -292,6 +304,10 @@ static struct op *op_new(enum opcode code, char *name,
 	return op;
 }
 
+/*
+ * Allocates a new code list on a node if necessary. Pushes op to back
+ * of list.
+ */
 static void push_op(struct node *n, struct op *op)
 {
 	if (n->code == NULL)
@@ -325,6 +341,9 @@ static struct address temp_new(struct typeinfo *t)
 	return place;
 }
 
+/*
+ * Returns code list given a child index on a tree if available.
+ */
 static struct list *get_code(struct tree *t, int i)
 {
 	struct node *n = get_node(t, i);
@@ -335,6 +354,11 @@ static struct list *get_code(struct tree *t, int i)
 	return NULL;
 }
 
+/*
+ * Returns address given a child index on a tree. If negative, returns
+ * own address. Looks up address based on token->text in scope if not
+ * stored in the node.
+ */
 static struct address get_place(struct tree *t, int i)
 {
 	struct node *n = i > -1 ? get_node(t, i) : t->data;
@@ -354,12 +378,18 @@ static struct address get_place(struct tree *t, int i)
 	return e;
 }
 
+/*
+ * Returns the label of an op (first address).
+ */
 static struct address get_label(struct op *op)
 {
 	log_assert(op->code == LABEL);
 	return op->address[0];
 }
 
+/*
+ * Returns static string for opcode.
+ */
 #define R(rule) case rule: return #rule
 static char *print_opcode(enum opcode code)
 {
@@ -397,6 +427,9 @@ static char *print_opcode(enum opcode code)
 }
 #undef R
 
+/*
+ * Given an op, prints it and its memory addresses.
+ */
 static void print_op(FILE *stream, struct op *op)
 {
 	fprintf(stream, "%-8s", print_opcode(op->code));
@@ -411,6 +444,9 @@ static void print_op(FILE *stream, struct op *op)
 	fprintf(stream, "\n");
 }
 
+/*
+ * Given a stream and linked list of ops, prints each in order.
+ */
 void print_code(FILE *stream, struct list *code)
 {
 	struct list_node *iter = list_head(code);
