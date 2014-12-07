@@ -195,6 +195,18 @@ void code_generate(struct tree *t)
 		push_op(n, op_new(map_code(n->rule), NULL, n->place, l, r));
 		break;
 	}
+	case UNARY_EXPR3:
+	case UNARY_EXPR2: {
+		n->place = get_place(t, 1);
+		push_op(n, op_new(map_code(n->rule), NULL, n->place, one, e));
+		break;
+	}
+	case POSTFIX_EXPR9:
+	case POSTFIX_EXPR10: {
+		n->place = get_place(t, 0);
+		push_op(n, op_new(map_code(n->rule), NULL, n->place, one, e));
+		break;
+	}
 	case ASSIGN_EXPR2: {
 		char *k = get_identifier(t);
 		n->place = get_place(t, 0);
@@ -265,8 +277,12 @@ static enum opcode map_code(enum rule r)
 	case EQUAL_EXPR3:
 		return BNE; /* != */
 	case ADD_EXPR2:
+	case UNARY_EXPR2:
+	case POSTFIX_EXPR9:
 		return ADD; /* + */
 	case ADD_EXPR3:
+	case UNARY_EXPR3:
+	case POSTFIX_EXPR10:
 		return SUB; /* - */
 	case MULT_EXPR2:
 		return MUL; /* * */
