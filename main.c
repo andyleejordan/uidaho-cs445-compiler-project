@@ -62,6 +62,7 @@ struct list *yyscopes;
 struct list *yyfiles;
 struct hasht *yyincludes;
 struct hasht *yytypes;
+size_t yylabels;
 
 enum region region;
 size_t offset;
@@ -169,6 +170,7 @@ void parse_program(char *filename)
 
 	/* generating intermediate code */
 	log_debug("generating intermediate code");
+	yylabels = 0; /* reset label counter */
 	code_generate(yyprogram);
 	print_code(stderr, ((struct node *)yyprogram->data)->code);
 

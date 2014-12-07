@@ -22,6 +22,7 @@
 #include "list.h"
 #include "tree.h"
 
+extern size_t yylabels;
 extern struct typeinfo int_type;
 extern struct typeinfo float_type;
 extern struct typeinfo char_type;
@@ -324,9 +325,8 @@ static void push_op(struct node *n, struct op *op)
  */
 static struct op *label_new()
 {
-	static size_t labels = 0;
-	struct address place = { LABEL_R, labels, &unknown_type };
-	++labels;
+	struct address place = { LABEL_R, yylabels, &unknown_type };
+	++yylabels;
 	return op_new(LABEL, NULL, place, e, e);
 }
 
