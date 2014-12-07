@@ -22,10 +22,6 @@ types eventually. So I am going with the implicit symbol table, and
 refactoring =get_identifier()= to return =token->text= for literals
 (which are their keys, same as identifier names for explicit symbols).
 
-** TODO Adjust constant offsets
-For integers, the offset "should" be the integer value. For strings
-and floats, I think maybe the value should be stored in a "string
-region" array at the appropriate offset.
 * Additional tasks
 ** TODO Align memory addresses
 ** TODO Support class instance initializers

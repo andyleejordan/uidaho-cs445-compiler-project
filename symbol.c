@@ -99,12 +99,18 @@ static void symbol_insert(char *k, struct typeinfo *v, struct tree *t,
 		struct node *n = t->data;
 		v->place.region = n->place.region = region;
 		v->place.offset = n->place.offset = offset;
+		v->place.type = n->place.type = v;
 
 		hasht_insert(constant ? scope_constant() : scope_current(), k, v);
 		log_symbol(k, v);
 
-		/* increment offset */
-		offset += typeinfo_size(v);
+		/* increment offset if not a constant int */
+		if (!(constant && v->base == INT_T))
+			offset += typeinfo_size(v);
+		/* otherwise use ival for offset */
+		else
+			v->place.offset = n->place.offset = v->token->ival;
+
 	} else if (e->base == FUNCTION_T && v->base == FUNCTION_T) {
 		if (!typeinfo_compare(e, v)) {
 			log_semantic(t, "function signatures for %s mismatched", k);
@@ -384,6 +390,7 @@ struct typeinfo *type_check(struct tree *n)
 		log_assert(token);
 		struct typeinfo *v = typeinfo_copy(get_typeinfo(t));
 		log_assert(v);
+		v->token = token;
 
 		/* constants are only inserted on first appearance */
 		if (!scope_search(token->text)) {
@@ -1153,6 +1160,7 @@ static void handle_param(struct typeinfo *v, struct tree *t, struct hasht *s, st
 		struct node *n = t->data;
 		v->place.region = n->place.region = region;
 		v->place.offset = n->place.offset = offset;
+		v->place.type = n->place.type = v;
 
 		hasht_insert(s, k, v);
 		log_symbol(k, v);
