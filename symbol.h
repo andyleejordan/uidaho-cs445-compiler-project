@@ -29,7 +29,7 @@ struct address get_address(struct tree *t);
 
 enum type {
 	INT_T,
-	DOUBLE_T,
+	FLOAT_T,
 	CHAR_T,
 	BOOL_T,
 	ARRAY_T,

@@ -25,7 +25,7 @@ extern enum region region;
 extern size_t offset;
 
 extern struct typeinfo int_type;
-extern struct typeinfo double_type;
+extern struct typeinfo float_type;
 extern struct typeinfo char_type;
 extern struct typeinfo string_type;
 extern struct typeinfo bool_type;

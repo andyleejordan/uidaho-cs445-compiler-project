@@ -76,7 +76,7 @@ static void handle_class(struct typeinfo *t, struct tree *n);
 
 /* basic type comparators */
 struct typeinfo int_type;
-struct typeinfo double_type;
+struct typeinfo float_type;
 struct typeinfo char_type;
 struct typeinfo string_type;
 struct typeinfo bool_type;
@@ -92,8 +92,8 @@ static void set_type_comparators()
 	int_type.base = INT_T;
 	int_type.pointer = false;
 
-	double_type.base = DOUBLE_T;
-	double_type.pointer = false;
+	float_type.base = FLOAT_T;
+	float_type.pointer = false;
 
 	char_type.base = CHAR_T;
 	char_type.pointer = false;
@@ -128,7 +128,7 @@ static enum type map_type(enum yytokentype t)
 	case FLOATING:
 	case FLOAT:
 	case DOUBLE:
-		return DOUBLE_T;
+		return FLOAT_T;
 	case CHARACTER:
 	case CHAR:
 		return CHAR_T;
@@ -506,7 +506,7 @@ size_t typeinfo_size(struct typeinfo *t)
 
 	switch (t->base) {
 	case INT_T:
-	case DOUBLE_T:
+	case FLOAT_T:
 		return 8;
 	case CHAR_T:
 	case BOOL_T:
@@ -569,8 +569,8 @@ static struct typeinfo *get_typeinfo(struct tree *t) {
 		switch (type) {
 		case INT_T:
 			return &int_type;
-		case DOUBLE_T:
-			return &double_type;
+		case FLOAT_T:
+			return &float_type;
 		case CHAR_T:
 			return &char_type;
 		case ARRAY_T:
@@ -785,10 +785,10 @@ struct typeinfo *type_check(struct tree *n)
 		case SUBEQ:
 		case MULEQ:
 		case DIVEQ: {
-			if (!(typeinfo_compare(l, &int_type) || typeinfo_compare(l, &double_type)))
+			if (!(typeinfo_compare(l, &int_type) || typeinfo_compare(l, &float_type)))
 				log_semantic(n, "left operand not an int or double");
 
-			if (!(typeinfo_compare(r, &int_type) || typeinfo_compare(r, &double_type)))
+			if (!(typeinfo_compare(r, &int_type) || typeinfo_compare(r, &float_type)))
 				log_semantic(n, "right operand not an int or double");
 			break;
 		}
@@ -834,11 +834,11 @@ struct typeinfo *type_check(struct tree *n)
 	case REL_EXPR4: /* <= */
 	case REL_EXPR5: /* >= */ {
 		struct typeinfo *l = get_left_type(n);
-		if (!(typeinfo_compare(l, &int_type) || typeinfo_compare(l, &double_type)))
+		if (!(typeinfo_compare(l, &int_type) || typeinfo_compare(l, &float_type)))
 			log_semantic(n, "left operand not an int or double");
 
 		struct typeinfo *r = get_right_type(n);
-		if (!(typeinfo_compare(r, &int_type) || typeinfo_compare(r, &double_type)))
+		if (!(typeinfo_compare(r, &int_type) || typeinfo_compare(r, &float_type)))
 			log_semantic(n, "right operand not an int or double");
 
 		if (!typeinfo_compare(l, r))
@@ -852,11 +852,11 @@ struct typeinfo *type_check(struct tree *n)
 	case MULT_EXPR2: /* * */
 	case MULT_EXPR3: /* / */ {
 		struct typeinfo *l = get_left_type(n);
-		if (!(typeinfo_compare(l, &int_type) || typeinfo_compare(l, &double_type)))
+		if (!(typeinfo_compare(l, &int_type) || typeinfo_compare(l, &float_type)))
 			log_semantic(n, "left operand not an int or double");
 
 		struct typeinfo *r = get_right_type(n);
-		if (!(typeinfo_compare(r, &int_type) || typeinfo_compare(r, &double_type)))
+		if (!(typeinfo_compare(r, &int_type) || typeinfo_compare(r, &float_type)))
 			log_semantic(n, "right operand not an int or double");
 
 		if (!typeinfo_compare(l, r))
@@ -1089,7 +1089,7 @@ struct typeinfo *type_check(struct tree *n)
 				/* return leftmost type as result of << */
 				ret = t;
 			} else if (!(typeinfo_compare(t, &int_type)
-			             || typeinfo_compare(t, &double_type)
+			             || typeinfo_compare(t, &float_type)
 			             || typeinfo_compare(t, &bool_type)
 			             || typeinfo_compare(t, &char_type)
 			             || typeinfo_compare(t, &string_type)
@@ -1117,7 +1117,7 @@ struct typeinfo *type_check(struct tree *n)
 		if (t == NULL)
 			log_semantic(r, "symbol undeclared");
 		if (!(typeinfo_compare(t, &int_type)
-		      || typeinfo_compare(t, &double_type)
+		      || typeinfo_compare(t, &float_type)
 		      || typeinfo_compare(t, &char_type)
 		      || typeinfo_compare(t, &string_type)
 		      || (t->base == CLASS_T && (strcmp(t->class.type, "string") == 0))))
@@ -1565,7 +1565,7 @@ static char *print_basetype(struct typeinfo *t)
 {
 	switch (t->base) {
 		R(INT_T);
-		R(DOUBLE_T);
+		R(FLOAT_T);
 		R(CHAR_T);
 		R(BOOL_T);
 		R(ARRAY_T);
@@ -1584,7 +1584,7 @@ static char *print_basetype(struct typeinfo *t)
 /*
  * Prints a realistic reprensentation of a symbol to the stream.
  *
- * Example: DOUBLE_T foobar(INT_T *, AClass)
+ * Example: FLOAT_T foobar(INT_T *, AClass)
  */
 void print_typeinfo(FILE *stream, const char *k, struct typeinfo *v)
 {
@@ -1593,7 +1593,7 @@ void print_typeinfo(FILE *stream, const char *k, struct typeinfo *v)
 
 	switch (v->base) {
 	case INT_T:
-	case DOUBLE_T:
+	case FLOAT_T:
 	case CHAR_T:
 	case BOOL_T:
 	case VOID_T: {
