@@ -13,27 +13,12 @@
 #include <stddef.h>
 #include <stdio.h>
 
+#include "type.h"
 #include "rules.h"
 
 struct tree;
-
-/* TODO: narrow these down */
-enum region {
-	GLOBE_R,
-	LOCAL_R,
-	PARAM_R,
-	CLASS_R,
-	LABEL_R,
-	CONST_R,
-	UNKNOWN_R
-};
-
-char *print_region(enum region r);
-
-struct address {
-	enum region region;
-	size_t offset;
-};
+struct list;
+struct token;
 
 struct node {
 	enum rule rule;
@@ -46,6 +31,5 @@ struct node *node_new(enum rule r);
 struct node *get_node(struct tree *t, size_t i);
 enum rule get_rule(struct tree *t);
 struct token *get_token(struct node *n);
-void print_address(FILE *stream, struct address a);
 
 #endif /* NODE_H */

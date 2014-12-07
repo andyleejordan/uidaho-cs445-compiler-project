@@ -18,6 +18,7 @@
 
 struct tree;
 struct hasht_node;
+struct typeinfo;
 
 void symbol_populate(struct tree *t);
 void symbol_free(struct hasht_node *n);
@@ -26,43 +27,8 @@ struct typeinfo *type_check(struct tree *t);
 
 char *get_identifier(struct tree *n);
 struct address get_address(struct tree *t);
-
-enum type {
-	INT_T,
-	FLOAT_T,
-	CHAR_T,
-	BOOL_T,
-	ARRAY_T,
-	FUNCTION_T,
-	CLASS_T,
-	VOID_T,
-	UNKNOWN_T
-};
-
-struct typeinfo {
-	enum type base;
-	bool pointer;
-	struct address place;
-
-	union {
-		struct arrayinfo {
-			struct typeinfo *type;
-			size_t size;
-		} array;
-		struct functioninfo {
-			struct typeinfo *type; /* return */
-			struct list *parameters; /* typeinfo */
-			struct hasht *symbols; /* NULL until defined */
-		} function;
-		struct classinfo {
-			char *type; /* from yytypes table */
-			struct hasht *public;
-			struct hasht *private;
-		} class;
-	};
-};
-
-size_t typeinfo_size(struct typeinfo *t);
-void print_typeinfo(FILE *stream, const char *k, struct typeinfo *v);
+bool get_pointer(struct tree *n);
+int get_array(struct tree *n);
+char *get_class(struct tree *n);
 
 #endif /* SYMBOL_H */

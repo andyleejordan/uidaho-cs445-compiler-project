@@ -13,6 +13,7 @@
 #include <stdio.h>
 
 #include "node.h"
+#include "type.h"
 
 enum opcode {
 	/* pseudo opcodes */

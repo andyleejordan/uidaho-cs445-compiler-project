@@ -17,26 +17,6 @@
 #include "rules.h"
 
 /*
- * Given a region enum, returns its name as a static string.
- */
-#define R(rule) case rule: return #rule
-char *print_region(enum region r)
-{
-	switch (r) {
-		R(GLOBE_R);
-		R(LOCAL_R);
-		R(PARAM_R);
-		R(CLASS_R);
-		R(LABEL_R);
-		R(CONST_R);
-		R(UNKNOWN_R);
-	};
-
-	return NULL; /* error */
-}
-#undef R
-
-/*
  * Allocates a new blank node.
  *
  * Nodes hold semantic attributes, such as production rule, memory
@@ -100,9 +80,4 @@ struct token *get_token(struct node *n)
 	struct token *t = n->token;
 	log_assert(t);
 	return t;
-}
-
-void print_address(FILE *stream, struct address a)
-{
-	fprintf(stream, "%s:%-8zu", print_region(a.region), a.offset);
 }

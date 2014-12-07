@@ -12,6 +12,7 @@
 #include <stdio.h>
 
 #include "intermediate.h"
+#include "type.h"
 #include "symbol.h"
 #include "scope.h"
 #include "token.h"
@@ -20,9 +21,6 @@
 #include "node.h"
 #include "list.h"
 #include "tree.h"
-
-extern enum region region;
-extern size_t offset;
 
 extern struct typeinfo int_type;
 extern struct typeinfo float_type;
@@ -43,7 +41,8 @@ static struct list *get_code(struct tree *t, int i);
 static struct address get_place(struct tree *t, int i);
 static struct address get_label(struct op *op);
 
-const struct address e = { UNKNOWN_R, 0 };
+const struct address e = { UNKNOWN_R, 0, &unknown_type };
+const struct address one = { CONST_R, 1, &int_type };
 
 /*
  * Tree traversal to generate a list of three-address code
@@ -158,10 +157,10 @@ void code_generate(struct tree *t)
 		/* ASN(temp, condition) -> BIF(temp, first) -> GOTO(follow) ->
 		   LABEL(first) -> get_code(n, 2) ->
 		   LABEL(FOLLOW) -> get_code(n, 4) */
-		struct address temp = temp_new(&bool_type);
 		struct op *first = label_new();
 		struct op *follow = label_new();
 		append_code(1); /* condition */
+		struct address temp = temp_new(&bool_type);
 		push_op(n, op_new(ASN, NULL, temp, get_place(t, 1), e));
 		push_op(n, op_new(BIF, NULL, temp, get_label(first), e));
 		push_op(n, op_new(GOTO, NULL, get_label(follow), e, e));
@@ -326,7 +325,7 @@ static void push_op(struct node *n, struct op *op)
 static struct op *label_new()
 {
 	static size_t labels = 0;
-	struct address place = { LABEL_R, labels };
+	struct address place = { LABEL_R, labels, &unknown_type };
 	++labels;
 	return op_new(LABEL, NULL, place, e, e);
 }
@@ -337,7 +336,7 @@ static struct op *label_new()
  */
 static struct address temp_new(struct typeinfo *t)
 {
-	struct address place = { region, offset };
+	struct address place = { region, offset, t };
 	offset += typeinfo_size(t);
 	return place;
 }

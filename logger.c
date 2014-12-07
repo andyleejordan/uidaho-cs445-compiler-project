@@ -17,6 +17,7 @@
 #include "node.h"
 #include "token.h"
 #include "lexer.h"
+#include "type.h"
 #include "symbol.h"
 
 #include "list.h"
@@ -154,8 +155,6 @@ void log_check(const char *format, ...)
 	va_end(ap);
 }
 
-extern enum region region;
-extern size_t offset;
 void log_symbol(const char *k, struct typeinfo *v)
 {
 	if (!arguments.symbols)
