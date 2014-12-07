@@ -108,6 +108,7 @@ void code_generate(struct tree *t)
 		   may make it unnecessary */
 		/* TODO: get ident, search, get address */
 		n->place = get_place(t, 0);
+		append_code(0);
 		break;
 	}
 	case INIT_DECL: {
@@ -116,7 +117,7 @@ void code_generate(struct tree *t)
 		struct node *init = get_node(t, 1);
 		if (init == NULL)
 			break;
-
+		append_code(1);
 		push_op(n, op_new(ASN, get_identifier(t), n->place, init->place, e));
 		break;
 	}
@@ -126,7 +127,7 @@ void code_generate(struct tree *t)
 		/* TODO: count number of parameters: list_size(type->function.list) */
 		append_code(1); /* parameters */
 		push_op(n, op_new(CALL, k, n->place, e, e));
-		goto done;
+		break;
 	}
 	case EXPR_LIST: {
 		iter = list_head(t->children);
@@ -137,7 +138,7 @@ void code_generate(struct tree *t)
 			push_op(n, op_new(PARAM, NULL, get_place(child, -1), e, e));
 			iter = iter->next;
 		}
-		goto done;
+		break;
 	}
 	case SELECT1: { /* IF */
 		struct address temp = temp_new(&bool_type);
@@ -151,7 +152,7 @@ void code_generate(struct tree *t)
 		push_op(n, first);
 		append_code(2); /* true */
 		push_op(n, follow);
-		goto done;
+		break;
 	}
 	case SELECT2: { /* IF-ELSE chains */
 		/* ASN(temp, condition) -> BIF(temp, first) -> GOTO(follow) ->
@@ -168,7 +169,7 @@ void code_generate(struct tree *t)
 		append_code(2); /* true */
 		push_op(n, follow);
 		append_code(4); /* false */
-		goto done;
+		break;
 	}
 	case REL_EXPR2:
 	case REL_EXPR3:
@@ -183,7 +184,7 @@ void code_generate(struct tree *t)
 		struct address r = get_place(t, 2);
 		append_code(2); /* right */
 		push_op(n, op_new(map_code(n->rule), NULL, n->place, l, r));
-		goto done;
+		break;
 	}
 	case ADD_EXPR2:
 	case ADD_EXPR3:
@@ -196,7 +197,7 @@ void code_generate(struct tree *t)
 		struct address r = get_place(t, 2);
 		append_code(2); /* right */
 		push_op(n, op_new(map_code(n->rule), NULL, n->place, l, r));
-		goto done;
+		break;
 	}
 	case ASSIGN_EXPR2: {
 		char *k = get_identifier(t);
@@ -204,7 +205,7 @@ void code_generate(struct tree *t)
 		struct address r = get_place(t, 2);
 		append_code(2); /* right */
 		push_op(n, op_new(map_code(n->rule), k, n->place, r, e));
-		goto done;
+		break;
 	}
 	case RETURN_STATEMENT: {
 		struct node *ret = get_node(t, 1);
@@ -213,7 +214,7 @@ void code_generate(struct tree *t)
 		n->place = ret->place;
 		push_op(n, op_new(RET, NULL, n->place, e, e));
 		append_code(1);
-		goto done;
+		break;
 	}
 	case FUNCTION_DEF2: {
 		/* TODO: get procedure parameter and local sizes */
@@ -221,21 +222,21 @@ void code_generate(struct tree *t)
 		push_op(n, op_new(PROC, get_identifier(t), e, e, e));
 		append_code(2);
 		push_op(n, op_new(END, NULL, e, e, e));
-		goto done;
-	}
-	default:
 		break;
 	}
-	/* concatenate all children code to build list */
-	iter = list_head(t->children);
-	while (!list_end(iter)) {
-		struct tree *child = iter->data;
-		struct node *n_ = child->data;
-		/* noop for NULL code */
-		n->code = list_concat(n->code, n_->code);
-		iter = iter->next;
+	default: {
+		/* concatenate all children code to build list */
+		iter = list_head(t->children);
+		while (!list_end(iter)) {
+			struct tree *child = iter->data;
+			struct node *n_ = child->data;
+			/* noop for NULL code */
+			n->code = list_concat(n->code, n_->code);
+			iter = iter->next;
+		}
 	}
- done:
+	}
+
 	if (scoped) {
 		while (list_size(yyscopes) != scopes) {
 			log_debug("popping scope");
