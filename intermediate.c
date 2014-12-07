@@ -141,12 +141,10 @@ void code_generate(struct tree *t)
 		break;
 	}
 	case SELECT1: { /* IF */
-		struct address temp = temp_new(&bool_type);
 		struct op *first = label_new();
 		struct op *follow = label_new();
 		append_code(1); /* condition */
-		push_op(n, op_new(ASN, NULL, temp, get_place(t, 1), e));
-		push_op(n, op_new(BIF, NULL, temp, get_label(first), e));
+		push_op(n, op_new(BIF, NULL, get_place(t, 1), get_label(first), e));
 		/* TODO: backpatch this follow with parent's follow */
 		push_op(n, op_new(GOTO, NULL, get_label(follow), e, e));
 		push_op(n, first);
@@ -161,9 +159,7 @@ void code_generate(struct tree *t)
 		struct op *first = label_new();
 		struct op *follow = label_new();
 		append_code(1); /* condition */
-		struct address temp = temp_new(&bool_type);
-		push_op(n, op_new(ASN, NULL, temp, get_place(t, 1), e));
-		push_op(n, op_new(BIF, NULL, temp, get_label(first), e));
+		push_op(n, op_new(BIF, NULL, get_place(t, 1), get_label(first), e));
 		push_op(n, op_new(GOTO, NULL, get_label(follow), e, e));
 		push_op(n, first);
 		append_code(2); /* true */
