@@ -675,16 +675,13 @@ struct typeinfo *type_check(struct tree *n)
 		struct typeinfo *r = typeinfo_copy(l);
 
 		r->function.parameters = list_new(NULL, NULL);
-		struct tree *expr_list = get_production(n, EXPR_LIST);
-		if (expr_list) {
-			struct list_node *iter = list_head(expr_list->children);
-			while (!list_end(iter)) {
-				struct typeinfo *t = type_check(iter->data);
-				if (t == NULL)
-					log_semantic(iter->data, "symbol for parameter undeclared");
-				list_push_back(r->function.parameters, t);
-				iter = iter->next;
-			}
+		struct tree *iter = get_production(n, EXPR_LIST);
+		while (iter && get_rule(iter) == EXPR_LIST) {
+			struct typeinfo *t = type_check(iter);
+			if (t == NULL)
+				log_semantic(iter, "symbol for parameter undeclared");
+			list_push_front(r->function.parameters, t);
+			iter = tree_index(iter, 0);
 		}
 
 		if (!typeinfo_compare(l, r)) {
@@ -951,7 +948,11 @@ struct typeinfo *type_check(struct tree *n)
 	}
 	case EXPR_LIST: {
 		/* recurse into expression lists */
-		return type_check(tree_index(n, 0));
+		struct tree *child = tree_index(n, 0);
+		if (child && get_rule(child) == EXPR_LIST)
+			return type_check(tree_index(n, 1));
+		else
+			return type_check(tree_index(n, 0));
 	}
 	default: {
 		/* recursive search for non-expressions */

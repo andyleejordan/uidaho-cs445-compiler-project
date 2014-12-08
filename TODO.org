@@ -1,6 +1,4 @@
 * Required tasks
-** TODO Fix expression lists for function definitions
-During typechecking.
 ** TODO Handle addressing (ADDR, LCONT, SCONT)
 ** TODO Handle shortcut assignments (+= etc.)
 Will require additional grammar rules
