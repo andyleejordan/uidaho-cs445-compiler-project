@@ -43,7 +43,6 @@ extern struct typeinfo unknown_type;
 static void symbol_insert(char *k, struct typeinfo *v, struct tree *t,
                           struct hasht *l, bool constant);
 
-static struct tree *get_production(struct tree *n, enum rule r);
 static struct token *get_category(struct tree *n, int target, int before);
 static struct token *get_category_(struct tree *n, int target, int before);
 static bool get_public(struct tree *n);
@@ -142,7 +141,7 @@ void symbol_free(struct hasht_node *n)
 /*
  * Given a tree node, get the first subtree with the production rule.
  */
-static struct tree *get_production(struct tree *n, enum rule r)
+struct tree *get_production(struct tree *n, enum rule r)
 {
 	log_assert(n);
 

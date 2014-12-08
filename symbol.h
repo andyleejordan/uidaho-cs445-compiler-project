@@ -25,6 +25,7 @@ void symbol_free(struct hasht_node *n);
 
 struct typeinfo *type_check(struct tree *t);
 
+struct tree *get_production(struct tree *n, enum rule r);
 char *get_identifier(struct tree *n);
 struct address get_address(struct tree *t);
 bool get_pointer(struct tree *n);
