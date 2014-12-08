@@ -279,6 +279,14 @@ void code_generate(struct tree *t)
 		n->place = size;
 		break;
 	}
+	case POSTFIX_EXPR2: { /* array[index] */
+		char *k = get_identifier(t);
+		struct typeinfo *array = scope_search(k);
+		struct address index = get_place(t, 2);
+		n->place = temp_new(array->array.type);
+		push_op(n, op_new(ARR, NULL, n->place, array->place, index));
+		break;
+	}
 	case POSTFIX_EXPR9:
 	case POSTFIX_EXPR10: {
 		n->place = get_place(t, 0);
@@ -289,8 +297,9 @@ void code_generate(struct tree *t)
 		char *k = get_identifier(t);
 		n->place = get_place(t, 0);
 		struct address r = get_place(t, 2);
+		append_code(0); /* left */
 		append_code(2); /* right */
-		push_op(n, op_new(map_code(n->rule), k, n->place, r, e));
+		push_op(n, op_new(ASN, k, n->place, r, e));
 		break;
 	}
 	case RETURN_STATEMENT: {
@@ -368,8 +377,6 @@ static enum opcode map_code(enum rule r)
 		return DIV; /* / */
 	case MULT_EXPR4:
 		return MOD; /* % */
-	case ASSIGN_EXPR2:
-		return ASN;
 	default:
 		return ERRC; /* unknown */
 	}
@@ -508,6 +515,7 @@ static char *print_opcode(enum opcode code)
 		R(BNE);
 		R(BIF);
 		R(BNIF);
+		R(ARR);
 		R(PARAM);
 		R(CALL);
 		R(RET);

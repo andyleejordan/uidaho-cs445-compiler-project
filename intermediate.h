@@ -34,14 +34,15 @@ enum opcode {
 	LCONT,  /* x := *y      store contents pointed to by y to x */
 	SCONT,  /* *x := y      store y to location pointed to by x */
 	GOTO,   /* goto L       unconditional jump to L */
-	BLT,    /* if x rop y then goto L  binary conditional jump to L */
-	BLE,
-	BGT,
-	BGE,
-	BEQ,
-	BNE,
+	BLT,    /* x < y */
+	BLE,    /* x <= y */
+	BGT,    /* x > y */
+	BGE,    /* x >= y */
+	BEQ,    /* x == y */
+	BNE,    /* x != y */
 	BIF,    /* if x then goto L   unary conditional jump to L */
 	BNIF,   /* if !x then goto L  unary negative conditional jump to L */
+	ARR,    /* x = array[y]   retrieve array element at index y */
 	PARAM,  /* param x        store x as a parameter */
 	CALL,   /* call p, x, n   call procedure p with n parameters, store result in x */
 	RET,    /* return x       return from procedure, use x as the result */

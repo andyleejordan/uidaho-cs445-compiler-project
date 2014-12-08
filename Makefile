@@ -31,7 +31,7 @@ SRCS = main.c type.c symbol.c node.c token.c rules.c scope.c intermediate.c \
 	logger.c list.c tree.c hasht.c lookup3.c \
 	lex.yy.c parser.tab.c
 OBJS = $(SRCS:.c=.o)
-TESTDATA = data/pass/fibonacci.cpp
+TESTDATA = data/pass/array.cpp data/pass/fibonacci.cpp
 TESTFLAGS = -t
 
 # targets
