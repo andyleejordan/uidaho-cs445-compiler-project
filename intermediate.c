@@ -135,7 +135,9 @@ void code_generate(struct tree *t)
 			struct tree *child = iter->data;
 			struct node *n_ = child->data;
 			n->code = list_concat(n->code, n_->code);
-			push_op(n, op_new(PARAM, NULL, get_place(child, -1), e, e));
+			struct address place = get_place(child, -1);
+			if (place.region != UNKNOWN_R)
+				push_op(n, op_new(PARAM, NULL, place, e, e));
 			iter = iter->next;
 		}
 		break;
