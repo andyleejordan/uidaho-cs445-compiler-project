@@ -826,6 +826,11 @@ struct typeinfo *type_check(struct tree *n)
 			log_semantic(n, "destructors not yet supported");
 		}
 	}
+	case UNARY_EXPR7:
+	case UNARY_EXPR8: {
+		/* sizeof keyword returns an int */
+		return &int_type;
+	}
 	case SHIFT_EXPR2: {
 		/* << only used for puts-to IO */
 		if (!(libs.usingstd && (libs.fstream || libs.iostream)))
