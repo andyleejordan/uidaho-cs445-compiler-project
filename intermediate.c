@@ -239,6 +239,46 @@ void code_generate(struct tree *t)
 		push_op(n, op_new(map_code(n->rule), NULL, n->place, one, e));
 		break;
 	}
+	case UNARY_EXPR7:
+	case UNARY_EXPR8: { /* sizeof(symbol) */
+		/* obtain size as a const int */
+		struct address size;
+		size.region = CONST_R;
+		size.type = &int_type;
+
+		struct typeinfo *type = NULL;
+
+		char *k = get_identifier(t);
+		if (k) {
+			/* perform symbol lookup if possible */
+			type = typeinfo_copy(scope_search(k));
+			/* if dereferencing, use size of value */
+			if (get_pointer(t))
+				type->pointer = false;
+			/* if accessing an index, use size of array element */
+			if (get_array(t) > 0) {
+				struct typeinfo *temp = typeinfo_copy(type->array.type);
+				free(type);
+				type = temp;
+			}
+		} else {
+			/* get type specifier */
+			struct tree *type_spec = get_production(t, TYPE_SPEC_SEQ);
+			if (type_spec == NULL)
+				log_semantic(t, "sizeof operator missing type spec");
+			type = typeinfo_copy(type_check(tree_index(type_spec, 0)));
+			/* check if given a pointer type */
+			if (get_pointer(t))
+				type->pointer = true;
+		}
+		if (type == NULL) /* still a semantic error */
+			log_semantic(t, "sizeof operator missing type");
+
+		size.offset = typeinfo_size(type);
+		free(type);
+		n->place = size;
+		break;
+	}
 	case POSTFIX_EXPR9:
 	case POSTFIX_EXPR10: {
 		n->place = get_place(t, 0);
