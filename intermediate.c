@@ -124,9 +124,13 @@ void code_generate(struct tree *t)
 	case POSTFIX_EXPR3: {
 		char *k = get_identifier(t);
 		n->place = temp_new(scope_search(k));
-		/* TODO: count number of parameters: list_size(type->function.list) */
+		/* count number of parameters */
+		struct address count;
+		count.region = CONST_R;
+		count.type = &int_type;
+		count.offset = list_size(scope_search(k)->function.parameters);
 		append_code(1); /* parameters */
-		push_op(n, op_new(CALL, k, n->place, e, e));
+		push_op(n, op_new(CALL, k, n->place, count, e));
 		break;
 	}
 	case EXPR_LIST: {
