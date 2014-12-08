@@ -14,6 +14,8 @@
 #include <stdio.h>
 #include <stdbool.h>
 
+bool TEST_DEBUG;
+
 int status;
 
 bool compare(const char *a, const char *b);

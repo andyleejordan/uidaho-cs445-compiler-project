@@ -19,6 +19,9 @@ bool compare(const char *a, const char *b)
 
 void running(const char *format, ...)
 {
+	if (!TEST_DEBUG)
+		return;
+
 	va_list ap;
 	va_start(ap, format);
 
@@ -33,6 +36,9 @@ void running(const char *format, ...)
 
 void testing(const char *format, ...)
 {
+	if (!TEST_DEBUG)
+		return;
+
 	va_list ap;
 	va_start(ap, format);
 
