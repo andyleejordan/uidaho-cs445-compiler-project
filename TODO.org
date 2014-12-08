@@ -1,27 +1,15 @@
 * Required tasks
-** TODO Generate TAC for loops (for and while)
-** TODO Traversal to assign ".first/.follow/.true/.false" labels for jumps
-Figure out where/how to store labels. They would *seem* to be "empty"
-code instructions with a label instead of opcode with addresses.
-** TODO Post-order traversal to assign code to expressions/statements/etc.
-*** TODO Create temporaries where required
-*** TODO Retrieve address of constants
-- build implicit symbol table, traverse to node with literal, and search
-- build a new function which traverses to the node with the literal
-  rule and return its address
-- redo =tree_traverse()= (again) to accept variadic functions and use
-  this to do the former much more easily
-
-Every way is going to require handling the scopes to find an explicit
-symbol the current way. This could be negated with the generic
-function as it could traverse to the node containing an identifier
-token and return its address. Since the type check procedure already
-checked that each symbol was defined (i.e. in the scope), it would be
-easier to skip checking it again, but honestly, we will want those
-types eventually. So I am going with the implicit symbol table, and
-refactoring =get_identifier()= to return =token->text= for literals
-(which are their keys, same as identifier names for explicit symbols).
-
+** TODO Fix expression lists for function definitions
+During typechecking.
+** TODO Handle addressing (ADDR, LCONT, SCONT)
+** TODO Handle shortcut assignments (+= etc.)
+Will require additional grammar rules
+** TODO Handle field accessors (./->)
+** TODO Handle classes
+** TODO Handle short-circuit booleans
+** TODO Handle switches
+** TODO Handle break/continue jumps
+** TODO Handle new expressions
 * Additional tasks
 ** TODO Align memory addresses
 ** TODO Support class instance initializers
