@@ -34,21 +34,29 @@ struct token *token_new(int category, int lineno,
 
 	t->category = category;
 	t->lineno = lineno;
-
 	t->text = strdup(text);
-
 	t->filename = strdup(filename);
 
-	if (category == INTEGER)
+	switch(category) {
+	case INTEGER:
 		t->ival = atoi(text);
-
-	if (category == FLOATING)
+		break;
+	case FALSE:
+		t->ival = 0;
+		break;
+	case TRUE:
+		t->ival = 1;
+		break;
+	case FLOATING:
 		t->fval = atof(text);
-
-	if (category == STRING) {
+		break;
+	case STRING:
 		t->ssize = 0; /* append null later */
 		token_sval_size = TEXT_CHUNK_SIZE;
 		t->sval = calloc(token_sval_size, sizeof(char));
+		break;
+	default:
+		break;
 	}
 
 	return t;

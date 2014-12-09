@@ -106,7 +106,7 @@ static void symbol_insert(char *k, struct typeinfo *v, struct tree *t,
 		log_symbol(k, v);
 
 		/* increment offset if not a constant int */
-		if (!(constant && v->base == INT_T))
+		if (!(constant && (v->base == INT_T || v->base == BOOL_T)))
 			offset += typeinfo_size(v);
 		/* otherwise use ival for offset */
 		else
