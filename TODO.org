@@ -1,13 +1,14 @@
 * Required tasks
-** TODO Handle addressing (ADDR, LCONT, SCONT)
-** TODO Handle shortcut assignments (+= etc.)
-Will require additional grammar rules
+** TODO Handle logical NOT
+** TODO Handle short-circuit booleans
 ** TODO Handle field accessors (./->)
 ** TODO Handle classes
-** TODO Handle short-circuit booleans
 ** TODO Handle switches
 ** TODO Handle break/continue jumps
 ** TODO Handle new expressions
+** TODO Handle shortcut assignments (+= etc.)
+Will require additional grammar rules
+
 * Additional tasks
 ** TODO Align memory addresses
 ** TODO Support class instance initializers

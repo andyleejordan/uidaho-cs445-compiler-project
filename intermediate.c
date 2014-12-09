@@ -51,6 +51,7 @@ const struct address one = { CONST_R, 1, &int_type };
  * instructions in post-order.
  */
 #define append_code(i) do { n->code = list_concat(n->code, get_code(t, i)); } while (0)
+#define child(i) tree_index(t, i)
 void code_generate(struct tree *t)
 {
 	struct node *n = t->data;
@@ -246,7 +247,19 @@ void code_generate(struct tree *t)
 		push_op(n, op_new(map_code(n->rule), NULL, n->place, one, e));
 		break;
 	}
-	case UNARY_EXPR5: { /* x = &y */
+	case UNARY_EXPR4: { /* dereference */
+		append_code(1);
+		/* stop if this is an assignment operand */
+		if (get_rule(t->parent) == ASSIGN_EXPR2) {
+			n->place = get_place(t, 1);
+			break;
+		}
+		/* otherwise dereference for value */
+		n->place = temp_new(get_place(t, 1).type);
+		push_op(n, op_new(LCONT, NULL, n->place, get_place(t, 1), e));
+		break;
+	}
+	case UNARY_EXPR5: { /* address-of */
 		n->place = temp_new(&int_type);
 		append_code(1);
 		push_op(n, op_new(ADDR, NULL, n->place, get_place(t, 1), e));
@@ -312,7 +325,13 @@ void code_generate(struct tree *t)
 		struct address r = get_place(t, 2);
 		append_code(0); /* left */
 		append_code(2); /* right */
-		push_op(n, op_new(ASN, k, n->place, r, e));
+		enum opcode code = ASN;
+		/* handle doing assignment with pointers */
+		if (get_rule(child(0)) == UNARY_EXPR4)
+			code = SCONT;
+		else if (get_rule(child(2)) == UNARY_EXPR4)
+			code = LCONT;
+		push_op(n, op_new(code, k, n->place, r, e));
 		break;
 	}
 	case RETURN_STATEMENT: {
@@ -357,6 +376,7 @@ void code_generate(struct tree *t)
 	}
 }
 #undef append_code
+#undef child
 
 /*
  * Maps a production rule to an opcode if supported.
