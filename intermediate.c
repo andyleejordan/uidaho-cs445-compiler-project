@@ -333,6 +333,12 @@ void code_generate(struct tree *t)
 	case UNARY_NOT: { /* logical not */
 		n->place = temp_new(&bool_type);
 		append_code(1);
+		push_op(n, op_new(NOT, NULL, n->place, get_place(t, 1), e));
+		break;
+	}
+	case UNARY_MINUS: { /* negative integer */
+		n->place = temp_new(&int_type);
+		append_code(1);
 		push_op(n, op_new(NEG, NULL, n->place, get_place(t, 1), e));
 		break;
 	}
@@ -658,6 +664,7 @@ static char *print_opcode(enum opcode code)
 		R(DIV);
 		R(MOD);
 		R(NEG);
+		R(NOT);
 		R(ASN);
 		R(ADDR);
 		R(LCONT);

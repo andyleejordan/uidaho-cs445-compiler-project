@@ -28,7 +28,8 @@ enum opcode {
 	MUL,
 	DIV,
 	MOD,
-	NEG,    /* x := op y    store result of unary operation on y to x */
+	NEG,    /* x := -y      store result of integer neg operation on y to x */
+	NOT,    /* x := !y      store result of logical not operation on y to x */
 	ASN,    /* x := y       store y to x */
 	ADDR,   /* x := &y      store address of y to x */
 	LCONT,  /* x := *y      store contents pointed to by y to x */
