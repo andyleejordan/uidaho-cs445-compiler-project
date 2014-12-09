@@ -45,6 +45,9 @@ static struct address get_label(struct op *op);
 const struct address e = { UNKNOWN_R, 0, &unknown_type };
 const struct address one = { CONST_R, 1, &int_type };
 
+struct op break_op;
+struct op continue_op;
+
 /*
  * Tree traversal(s) to generate a list of three-address code
  * instructions given a parse tree. Handles scopes in pre-order,
@@ -56,6 +59,8 @@ const struct address one = { CONST_R, 1, &int_type };
 static void handle_switch(struct tree *t, struct op *next, struct op **def,
                           struct address temp, struct address test,
                           struct list *test_code);
+
+static void backpatch(struct list *code, struct op *first, struct op *follow);
 
 void code_generate(struct tree *t)
 {
@@ -153,6 +158,14 @@ void code_generate(struct tree *t)
 		}
 		break;
 	}
+	case BREAK_STATEMENT: {
+		push_op(n, &break_op);
+		break;
+	}
+	case CONTINUE_STATEMENT: {
+		push_op(n, &continue_op);
+		break;
+	}
 	case LABELED_STATEMENT1:
 	case LABELED_STATEMENT2: {
 		/* these are skipped so that their code is
@@ -164,7 +177,6 @@ void code_generate(struct tree *t)
 		struct op *follow = label_new();
 		append_code(1); /* condition */
 		push_op(n, op_new(BIF, NULL, get_place(t, 1), get_label(first), e));
-		/* TODO: backpatch this follow with parent's follow */
 		push_op(n, op_new(GOTO, NULL, get_label(follow), e, e));
 		push_op(n, first);
 		append_code(2); /* true */
@@ -196,7 +208,7 @@ void code_generate(struct tree *t)
 		struct list *test_code = list_new(NULL, NULL);
 		list_push_back(test_code, test);
 
-		/* call search for labels, tests, breaks, continues */
+		/* call search for labels, tests, and breaks */
 		append_code(1); /* expr */
 		push_op(n, op_new(GOTO, NULL, get_label(test), e, e));
 		handle_switch(child(2), next, &dflt,
@@ -221,6 +233,7 @@ void code_generate(struct tree *t)
 		push_op(n, op_new(BIF, NULL, get_place(t, 1), get_label(body), e));
 		push_op(n, op_new(GOTO, NULL, get_label(follow), e, e));
 		push_op(n, body);
+		backpatch(get_code(t, 2), first, follow);
 		append_code(2); /* body */
 		push_op(n, op_new(GOTO, NULL, get_label(first), e, e));
 		push_op(n, follow);
@@ -228,10 +241,13 @@ void code_generate(struct tree *t)
 	}
 	case ITER2: { /* do { body; } while (expr); */
 		struct op *first = label_new();
+		struct op *follow = label_new();
 		push_op(n, first); /* before body */
+		backpatch(get_code(t, 1), first, follow);
 		append_code(1); /* body */
 		append_code(3); /* expr */
 		push_op(n, op_new(BIF, NULL, get_place(t, 3), get_label(first), e));
+		push_op(n, follow);
 		break;
 	}
 	case ITER3: { /* for (expr1; expr2; expr3) { body; } */
@@ -244,6 +260,7 @@ void code_generate(struct tree *t)
 		push_op(n, op_new(BIF, NULL, get_place(t, 2), get_label(body), e));
 		push_op(n, op_new(GOTO, NULL, get_label(follow), e, e));
 		push_op(n, body);
+		backpatch(get_code(t, 4), first, follow);
 		append_code(4); /* body */
 		append_code(3); /* expr3 */
 		push_op(n, op_new(GOTO, NULL, get_label(first), e, e));
@@ -482,6 +499,19 @@ static void handle_switch(struct tree *t, struct op *next, struct op **dflt,
 	default: {
 		break;
 	}
+	}
+}
+
+static void backpatch(struct list *code, struct op *first, struct op *follow)
+{
+	struct list_node *iter = list_head(code);
+	while (!list_end(iter)) {
+		struct op *op = iter->data;
+		if (follow && op == &break_op)
+			iter->data = op_new(GOTO, NULL, get_label(follow), e, e);
+		if (first && op == &continue_op)
+			iter->data = op_new(GOTO, NULL, get_label(first), e, e);
+		iter = iter->next;
 	}
 }
 #undef append_code
