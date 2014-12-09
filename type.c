@@ -229,22 +229,6 @@ struct typeinfo *typeinfo_copy(struct typeinfo *t)
 	n = memcpy(n, t, sizeof(*t));
 	log_assert(n);
 
-	/* recursive copy of the types */
-	switch(n->base) {
-	case ARRAY_T:
-		n->array.type = typeinfo_copy(t->array.type);
-		break;
-	case FUNCTION_T:
-		/* may also want to copy parameters list and symbol table */
-		n->function.type = typeinfo_copy(t->function.type);
-		break;
-	case CLASS_T:
-		/* this type is a string not a typeinfo */
-		break;
-	default:
-		/* the rest don't need anything else */
-		break;
-	}
 
 	return n;
 }
