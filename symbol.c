@@ -29,6 +29,8 @@
 #include "hasht.h"
 #include "tree.h"
 
+#define child(i) tree_index(n, i)
+
 /* type comparators */
 extern struct typeinfo int_type;
 extern struct typeinfo float_type;
@@ -349,7 +351,7 @@ static struct typeinfo *get_typeinfo(struct tree *t) {
  */
 static struct typeinfo *get_left_type(struct tree *n)
 {
-	struct tree *n_= tree_index(n, 0);
+	struct tree *n_= child(0);
 	struct typeinfo *t = type_check(n_);
 	if (t == NULL)
 		log_semantic(n_, "left operand undeclared");
@@ -361,7 +363,7 @@ static struct typeinfo *get_left_type(struct tree *n)
  */
 static struct typeinfo *get_right_type(struct tree *n)
 {
-	struct tree *n_= tree_index(n, 2);
+	struct tree *n_= child(2);
 	struct typeinfo *t = type_check(n_);
 	if (t == NULL)
 		log_semantic(n_, "right operand undeclared");
@@ -383,7 +385,7 @@ struct typeinfo *type_check(struct tree *n)
 	switch (production) {
 	case LITERAL: {
 		/* assign place to constants */
-		struct tree *t = tree_index(n, 0);
+		struct tree *t = child(0);
 		log_assert(t);
 		struct token *token = get_token(t->data);
 		log_assert(token);
@@ -414,7 +416,7 @@ struct typeinfo *type_check(struct tree *n)
 		if (l == NULL)
 			log_semantic(n, "could not get symbol for %s in init", k);
 
-		struct typeinfo *r = type_check(tree_index(n, 0));
+		struct typeinfo *r = type_check(child(0));
 		if (r == NULL)
 			log_semantic(n, "symbol %s undeclared", k);
 
@@ -516,7 +518,7 @@ struct typeinfo *type_check(struct tree *n)
 	case DELETE_EXPR1:
 	case DELETE_EXPR2: {
 		/* delete operator */
-		struct typeinfo *t = type_check(tree_index(n, 1));
+		struct typeinfo *t = type_check(child(1));
 		if (t == NULL)
 			log_semantic(n, "symbol %s undeclared", get_identifier(n));
 
@@ -527,7 +529,7 @@ struct typeinfo *type_check(struct tree *n)
 	}
 	case ASSIGN_EXPR2: {
 		/* assignment operator */
-		char *k = get_identifier(tree_index(n, 0));
+		char *k = get_identifier(child(0));
 		if (k == NULL)
 			log_semantic(n, "left assignment operand not assignable");
 
@@ -698,7 +700,7 @@ struct typeinfo *type_check(struct tree *n)
 	case POSTFIX_EXPR6: {
 		/* class_instance.field access */
 		char *k = get_identifier(n);
-		char *f = get_identifier(tree_index(n, 2));
+		char *f = get_identifier(child(2));
 		log_assert(k && f);
 
 		struct typeinfo *l = scope_search(k);
@@ -723,7 +725,7 @@ struct typeinfo *type_check(struct tree *n)
 	case POSTFIX_EXPR8: {
 		/* class_ptr->field access */
 		char *k = get_identifier(n);
-		char *f = get_identifier(tree_index(n, 2));
+		char *f = get_identifier(child(2));
 		log_assert(k && f);
 
 		struct typeinfo *l = scope_search(k);
@@ -746,7 +748,7 @@ struct typeinfo *type_check(struct tree *n)
 	}
 	case POSTFIX_EXPR9:  /* i++ */
 	case POSTFIX_EXPR10: /* i-- */ {
-		struct typeinfo *t = type_check(tree_index(n, 0));
+		struct typeinfo *t = type_check(child(0));
 		if (!typeinfo_compare(t, &int_type))
 			log_semantic(n, "operand to postfix ++/-- not an int");
 
@@ -755,7 +757,7 @@ struct typeinfo *type_check(struct tree *n)
 	}
 	case UNARY_EXPR2: /* ++i */
 	case UNARY_EXPR3: /* --i */ {
-		struct typeinfo *t = type_check(tree_index(n, 1));
+		struct typeinfo *t = type_check(child(1));
 		if (t == NULL)
 			log_semantic(n, "symbol undeclared");
 		if (!typeinfo_compare(t, &int_type))
@@ -801,7 +803,7 @@ struct typeinfo *type_check(struct tree *n)
 		return copy;
 	}
 	case UNARY_EXPR6: {
-		struct typeinfo *t = type_check(tree_index(n, 1));
+		struct typeinfo *t = type_check(child(1));
 		if (t == NULL)
 			log_semantic(n, "symbol undeclared");
 
@@ -866,8 +868,8 @@ struct typeinfo *type_check(struct tree *n)
 		if (!(libs.usingstd && (libs.fstream || libs.iostream)))
 			log_semantic(n, ">> can only be used with std streams in 120++");
 
-		struct tree *l = tree_index(n, 0);
-		struct tree *r = tree_index(n, 1);
+		struct tree *l = child(0);
+		struct tree *r = child(1);
 		char *cin = get_identifier(l);
 		if (strcmp(cin, "cin") != 0)
 			log_semantic(l, "left operand of >> is not cin");
@@ -948,11 +950,11 @@ struct typeinfo *type_check(struct tree *n)
 	}
 	case EXPR_LIST: {
 		/* recurse into expression lists */
-		struct tree *child = tree_index(n, 0);
-		if (child && get_rule(child) == EXPR_LIST)
-			return type_check(tree_index(n, 1));
+		struct tree *c = child(0);
+		if (c && get_rule(c) == EXPR_LIST)
+			return type_check(child(1));
 		else
-			return type_check(tree_index(n, 0));
+			return type_check(child(0));
 	}
 	default: {
 		/* recursive search for non-expressions */
@@ -975,7 +977,7 @@ static bool handle_node(struct tree *n, int d)
 {
 	switch (get_rule(n)) {
 	case SIMPLE_DECL1: { /* variable and function declarations */
-		handle_init_list(typeinfo_new(n), tree_index(n, 1));
+		handle_init_list(typeinfo_new(n), child(1));
 		return false;
 	}
 	case FUNCTION_DEF1: { /* constructor definition */
@@ -1079,14 +1081,14 @@ static void handle_init_list(struct typeinfo *v, struct tree *n)
 			log_semantic(n, "unrecognized class access specifier");
 		}
 
-		handle_init_list(v, tree_index(n, 1));
+		handle_init_list(v, child(1));
 
 		log_debug("class scope had %zu symbols", hasht_used(list_back(yyscopes)));
 		log_debug("popping scope");
 		scope_pop();
 	} else if (r == MEMBER_DECL1) {
 		/* recurse to end of class declaration */
-		handle_init_list(typeinfo_new(n), tree_index(n, 1));
+		handle_init_list(typeinfo_new(n), child(1));
 	} else {
 		/* process a single declaration with copy of type */
 		struct typeinfo *c = typeinfo_copy(v);
@@ -1141,18 +1143,18 @@ static void handle_function(struct typeinfo *t, struct tree *n, char *k)
  * table and able to find an indentifier, inserts into the scope. If
  * given a parameters list, will insert into the list.
  */
-static void handle_param(struct typeinfo *v, struct tree *t, struct hasht *s, struct list *l)
+static void handle_param(struct typeinfo *v, struct tree *n, struct hasht *s, struct list *l)
 {
-	log_assert(t);
-	char *k = get_identifier(t);
+	log_assert(n);
+	char *k = get_identifier(n);
 
-	if (tree_size(t) > 3) { /* not a simple type */
-		struct tree *t_ = tree_index(t, 1);
-		enum rule r = get_rule(t_);
+	if (tree_size(n) > 3) { /* not a simple type */
+		struct tree *t = child(1);
+		enum rule r = get_rule(t);
 
 		/* array (with possible size) */
 		if (r == DIRECT_ABSTRACT_DECL4 || r == DIRECT_DECL6)
-			v = typeinfo_new_array(t_, v);
+			v = typeinfo_new_array(t, v);
 	}
 
 	/* insert into list when declaring */
@@ -1162,10 +1164,10 @@ static void handle_param(struct typeinfo *v, struct tree *t, struct hasht *s, st
 	/* insert into table when defining */
 	if (s && k && v) {
 		/* assign region and offset */
-		struct node *n = t->data;
-		v->place.region = n->place.region = region;
-		v->place.offset = n->place.offset = offset;
-		v->place.type = n->place.type = v;
+		struct node *node = n->data;
+		v->place.region = node->place.region = region;
+		v->place.offset = node->place.offset = offset;
+		v->place.type = node->place.type = v;
 
 		hasht_insert(s, k, v);
 		log_symbol(k, v);
@@ -1211,7 +1213,7 @@ static void handle_class(struct typeinfo *t, struct tree *n)
 	region = CLASS_R;
 	offset = 0;
 
-	handle_init_list(t, tree_index(n, 1));
+	handle_init_list(t, child(1));
 
 	if (t->class.public == NULL) {
 		log_debug("creating default public scope for %s", k);
@@ -1233,3 +1235,5 @@ static void handle_class(struct typeinfo *t, struct tree *n)
 	region = region_;
 	offset = offset_;
 }
+
+#undef child
