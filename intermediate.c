@@ -47,6 +47,7 @@ const struct address one = { CONST_R, 1, &int_type };
 
 struct op break_op;
 struct op continue_op;
+struct op default_op;
 
 /*
  * Tree traversal(s) to generate a list of three-address code
@@ -56,7 +57,7 @@ struct op continue_op;
 #define append_code(i) do { n->code = list_concat(n->code, get_code(t, i)); } while (0)
 #define child(i) tree_index(t, i)
 
-static void handle_switch(struct tree *t, struct op *next, struct op **def,
+static void handle_switch(struct list *code, struct op *next, struct op **def,
                           struct address temp, struct address test,
                           struct list *test_code);
 
@@ -166,10 +167,18 @@ void code_generate(struct tree *t)
 		push_op(n, &continue_op);
 		break;
 	}
-	case LABELED_STATEMENT1:
+	case LABELED_STATEMENT1: {
+		/* this label stores the case in address[1]
+		   temporarily so that handle_switch() can get it */
+		struct op *label = label_new();
+		label->address[1] = get_place(t, 1);
+		push_op(n, label);
+		append_code(2);
+		break;
+	}
 	case LABELED_STATEMENT2: {
-		/* these are skipped so that their code is
-		   concatenated during handling of switches */
+		push_op(n, &default_op);
+		append_code(1);
 		break;
 	}
 	case SELECT1: { /* IF */
@@ -211,7 +220,7 @@ void code_generate(struct tree *t)
 		/* call search for labels, tests, and breaks */
 		append_code(1); /* expr */
 		push_op(n, op_new(GOTO, NULL, get_label(test), e, e));
-		handle_switch(child(2), next, &dflt,
+		handle_switch(get_code(t, 2), next, &dflt,
 		              temp_new(&bool_type), s, test_code);
 		append_code(2);
 
@@ -439,66 +448,35 @@ void code_generate(struct tree *t)
 }
 
 /*
- * Post-order recursive search for switches which takes the switch's
- * body as a subtree, 'next' label op, address s of the operand, and
- * the list of test code.
-
- * This assigns GOTO next for break statements, appends a BIF(BEQ(s,
- * case), label) as test code for cases, and returns the default label
- * through dflt, with GOTO dflt appended after this function returns.
+ * Creates test code given a the body's code list with marked nodes
+ * for labels and breaks.
+ *
+ * Returns the default label through dflt, with GOTO dflt appended
+ * after this function returns.
  */
-static void handle_switch(struct tree *t, struct op *next, struct op **dflt,
+static void handle_switch(struct list *code, struct op *next, struct op **dflt,
                           struct address temp, struct address test,
                           struct list *test_code)
 {
-	struct list_node *iter = list_head(t->children);
+	struct list_node *iter = list_head(code);
 	while (!list_end(iter)) {
-		handle_switch(iter->data, next, dflt, temp, test, test_code);
+		struct op *op = iter->data;
+		if (op->code == LABEL) {
+			/* append BIF(BEQ(s, case), label), clear label */
+			list_push_back(test_code, op_new(BEQ, NULL, temp,
+			                                 test, op->address[1]));
+			list_push_back(test_code, op_new(BIF, NULL, temp,
+			                                 get_label(op), e));
+			op->address[1] = e;
+		} else if (op == &break_op) {
+			/* replace marker with GOTO next for break statements */
+			iter->data = op_new(GOTO, NULL, get_label(next), e, e);
+		} else if (op == &default_op) {
+			/* replace marker with default label and pass back */
+			*dflt = label_new();
+			iter->data = *dflt;
+		}
 		iter = iter->next;
-	}
-
-	struct node *n = t->data;
-
-	switch (n->rule) {
-	case LABELED_STATEMENT1: {
-		/* compare case */
-		struct op *label = label_new();
-
-		push_op(n, label);
-		append_code(2);
-		list_push_back(test_code, op_new(BEQ, NULL, temp,
-		                                 test, get_place(t, 1)));
-		list_push_back(test_code, op_new(BIF, NULL, temp,
-		                                 get_label(label), e));
-		break;
-	}
-	case LABELED_STATEMENT2: {
-		/* default case */
-		append_code(1);
-		*dflt = label_new();
-		break;
-	}
-	case BREAK_STATEMENT: {
-		push_op(n, op_new(GOTO, NULL, get_label(next), e, e));
-		break;
-	}
-	/* could probably handle these in a default concat loop */
-	case STATEMENT_SEQ1: {
-		append_code(0);
-		break;
-	}
-	case STATEMENT_SEQ2: {
-		append_code(0);
-		append_code(1);
-		break;
-	}
-	case COMPOUND_STATEMENT: {
-		append_code(1);
-		break;
-	}
-	default: {
-		break;
-	}
 	}
 }
 
