@@ -432,7 +432,7 @@ struct typeinfo *type_check(struct tree *n)
 			log_semantic(n, "could not initialize %s with given type", k);
 		}
 	}
-	case INIT_LIST2: {
+	case INIT_LIST: {
 		/* arrays get lists of initializers, check that each
 		   type matches the array's element type */
 		char *k = get_identifier(n->parent->parent);
@@ -460,7 +460,7 @@ struct typeinfo *type_check(struct tree *n)
 		log_check("initialized %s with list", k);
 		return l;
 	}
-	case NEW_EXPR1: {
+	case NEW_EXPR: {
 		/* new operator */
 		struct tree *type_spec = get_production(n, TYPE_SPEC_SEQ);
 		if (type_spec == NULL)
@@ -527,7 +527,7 @@ struct typeinfo *type_check(struct tree *n)
 
 		return NULL;
 	}
-	case ASSIGN_EXPR2: {
+	case ASSIGN_EXPR: {
 		/* assignment operator */
 		char *k = get_identifier(child(0));
 		if (k == NULL)
@@ -577,8 +577,8 @@ struct typeinfo *type_check(struct tree *n)
 			log_semantic(n, "could not assign to %s", k);
 		}
 	}
-	case EQUAL_EXPR2:
-	case EQUAL_EXPR3: {
+	case EQUAL_EXPR:
+	case NOTEQUAL_EXPR: {
 		struct typeinfo *l = get_left_type(n);
 		struct typeinfo *r = get_right_type(n);
 
@@ -588,10 +588,10 @@ struct typeinfo *type_check(struct tree *n)
 		log_check("equality comparison");
 		return &bool_type;
 	}
-	case REL_EXPR2: /* < */
-	case REL_EXPR3: /* > */
-	case REL_EXPR4: /* <= */
-	case REL_EXPR5: /* >= */ {
+	case REL_LT: /* < */
+	case REL_GT: /* > */
+	case REL_LTEQ: /* <= */
+	case REL_GTEQ: /* >= */ {
 		struct typeinfo *l = get_left_type(n);
 		if (!(typeinfo_compare(l, &int_type) || typeinfo_compare(l, &float_type)))
 			log_semantic(n, "left operand not an int or double");
@@ -606,10 +606,10 @@ struct typeinfo *type_check(struct tree *n)
 		log_check("order comparison");
 		return &bool_type;
 	}
-	case ADD_EXPR2:  /* + */
-	case ADD_EXPR3:  /* - */
-	case MULT_EXPR2: /* * */
-	case MULT_EXPR3: /* / */ {
+	case ADD_EXPR:  /* + */
+	case SUB_EXPR:  /* - */
+	case MULT_EXPR: /* * */
+	case DIV_EXPR: /* / */ {
 		struct typeinfo *l = get_left_type(n);
 		if (!(typeinfo_compare(l, &int_type) || typeinfo_compare(l, &float_type)))
 			log_semantic(n, "left operand not an int or double");
@@ -624,7 +624,7 @@ struct typeinfo *type_check(struct tree *n)
 		log_check("binary arithmetic");
 		return l;
 	}
-	case MULT_EXPR4: {
+	case MOD_EXPR: {
 		/* modulo operator */
 		struct typeinfo *l = get_left_type(n);
 		struct typeinfo *r = get_right_type(n);
@@ -635,13 +635,13 @@ struct typeinfo *type_check(struct tree *n)
 		log_check("modulo arithmetic");
 		return l;
 	}
-	case AND_EXPR2:
-	case XOR_EXPR2:
-	case OR_EXPR2: {
+	case AND_EXPR:
+	case XOR_EXPR:
+	case OR_EXPR: {
 		log_semantic(n, "C++ bitwise operation unsupported in 120++");
 	}
-	case LOGICAL_AND_EXPR2: /* && */
-	case LOGICAL_OR_EXPR2:  /* || */ {
+	case LOGICAL_AND_EXPR: /* && */
+	case LOGICAL_OR_EXPR:  /* || */ {
 		struct typeinfo *l = get_left_type(n);
 		if (!(typeinfo_compare(l, &int_type) || typeinfo_compare(l, &bool_type)))
 			log_semantic(n, "left operand not an int or bool");
@@ -653,7 +653,7 @@ struct typeinfo *type_check(struct tree *n)
 		log_check("logical comparison");
 		return &bool_type;
 	}
-	case POSTFIX_EXPR2: {
+	case POSTFIX_ARRAY_INDEX: {
 		/* array indexing: check identifier is an array and index is an int */
 		char *k = get_identifier(n);
 
@@ -670,7 +670,7 @@ struct typeinfo *type_check(struct tree *n)
 		log_check("%s[index]", k);
 		return l->array.type;
 	}
-	case POSTFIX_EXPR3: {
+	case POSTFIX_CALL: {
 		/* function invocation: build typeinfo list from
 		   EXPR_LIST, recursing on each item */
 		struct typeinfo *l = get_left_type(n);
@@ -696,8 +696,7 @@ struct typeinfo *type_check(struct tree *n)
 		log_check("function invocation");
 		return typeinfo_return(l);
 	}
-	case POSTFIX_EXPR5:
-	case POSTFIX_EXPR6: {
+	case POSTFIX_DOT_FIELD: {
 		/* class_instance.field access */
 		char *k = get_identifier(n);
 		char *f = get_identifier(child(2));
@@ -721,8 +720,7 @@ struct typeinfo *type_check(struct tree *n)
 		log_check("%s.%s", k, f);
 		return typeinfo_return(r);
 	}
-	case POSTFIX_EXPR7:
-	case POSTFIX_EXPR8: {
+	case POSTFIX_ARROW_FIELD: {
 		/* class_ptr->field access */
 		char *k = get_identifier(n);
 		char *f = get_identifier(child(2));
@@ -746,8 +744,8 @@ struct typeinfo *type_check(struct tree *n)
 		log_check("%s->%s", k, f);
 		return typeinfo_return(r);
 	}
-	case POSTFIX_EXPR9:  /* i++ */
-	case POSTFIX_EXPR10: /* i-- */ {
+	case POSTFIX_PLUSPLUS:  /* i++ */
+	case POSTFIX_MINUSMINUS: /* i-- */ {
 		struct typeinfo *t = type_check(child(0));
 		if (!typeinfo_compare(t, &int_type))
 			log_semantic(n, "operand to postfix ++/-- not an int");
@@ -755,8 +753,8 @@ struct typeinfo *type_check(struct tree *n)
 		log_check("postfix ++/--");
 		return t;
 	}
-	case UNARY_EXPR2: /* ++i */
-	case UNARY_EXPR3: /* --i */ {
+	case UNARY_PLUSPLUS: /* ++i */
+	case UNARY_MINUSMINUS: /* --i */ {
 		struct typeinfo *t = type_check(child(1));
 		if (t == NULL)
 			log_semantic(n, "symbol undeclared");
@@ -766,7 +764,7 @@ struct typeinfo *type_check(struct tree *n)
 		log_check("prefix ++/--");
 		return t;
 	}
-	case UNARY_EXPR4: {
+	case UNARY_STAR: {
 		/* dereference operator */
 		char *k = get_identifier(n);
 		log_assert(k);
@@ -784,7 +782,7 @@ struct typeinfo *type_check(struct tree *n)
 		log_check("*%s", k);
 		return copy;
 	}
-	case UNARY_EXPR5: {
+	case UNARY_AMPERSAND: {
 		/* address operator */
 		char *k = get_identifier(n);
 		log_assert(k);
@@ -802,7 +800,10 @@ struct typeinfo *type_check(struct tree *n)
 		log_check("&%s", k);
 		return copy;
 	}
-	case UNARY_EXPR6: {
+	case UNARY_PLUS:
+	case UNARY_MINUS:
+	case UNARY_NOT:
+	case UNARY_TILDE: {
 		struct typeinfo *t = type_check(child(1));
 		if (t == NULL)
 			log_semantic(n, "symbol undeclared");
@@ -825,12 +826,12 @@ struct typeinfo *type_check(struct tree *n)
 			log_semantic(n, "destructors not yet supported");
 		}
 	}
-	case UNARY_EXPR7:
-	case UNARY_EXPR8: {
+	case UNARY_SIZEOF_EXPR:
+	case UNARY_SIZEOF_TYPE: {
 		/* sizeof keyword returns an int */
 		return &int_type;
 	}
-	case SHIFT_EXPR2: {
+	case SHIFT_LEFT: {
 		/* << only used for puts-to IO */
 		if (!(libs.usingstd && (libs.fstream || libs.iostream)))
 			log_semantic(n, "<< can only be used with std streams in 120++");
@@ -863,7 +864,7 @@ struct typeinfo *type_check(struct tree *n)
 		log_check("<<");
 		return ret;
 	}
-	case SHIFT_EXPR3: {
+	case SHIFT_RIGHT: {
 		/* << only used for gets-from IO */
 		if (!(libs.usingstd && (libs.fstream || libs.iostream)))
 			log_semantic(n, ">> can only be used with std streams in 120++");
@@ -888,8 +889,8 @@ struct typeinfo *type_check(struct tree *n)
 		return NULL;
 
 	}
-	case FUNCTION_DEF1:
-	case FUNCTION_DEF2: {
+	case FUNCTION_DEF:
+	case CTOR_FUNCTION_DEF: {
 		/* manage scopes for function recursion */
 		size_t scopes = list_size(yyscopes);
 
@@ -902,7 +903,7 @@ struct typeinfo *type_check(struct tree *n)
 		}
 
 		/* retrieve function scope */
-		char *k = (production == FUNCTION_DEF1)
+		char *k = (production == FUNCTION_DEF)
 			? get_class(n) /* ctor function name is class name */
 			: get_identifier(n);
 
@@ -916,7 +917,7 @@ struct typeinfo *type_check(struct tree *n)
 		/* check return type of function */
 		struct tree *jump = get_production(n, RETURN_STATEMENT);
 		struct typeinfo *ret = NULL;
-		if (production == FUNCTION_DEF1)
+		if (production == FUNCTION_DEF)
 			/* constructor always returns class */
 			ret = typeinfo_return(function);
 		else if (jump == NULL || tree_size(jump) == 2)
@@ -970,21 +971,21 @@ struct typeinfo *type_check(struct tree *n)
 }
 
 /*
- * Recursively handles nodes, processing SIMPLE_DECL1 and
- * FUNCTION_DEF2 for symbols.
+ * Recursively handles nodes, processing SIMPLE_DECL and
+ * CTOR_FUNCTION_DEF for symbols.
  */
 static bool handle_node(struct tree *n, int d)
 {
 	switch (get_rule(n)) {
-	case SIMPLE_DECL1: { /* variable and function declarations */
+	case SIMPLE_DECL: { /* variable and function declarations */
 		handle_init_list(typeinfo_new(n), child(1));
 		return false;
 	}
-	case FUNCTION_DEF1: { /* constructor definition */
+	case FUNCTION_DEF: { /* constructor definition */
 		handle_function(typeinfo_new(n), n, get_class(n));
 		return false;
 	}
-	case FUNCTION_DEF2: { /* function or member definition */
+	case CTOR_FUNCTION_DEF: { /* function or member definition */
 		handle_function(typeinfo_new(n), n, get_identifier(n));
 		return false;
 	}
@@ -1008,7 +1009,7 @@ static void handle_init(struct typeinfo *v, struct tree *n)
 
 	switch (get_rule(n)) {
 	case INIT_DECL:
-	case UNARY_EXPR4:
+	case UNARY_STAR:
 	case DECL2:
 	case MEMBER_DECL1:
 	case MEMBER_DECLARATOR1: {
@@ -1060,7 +1061,7 @@ static void handle_init(struct typeinfo *v, struct tree *n)
 static void handle_init_list(struct typeinfo *v, struct tree *n)
 {
 	enum rule r = get_rule(n);
-	if (r == INIT_DECL_LIST2 || r == MEMBER_SPEC1 || r == MEMBER_DECL_LIST2) {
+	if (r == INIT_DECL_LIST || r == MEMBER_SPEC1 || r == MEMBER_DECL_LIST2) {
 		/* recurse through lists of declarators */
 		struct list_node *iter = list_head(n->children);
 		while (!list_end(iter)) {

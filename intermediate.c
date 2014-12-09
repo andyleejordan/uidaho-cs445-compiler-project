@@ -75,8 +75,8 @@ void code_generate(struct tree *t)
 	size_t offset_ = offset;
 
 	switch (n->rule) {
-	case FUNCTION_DEF1:
-	case FUNCTION_DEF2: {
+	case FUNCTION_DEF:
+	case CTOR_FUNCTION_DEF: {
 		/* manage scopes for function recursion */
 		scoped = true;
 		char *k = get_identifier(t);
@@ -133,7 +133,7 @@ void code_generate(struct tree *t)
 		push_op(n, op_new(ASN, get_identifier(t), n->place, init->place, e));
 		break;
 	}
-	case POSTFIX_EXPR3: {
+	case POSTFIX_CALL: {
 		char *k = get_identifier(t);
 		n->place = temp_new(scope_search(k));
 		/* count number of parameters */
@@ -167,7 +167,7 @@ void code_generate(struct tree *t)
 		push_op(n, &continue_op);
 		break;
 	}
-	case LABELED_STATEMENT1: {
+	case CASE_STATEMENT: {
 		/* this label stores the case in address[1]
 		   temporarily so that handle_switch() can get it */
 		struct op *label = label_new();
@@ -176,12 +176,12 @@ void code_generate(struct tree *t)
 		append_code(2);
 		break;
 	}
-	case LABELED_STATEMENT2: {
+	case DEFAULT_STATEMENT: {
 		push_op(n, &default_op);
 		append_code(1);
 		break;
 	}
-	case SELECT1: { /* IF */
+	case IF_STATEMENT: { /* IF */
 		struct op *first = label_new();
 		struct op *follow = label_new();
 		append_code(1); /* condition */
@@ -192,7 +192,7 @@ void code_generate(struct tree *t)
 		push_op(n, follow);
 		break;
 	}
-	case SELECT2: { /* IF-ELSE chains */
+	case IF_ELSE_STATEMENT: { /* IF-ELSE chains */
 		/* ASN(temp, condition) -> BIF(temp, first) -> GOTO(follow) ->
 		   LABEL(first) -> get_code(n, 2) ->
 		   LABEL(FOLLOW) -> get_code(n, 4) */
@@ -207,7 +207,7 @@ void code_generate(struct tree *t)
 		append_code(4); /* false */
 		break;
 	}
-	case SELECT3: { /* switch (expr) { body; } */
+	case SWITCH_STATEMENT: { /* switch (expr) { body; } */
 		struct address s = get_place(t, 1);
 		struct op *test = label_new();
 		struct op *next = label_new();
@@ -233,7 +233,7 @@ void code_generate(struct tree *t)
 
 		break;
 	}
-	case ITER1: { /* while (expr) { body; } */
+	case WHILE_LOOP: { /* while (expr) { body; } */
 		struct op *first = label_new();
 		struct op *body = label_new();
 		struct op *follow = label_new();
@@ -248,7 +248,7 @@ void code_generate(struct tree *t)
 		push_op(n, follow);
 		break;
 	}
-	case ITER2: { /* do { body; } while (expr); */
+	case DO_WHILE_LOOP: { /* do { body; } while (expr); */
 		struct op *first = label_new();
 		struct op *follow = label_new();
 		push_op(n, first); /* before body */
@@ -259,7 +259,7 @@ void code_generate(struct tree *t)
 		push_op(n, follow);
 		break;
 	}
-	case ITER3: { /* for (expr1; expr2; expr3) { body; } */
+	case FOR_LOOP: { /* for (expr1; expr2; expr3) { body; } */
 		append_code(1); /* expr 1 */
 		struct op *first = label_new();
 		struct op *body = label_new();
@@ -276,14 +276,14 @@ void code_generate(struct tree *t)
 		push_op(n, follow);
 		break;
 	}
-	case REL_EXPR2:
-	case REL_EXPR3:
-	case REL_EXPR4:
-	case REL_EXPR5:
-	case EQUAL_EXPR3:
-	case EQUAL_EXPR2:
-	case LOGICAL_OR_EXPR2:
-	case LOGICAL_AND_EXPR2: {
+	case REL_LT:
+	case REL_GT:
+	case REL_LTEQ:
+	case REL_GTEQ:
+	case NOTEQUAL_EXPR:
+	case EQUAL_EXPR:
+	case LOGICAL_OR_EXPR:
+	case LOGICAL_AND_EXPR: {
 		/* TODO: handle short circuiting */
 		n->place = temp_new(&bool_type);
 		struct address l = get_place(t, 0);
@@ -293,11 +293,11 @@ void code_generate(struct tree *t)
 		push_op(n, op_new(map_code(n->rule), NULL, n->place, l, r));
 		break;
 	}
-	case ADD_EXPR2:
-	case ADD_EXPR3:
-	case MULT_EXPR2:
-	case MULT_EXPR3:
-	case MULT_EXPR4: {
+	case ADD_EXPR:
+	case SUB_EXPR:
+	case MULT_EXPR:
+	case DIV_EXPR:
+	case MOD_EXPR: {
 		n->place = temp_new(&int_type);
 		struct address l = get_place(t, 0);
 		append_code(0); /* left */
@@ -306,16 +306,16 @@ void code_generate(struct tree *t)
 		push_op(n, op_new(map_code(n->rule), NULL, n->place, l, r));
 		break;
 	}
-	case UNARY_EXPR2: /* unary increment and decrement */
-	case UNARY_EXPR3: {
+	case UNARY_PLUSPLUS: /* unary increment and decrement */
+	case UNARY_MINUSMINUS: {
 		n->place = get_place(t, 1);
 		push_op(n, op_new(map_code(n->rule), NULL, n->place, one, e));
 		break;
 	}
-	case UNARY_EXPR4: { /* dereference */
+	case UNARY_STAR: { /* dereference */
 		append_code(1);
 		/* stop if this is an assignment operand */
-		if (get_rule(t->parent) == ASSIGN_EXPR2) {
+		if (get_rule(t->parent) == ASSIGN_EXPR) {
 			n->place = get_place(t, 1);
 			break;
 		}
@@ -324,20 +324,20 @@ void code_generate(struct tree *t)
 		push_op(n, op_new(LCONT, NULL, n->place, get_place(t, 1), e));
 		break;
 	}
-	case UNARY_EXPR5: { /* address-of */
+	case UNARY_AMPERSAND: { /* address-of */
 		n->place = temp_new(&int_type);
 		append_code(1);
 		push_op(n, op_new(ADDR, NULL, n->place, get_place(t, 1), e));
 		break;
 	}
-	case UNARY_EXPR6: { /* logical not */
+	case UNARY_NOT: { /* logical not */
 		n->place = temp_new(&bool_type);
 		append_code(1);
 		push_op(n, op_new(NEG, NULL, n->place, get_place(t, 1), e));
 		break;
 	}
-	case UNARY_EXPR7:
-	case UNARY_EXPR8: { /* sizeof(symbol) */
+	case UNARY_SIZEOF_EXPR:
+	case UNARY_SIZEOF_TYPE: { /* sizeof(symbol) */
 		/* obtain size as a const int */
 		struct address size;
 		size.region = CONST_R;
@@ -376,7 +376,7 @@ void code_generate(struct tree *t)
 		n->place = size;
 		break;
 	}
-	case POSTFIX_EXPR2: { /* array[index] */
+	case POSTFIX_ARRAY_INDEX: { /* array[index] */
 		char *k = get_identifier(t);
 		struct typeinfo *array = scope_search(k);
 		struct address index = get_place(t, 2);
@@ -384,13 +384,13 @@ void code_generate(struct tree *t)
 		push_op(n, op_new(ARR, NULL, n->place, array->place, index));
 		break;
 	}
-	case POSTFIX_EXPR9:
-	case POSTFIX_EXPR10: {
+	case POSTFIX_PLUSPLUS:
+	case POSTFIX_MINUSMINUS: {
 		n->place = get_place(t, 0);
 		push_op(n, op_new(map_code(n->rule), NULL, n->place, one, e));
 		break;
 	}
-	case ASSIGN_EXPR2: {
+	case ASSIGN_EXPR: {
 		char *k = get_identifier(t);
 		n->place = get_place(t, 0);
 		struct address r = get_place(t, 2);
@@ -398,9 +398,9 @@ void code_generate(struct tree *t)
 		append_code(2); /* right */
 		enum opcode code = ASN;
 		/* handle doing assignment with pointers */
-		if (get_rule(child(0)) == UNARY_EXPR4)
+		if (get_rule(child(0)) == UNARY_STAR)
 			code = SCONT;
-		else if (get_rule(child(2)) == UNARY_EXPR4)
+		else if (get_rule(child(2)) == UNARY_STAR)
 			code = LCONT;
 		push_op(n, op_new(code, k, n->place, r, e));
 		break;
@@ -414,7 +414,7 @@ void code_generate(struct tree *t)
 		append_code(1);
 		break;
 	}
-	case FUNCTION_DEF2: {
+	case CTOR_FUNCTION_DEF: {
 		/* TODO: get procedure parameter and local sizes */
 		push_op(n, label_new());
 		push_op(n, op_new(PROC, get_identifier(t), e, e, e));
@@ -503,35 +503,35 @@ static void backpatch(struct list *code, struct op *first, struct op *follow)
 static enum opcode map_code(enum rule r)
 {
 	switch (r) {
-	case REL_EXPR2:
+	case REL_LT:
 		return BLT; /* < */
-	case REL_EXPR3:
+	case REL_GT:
 		return BGT; /* > */
-	case REL_EXPR4:
+	case REL_LTEQ:
 		return BLE; /* <= */
-	case REL_EXPR5:
+	case REL_GTEQ:
 		return BGE; /* >= */
-	case EQUAL_EXPR2:
+	case EQUAL_EXPR:
 		return BEQ; /* == */
-	case EQUAL_EXPR3:
+	case NOTEQUAL_EXPR:
 		return BNE; /* != */
-	case LOGICAL_OR_EXPR2:
+	case LOGICAL_OR_EXPR:
 		return BOR;
-	case LOGICAL_AND_EXPR2:
+	case LOGICAL_AND_EXPR:
 		return BAND;
-	case ADD_EXPR2:
-	case UNARY_EXPR2:
-	case POSTFIX_EXPR9:
+	case ADD_EXPR:
+	case UNARY_PLUSPLUS:
+	case POSTFIX_PLUSPLUS:
 		return ADD; /* + */
-	case ADD_EXPR3:
-	case UNARY_EXPR3:
-	case POSTFIX_EXPR10:
+	case SUB_EXPR:
+	case UNARY_MINUSMINUS:
+	case POSTFIX_MINUSMINUS:
 		return SUB; /* - */
-	case MULT_EXPR2:
+	case MULT_EXPR:
 		return MUL; /* * */
-	case MULT_EXPR3:
+	case DIV_EXPR:
 		return DIV; /* / */
-	case MULT_EXPR4:
+	case MOD_EXPR:
 		return MOD; /* % */
 	default:
 		return ERRC; /* unknown */

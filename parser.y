@@ -82,7 +82,7 @@ static void yyerror(const char *s);
 
 %require "3.0"
 %defines
-%expect 21
+%expect 18
 %define parse.error verbose
 
 %union {
@@ -102,7 +102,7 @@ static void yyerror(const char *s);
 %type <t> literal boolean program primary_expression id_expression
 %type <t> unqualified_id qualified_id nested_name_specifier
 %type <t> postfix_expression expression_list unary_expression
-%type <t> unary_operator new_expression new_placement new_type_id
+%type <t> new_expression new_placement new_type_id
 %type <t> new_declarator direct_new_declarator new_initializer
 %type <t> delete_expression pm_expression multiplicative_expression
 %type <t> additive_expression shift_expression relational_expression
@@ -177,7 +177,6 @@ id_expression:
 
 unqualified_id:
         IDENTIFIER       { $$ = $1; }
-        | '~' CLASS_NAME { $$ = P(UNQUAL_ID2, 2, $1, $2); }
         ;
 
 qualified_id:
@@ -191,15 +190,13 @@ nested_name_specifier:
 
 postfix_expression:
         primary_expression                                  { $$ = $1; }
-        | postfix_expression '[' expression ']'             { $$ = P(POSTFIX_EXPR2, 4, $1, $2, $3, $4); }
-        | postfix_expression '(' expression_list_opt ')'    { $$ = P(POSTFIX_EXPR3, 2, $1, $3); }
-        | simple_type_specifier '(' expression_list_opt ')' { $$ = P(POSTFIX_EXPR4, 2, $1, $3); }
-        | postfix_expression '.' COLONCOLON id_expression   { $$ = P(POSTFIX_EXPR5, 3, $1, $2, $4); }
-        | postfix_expression '.' id_expression              { $$ = P(POSTFIX_EXPR6, 3, $1, $2, $3); }
-        | postfix_expression ARROW COLONCOLON id_expression { $$ = P(POSTFIX_EXPR7, 3, $1, $2, $4); }
-        | postfix_expression ARROW id_expression            { $$ = P(POSTFIX_EXPR8, 3, $1, $2, $3); }
-        | postfix_expression PLUSPLUS                       { $$ = P(POSTFIX_EXPR9, 2, $1, $2); }
-        | postfix_expression MINUSMINUS                     { $$ = P(POSTFIX_EXPR10, 2, $1, $2); }
+        | postfix_expression '[' expression ']'             { $$ = P(POSTFIX_ARRAY_INDEX, 4, $1, $2, $3, $4); }
+        | postfix_expression '(' expression_list_opt ')'    { $$ = P(POSTFIX_CALL, 2, $1, $3); }
+        | simple_type_specifier '(' expression_list_opt ')' { $$ = P(POSTFIX_CAST, 2, $1, $3); }
+        | postfix_expression '.' id_expression              { $$ = P(POSTFIX_DOT_FIELD, 3, $1, $2, $3); }
+        | postfix_expression ARROW id_expression            { $$ = P(POSTFIX_ARROW_FIELD, 3, $1, $2, $3); }
+        | postfix_expression PLUSPLUS                       { $$ = P(POSTFIX_PLUSPLUS, 2, $1, $2); }
+        | postfix_expression MINUSMINUS                     { $$ = P(POSTFIX_MINUSMINUS, 2, $1, $2); }
         ;
 
 expression_list:
@@ -209,27 +206,22 @@ expression_list:
 
 unary_expression:
         postfix_expression                { $$ = $1; }
-        | PLUSPLUS unary_expression       { $$ = P(UNARY_EXPR2, 2, $1, $2); }
-        | MINUSMINUS unary_expression     { $$ = P(UNARY_EXPR3, 2, $1, $2); }
-        | '*' unary_expression            { $$ = P(UNARY_EXPR4, 2, $1, $2); }
-        | '&' unary_expression            { $$ = P(UNARY_EXPR5, 2, $1, $2); }
-        | unary_operator unary_expression { $$ = P(UNARY_EXPR6, 2, $1, $2); }
-        | SIZEOF unary_expression         { $$ = P(UNARY_EXPR7, 2, $1, $2); }
-        | SIZEOF '(' type_id ')'          { $$ = P(UNARY_EXPR8, 2, $1, $3); }
+        | PLUSPLUS unary_expression       { $$ = P(UNARY_PLUSPLUS, 2, $1, $2); }
+        | MINUSMINUS unary_expression     { $$ = P(UNARY_MINUSMINUS, 2, $1, $2); }
+        | '*' unary_expression            { $$ = P(UNARY_STAR, 2, $1, $2); }
+        | '&' unary_expression            { $$ = P(UNARY_AMPERSAND, 2, $1, $2); }
+        | '+' unary_expression            { $$ = P(UNARY_PLUS, 2, $1, $2); }
+        | '-' unary_expression            { $$ = P(UNARY_MINUS, 2, $1, $2); }
+        | '!' unary_expression            { $$ = P(UNARY_NOT, 2, $1, $2); }
+        | '~' unary_expression            { $$ = P(UNARY_TILDE, 2, $1, $2); }
+        | SIZEOF unary_expression         { $$ = P(UNARY_SIZEOF_EXPR, 2, $1, $2); }
+        | SIZEOF '(' type_id ')'          { $$ = P(UNARY_SIZEOF_TYPE, 2, $1, $3); }
         | new_expression                  { $$ = $1; }
         | delete_expression               { $$ = $1; }
         ;
 
-unary_operator:
-        '+'   { $$ = $1; }
-        | '-' { $$ = $1; }
-        | '!' { $$ = $1; }
-        | '~' { $$ = $1; }
-        ;
-
 new_expression:
-        NEW new_placement_opt new_type_id new_initializer_opt              { $$ = P(NEW_EXPR1, 4, $1, $2, $3, $4); }
-        | COLONCOLON NEW new_placement_opt new_type_id new_initializer_opt { $$ = P(NEW_EXPR2, 4, $2, $3, $4, $5); }
+        NEW new_placement_opt new_type_id new_initializer_opt { $$ = P(NEW_EXPR, 4, $1, $2, $3, $4); }
         ;
 
 new_placement:
@@ -241,7 +233,7 @@ new_type_id:
         ;
 
 new_declarator:
-        ptr_operator new_declarator_opt { $$ = P(NEW_DECL1, 2, $1, $2); }
+        ptr_operator new_declarator_opt { $$ = P(NEW_DECL, 2, $1, $2); }
         | direct_new_declarator         { $$ = $1; }
         ;
 
@@ -256,9 +248,7 @@ new_initializer:
 
 delete_expression:
         DELETE unary_expression                      { $$ = P(DELETE_EXPR1, 2, $1, $2); }
-        | COLONCOLON DELETE unary_expression         { $$ = P(DELETE_EXPR2, 2, $2, $3); }
-        | DELETE '[' ']' unary_expression            { $$ = P(DELETE_EXPR3, 4, $1, $2, $3, $4); }
-        | COLONCOLON DELETE '[' ']' unary_expression { $$ = P(DELETE_EXPR4, 4, $2, $3, $4, $5); }
+        | DELETE '[' ']' unary_expression            { $$ = P(DELETE_EXPR2, 4, $1, $2, $3, $4); }
         ;
 
 pm_expression:
@@ -269,70 +259,70 @@ pm_expression:
 
 multiplicative_expression:
         pm_expression                                 { $$ = $1; }
-        | multiplicative_expression '*' pm_expression { $$ = P(MULT_EXPR2, 3, $1, $2, $3); }
-        | multiplicative_expression '/' pm_expression { $$ = P(MULT_EXPR3, 3, $1, $2, $3); }
-        | multiplicative_expression '%' pm_expression { $$ = P(MULT_EXPR4, 3, $1, $2, $3); }
+        | multiplicative_expression '*' pm_expression { $$ = P(MULT_EXPR, 3, $1, $2, $3); }
+        | multiplicative_expression '/' pm_expression { $$ = P(DIV_EXPR, 3, $1, $2, $3); }
+        | multiplicative_expression '%' pm_expression { $$ = P(MOD_EXPR, 3, $1, $2, $3); }
         ;
 
 additive_expression:
         multiplicative_expression                           { $$ = $1; }
-        | additive_expression '+' multiplicative_expression { $$ = P(ADD_EXPR2, 3, $1, $2, $3); }
-        | additive_expression '-' multiplicative_expression { $$ = P(ADD_EXPR3, 3, $1, $2, $3); }
+        | additive_expression '+' multiplicative_expression { $$ = P(ADD_EXPR, 3, $1, $2, $3); }
+        | additive_expression '-' multiplicative_expression { $$ = P(SUB_EXPR, 3, $1, $2, $3); }
         ;
 
 shift_expression:
         additive_expression                       { $$ = $1; }
-        | shift_expression SL additive_expression { $$ = P(SHIFT_EXPR2, 2, $1, $3); }
-        | shift_expression SR additive_expression { $$ = P(SHIFT_EXPR3, 2, $1, $3); }
+        | shift_expression SL additive_expression { $$ = P(SHIFT_LEFT, 2, $1, $3); }
+        | shift_expression SR additive_expression { $$ = P(SHIFT_RIGHT, 2, $1, $3); }
         ;
 
 relational_expression:
         shift_expression                              { $$ = $1; }
-        | relational_expression '<' shift_expression  { $$ = P(REL_EXPR2, 3, $1, $2, $3); }
-        | relational_expression '>' shift_expression  { $$ = P(REL_EXPR3, 3, $1, $2, $3); }
-        | relational_expression LTEQ shift_expression { $$ = P(REL_EXPR4, 3, $1, $2, $3); }
-        | relational_expression GTEQ shift_expression { $$ = P(REL_EXPR5, 3, $1, $2, $3); }
+        | relational_expression '<' shift_expression  { $$ = P(REL_LT, 3, $1, $2, $3); }
+        | relational_expression '>' shift_expression  { $$ = P(REL_GT, 3, $1, $2, $3); }
+        | relational_expression LTEQ shift_expression { $$ = P(REL_LTEQ, 3, $1, $2, $3); }
+        | relational_expression GTEQ shift_expression { $$ = P(REL_GTEQ, 3, $1, $2, $3); }
         ;
 
 equality_expression:
         relational_expression                             { $$ = $1; }
-        | equality_expression EQ relational_expression    { $$ = P(EQUAL_EXPR2, 3, $1, $2, $3); }
-        | equality_expression NOTEQ relational_expression { $$ = P(EQUAL_EXPR3, 3, $1, $2, $3); }
+        | equality_expression EQ relational_expression    { $$ = P(EQUAL_EXPR, 3, $1, $2, $3); }
+        | equality_expression NOTEQ relational_expression { $$ = P(NOTEQUAL_EXPR, 3, $1, $2, $3); }
         ;
 
 and_expression:
         equality_expression                      { $$ = $1; }
-        | and_expression '&' equality_expression { $$ = P(AND_EXPR2, 3, $1, $2, $3); }
+        | and_expression '&' equality_expression { $$ = P(AND_EXPR, 3, $1, $2, $3); }
         ;
 
 exclusive_or_expression:
         and_expression                               { $$ = $1; }
-        | exclusive_or_expression '^' and_expression { $$ = P(XOR_EXPR2, 3, $1, $2, $3); }
+        | exclusive_or_expression '^' and_expression { $$ = P(XOR_EXPR, 3, $1, $2, $3); }
         ;
 
 inclusive_or_expression:
         exclusive_or_expression                               { $$ = $1; }
-        | inclusive_or_expression '|' exclusive_or_expression { $$ = P(OR_EXPR2, 3, $1, $2, $3); }
+        | inclusive_or_expression '|' exclusive_or_expression { $$ = P(OR_EXPR, 3, $1, $2, $3); }
         ;
 
 logical_and_expression:
         inclusive_or_expression                                 { $$ = $1; }
-        | logical_and_expression ANDAND inclusive_or_expression { $$ = P(LOGICAL_AND_EXPR2, 3, $1, $2, $3); }
+        | logical_and_expression ANDAND inclusive_or_expression { $$ = P(LOGICAL_AND_EXPR, 3, $1, $2, $3); }
         ;
 
 logical_or_expression:
         logical_and_expression                              { $$ = $1; }
-        | logical_or_expression OROR logical_and_expression { $$ = P(LOGICAL_OR_EXPR2, 3, $1, $2, $3); }
+        | logical_or_expression OROR logical_and_expression { $$ = P(LOGICAL_OR_EXPR, 3, $1, $2, $3); }
         ;
 
 conditional_expression:
         logical_or_expression                                            { $$ = $1; }
-        | logical_or_expression '?' expression ':' assignment_expression { $$ = P(COND_EXPR2, 3, $1, $3, $5); }
+        | logical_or_expression '?' expression ':' assignment_expression { $$ = P(TERNARY_EXPR, 3, $1, $3, $5); }
         ;
 
 assignment_expression:
         conditional_expression                                            { $$ = $1; }
-        | logical_or_expression assignment_operator assignment_expression { $$ = P(ASSIGN_EXPR2, 3, $1, $2, $3); }
+        | logical_or_expression assignment_operator assignment_expression { $$ = P(ASSIGN_EXPR, 3, $1, $2, $3); }
         ;
 
 assignment_operator:
@@ -373,8 +363,8 @@ statement:
         ;
 
 labeled_statement:
-        CASE constant_expression ':' statement { $$ = P(LABELED_STATEMENT1, 3, $1, $2, $4); }
-        | DEFAULT ':' statement                { $$ = P(LABELED_STATEMENT2, 2, $1, $3); }
+        CASE constant_expression ':' statement { $$ = P(CASE_STATEMENT, 3, $1, $2, $4); }
+        | DEFAULT ':' statement                { $$ = P(DEFAULT_STATEMENT, 2, $1, $3); }
         ;
 
 expression_statement:
@@ -391,9 +381,9 @@ statement_seq:
         ;
 
 selection_statement:
-        IF '(' condition ')' statement                  { $$ = P(SELECT1, 3, $1, $3, $5); }
-        | IF '(' condition ')' statement ELSE statement { $$ = P(SELECT2, 5, $1, $3, $5, $6, $7); }
-        | SWITCH '(' condition ')' statement            { $$ = P(SELECT3, 3, $1, $3, $5); }
+        IF '(' condition ')' statement                  { $$ = P(IF_STATEMENT, 3, $1, $3, $5); }
+        | IF '(' condition ')' statement ELSE statement { $$ = P(IF_ELSE_STATEMENT, 5, $1, $3, $5, $6, $7); }
+        | SWITCH '(' condition ')' statement            { $$ = P(SWITCH_STATEMENT, 3, $1, $3, $5); }
         ;
 
 condition:
@@ -402,9 +392,9 @@ condition:
         ;
 
 iteration_statement:
-        WHILE '(' condition ')' statement                                           { $$ = P(ITER1, 3, $1, $3, $5); }
-        | DO statement WHILE '(' expression ')' ';'                                 { $$ = P(ITER2, 4, $1, $2, $3, $5); }
-        | FOR '(' for_init_statement condition_opt ';' expression_opt ')' statement { $$ = P(ITER3, 5, $1, $3, $4, $6, $8); }
+        WHILE '(' condition ')' statement                                           { $$ = P(WHILE_LOOP, 3, $1, $3, $5); }
+        | DO statement WHILE '(' expression ')' ';'                                 { $$ = P(DO_WHILE_LOOP, 4, $1, $2, $3, $5); }
+        | FOR '(' for_init_statement condition_opt ';' expression_opt ')' statement { $$ = P(FOR_LOOP, 5, $1, $3, $4, $6, $8); }
         ;
 
 for_init_statement:
@@ -428,7 +418,7 @@ declaration_statement:
 
 declaration_seq:
         declaration                   { $$ = $1; }
-        | declaration_seq declaration { $$ = P(DECL_SEQ2, 2, $1, $2); }
+        | declaration_seq declaration { $$ = P(DECL_SEQ, 2, $1, $2); }
         ;
 
 declaration:
@@ -441,7 +431,7 @@ block_declaration:
         ;
 
 simple_declaration:
-        decl_specifier_seq init_declarator_list ';' { $$ = P(SIMPLE_DECL1, 2, $1, $2); }
+        decl_specifier_seq init_declarator_list ';' { $$ = P(SIMPLE_DECL, 2, $1, $2); }
         | decl_specifier_seq ';'                    { $$ = $1; } /* likely needs a name */
         ;
 
@@ -451,7 +441,7 @@ decl_specifier:
 
 decl_specifier_seq:
         decl_specifier                      { $$ = $1; }
-        | decl_specifier_seq decl_specifier { $$ = P(DECL_SPEC_SEQ2, 2, $1, $2); }
+        | decl_specifier_seq decl_specifier { $$ = P(DECL_SPEC_SEQ, 2, $1, $2); }
         ;
 
 type_specifier:
@@ -462,7 +452,7 @@ type_specifier:
 
 simple_type_specifier:
         CLASS_NAME                                    { $$ = $1; }
-        | nested_name_specifier CLASS_NAME            { $$ = P(SIMPLE_TYPE_SPEC2, 2, $1, $2); }
+        | nested_name_specifier CLASS_NAME            { $$ = P(NESTED_SIMPLE_TYPE_SPEC, 2, $1, $2); }
         | CHAR                                        { $$ = $1; }
         | BOOL                                        { $$ = $1; }
         | SHORT                                       { $$ = $1; }
@@ -486,7 +476,7 @@ elaborated_type_specifier:
 
 init_declarator_list:
         init_declarator                            { $$ = $1; }
-        | init_declarator_list ',' init_declarator { $$ = P(INIT_DECL_LIST2, 2, $1, $3); }
+        | init_declarator_list ',' init_declarator { $$ = P(INIT_DECL_LIST, 2, $1, $3); }
         ;
 
 init_declarator:
@@ -531,12 +521,12 @@ type_specifier_seq:
         ;
 
 abstract_declarator:
-        ptr_operator abstract_declarator_opt { $$ = P(ABSTRACT_DECL1, 2, $1, $2); }
+        ptr_operator abstract_declarator_opt { $$ = P(ABSTRACT_DECL, 2, $1, $2); }
         | direct_abstract_declarator         { $$ = $1; }
         ;
 
 direct_abstract_declarator:
-        direct_abstract_declarator '(' parameter_declaration_clause ')' { $$ = P(DIRECT_ABSTRACT_DECL1, 2, $1, $3); }
+        direct_abstract_declarator '(' parameter_declaration_clause ')' { $$ = P(DIRECT_ABSTRACT_DECL, 2, $1, $3); }
         | '(' parameter_declaration_clause ')'                          { $$ = $2; }
         | direct_abstract_declarator '[' constant_expression_opt ']'    { $$ = P(DIRECT_ABSTRACT_DECL3, 4, $1, $2, $3, $4); }
         | '[' constant_expression_opt ']'                               { $$ = P(DIRECT_ABSTRACT_DECL4, 3, $1, $2, $3); }
@@ -561,8 +551,8 @@ parameter_declaration:
         ;
 
 function_definition:
-        declarator ctor_initializer_opt function_body                      { $$ = P(FUNCTION_DEF1, 3, $1, $2, $3); }
-        | decl_specifier_seq declarator ctor_initializer_opt function_body { $$ = P(FUNCTION_DEF2, 4, $1, $2, $3, $4); }
+        declarator ctor_initializer_opt function_body                      { $$ = P(FUNCTION_DEF, 3, $1, $2, $3); }
+        | decl_specifier_seq declarator ctor_initializer_opt function_body { $$ = P(CTOR_FUNCTION_DEF, 4, $1, $2, $3, $4); }
         ;
 
 function_body:
@@ -582,7 +572,7 @@ initializer_clause:
 
 initializer_list:
         initializer_clause                        { $$ = $1; }
-        | initializer_list ',' initializer_clause { $$ = P(INIT_LIST2, 2, $1, $3); }
+        | initializer_list ',' initializer_clause { $$ = P(INIT_LIST, 2, $1, $3); }
         ;
 
 /*----------------------------------------------------------------------
@@ -648,7 +638,7 @@ ctor_initializer:
 
 mem_initializer_list:
         mem_initializer                            { $$ = $1; }
-        | mem_initializer ',' mem_initializer_list { $$ = P(MEM_INIT_LIST2, 2, $1, $3); }
+        | mem_initializer ',' mem_initializer_list { $$ = P(MEM_INIT_LIST, 2, $1, $3); }
         ;
 
 mem_initializer:
