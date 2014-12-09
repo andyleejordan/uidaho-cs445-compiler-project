@@ -240,10 +240,16 @@ void code_generate(struct tree *t)
 		push_op(n, op_new(map_code(n->rule), NULL, n->place, l, r));
 		break;
 	}
-	case UNARY_EXPR3:
-	case UNARY_EXPR2: {
+	case UNARY_EXPR2: /* unary increment and decrement */
+	case UNARY_EXPR3: {
 		n->place = get_place(t, 1);
 		push_op(n, op_new(map_code(n->rule), NULL, n->place, one, e));
+		break;
+	}
+	case UNARY_EXPR5: { /* x = &y */
+		n->place = temp_new(&int_type);
+		append_code(1);
+		push_op(n, op_new(ADDR, NULL, n->place, get_place(t, 1), e));
 		break;
 	}
 	case UNARY_EXPR7:
