@@ -46,12 +46,17 @@ const struct address e = { UNKNOWN_R, 0, &unknown_type };
 const struct address one = { CONST_R, 1, &int_type };
 
 /*
- * Tree traversal to generate a list of three-address code
+ * Tree traversal(s) to generate a list of three-address code
  * instructions given a parse tree. Handles scopes in pre-order,
  * instructions in post-order.
  */
 #define append_code(i) do { n->code = list_concat(n->code, get_code(t, i)); } while (0)
 #define child(i) tree_index(t, i)
+
+static void handle_switch(struct tree *t, struct op *next, struct op **def,
+                          struct address temp, struct address test,
+                          struct list *test_code);
+
 void code_generate(struct tree *t)
 {
 	struct node *n = t->data;
@@ -148,6 +153,12 @@ void code_generate(struct tree *t)
 		}
 		break;
 	}
+	case LABELED_STATEMENT1:
+	case LABELED_STATEMENT2: {
+		/* these are skipped so that their code is
+		   concatenated during handling of switches */
+		break;
+	}
 	case SELECT1: { /* IF */
 		struct op *first = label_new();
 		struct op *follow = label_new();
@@ -173,6 +184,32 @@ void code_generate(struct tree *t)
 		append_code(2); /* true */
 		push_op(n, follow);
 		append_code(4); /* false */
+		break;
+	}
+	case SELECT3: { /* switch (expr) { body; } */
+		struct address s = get_place(t, 1);
+		struct op *test = label_new();
+		struct op *next = label_new();
+		struct op *dflt = NULL;
+
+		/* create test code list starting with test label */
+		struct list *test_code = list_new(NULL, NULL);
+		list_push_back(test_code, test);
+
+		/* call search for labels, tests, breaks, continues */
+		append_code(1); /* expr */
+		push_op(n, op_new(GOTO, NULL, get_label(test), e, e));
+		handle_switch(child(2), next, &dflt,
+		              temp_new(&bool_type), s, test_code);
+		append_code(2);
+
+		/* concat test code and follow label */
+		n->code = list_concat(n->code, test_code);
+		/* push GOTO default if found */
+		if (dflt)
+			push_op(n, op_new(GOTO, NULL, get_label(dflt), e, e));
+		push_op(n, next);
+
 		break;
 	}
 	case ITER1: { /* while (expr) { body; } */
@@ -381,6 +418,70 @@ void code_generate(struct tree *t)
 		/* restore region and offset */
 		region = region_;
 		offset = offset_;
+	}
+}
+
+/*
+ * Post-order recursive search for switches which takes the switch's
+ * body as a subtree, 'next' label op, address s of the operand, and
+ * the list of test code.
+
+ * This assigns GOTO next for break statements, appends a BIF(BEQ(s,
+ * case), label) as test code for cases, and returns the default label
+ * through dflt, with GOTO dflt appended after this function returns.
+ */
+static void handle_switch(struct tree *t, struct op *next, struct op **dflt,
+                          struct address temp, struct address test,
+                          struct list *test_code)
+{
+	struct list_node *iter = list_head(t->children);
+	while (!list_end(iter)) {
+		handle_switch(iter->data, next, dflt, temp, test, test_code);
+		iter = iter->next;
+	}
+
+	struct node *n = t->data;
+
+	switch (n->rule) {
+	case LABELED_STATEMENT1: {
+		/* compare case */
+		struct op *label = label_new();
+
+		push_op(n, label);
+		append_code(2);
+		list_push_back(test_code, op_new(BEQ, NULL, temp,
+		                                 test, get_place(t, 1)));
+		list_push_back(test_code, op_new(BIF, NULL, temp,
+		                                 get_label(label), e));
+		break;
+	}
+	case LABELED_STATEMENT2: {
+		/* default case */
+		append_code(1);
+		*dflt = label_new();
+		break;
+	}
+	case BREAK_STATEMENT: {
+		push_op(n, op_new(GOTO, NULL, get_label(next), e, e));
+		break;
+	}
+	/* could probably handle these in a default concat loop */
+	case STATEMENT_SEQ1: {
+		append_code(0);
+		break;
+	}
+	case STATEMENT_SEQ2: {
+		append_code(0);
+		append_code(1);
+		break;
+	}
+	case COMPOUND_STATEMENT: {
+		append_code(1);
+		break;
+	}
+	default: {
+		break;
+	}
 	}
 }
 #undef append_code

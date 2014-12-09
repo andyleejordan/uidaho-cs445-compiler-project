@@ -1,9 +1,57 @@
 * Required tasks
-** TODO Handle short-circuit booleans
-** TODO Handle field accessors (./->)
+** TODO Fix NEG, -1 et. al. should store into int not bool
 ** TODO Handle classes
-** TODO Handle switches
+** TODO Handle field accessors (./->)
+** DONE Handle switches
+#+begin_src text
+Consider the C switch statement:
+
+switch(e) of {
+   case v1:
+      S1;
+   case v2:
+      S2;
+   ...
+   case vn-1:
+      Sn-1;
+   default:
+      Sn;
+}
+
+The intermediate code for this might look like:
+
+	code for e, storing result in temp var t
+	goto Test
+L1:
+	code for S1
+L2:
+	code for S2
+	...
+Ln-1:
+	code for Sn-1
+Ln:
+	code for Sn
+	goto Next
+Test:
+	if t=v1 goto L1
+	if t=v2 goto L2
+	...
+	if t=vn-1 goto Ln-1
+	goto Ln
+Next:
+#+end_src
 ** TODO Handle break/continue jumps
+Will need labels to be backpatched for GOTO ops.
+
+*** break/continue
+Specialized recursive search to attach goto with given label at each break/continue.
+*** labeled statements
+Recursive search to search for labeled statements, push a label op,
+push a =BIF(e->place, get_place(iter, 1))= to a code list starting
+with label temp. Append code after search.
+
+
+** TODO Handle short-circuit booleans
 ** TODO Handle new expressions
 ** TODO Handle shortcut assignments (+= etc.)
 Will require additional grammar rules
