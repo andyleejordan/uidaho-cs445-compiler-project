@@ -57,9 +57,9 @@ struct op default_op;
 #define append_code(i) do { n->code = list_concat(n->code, get_code(t, i)); } while (0)
 #define child(i) tree_index(t, i)
 
-static void handle_switch(struct list *code, struct op *next, struct op **def,
-                          struct address temp, struct address test,
-                          struct list *test_code);
+static struct op *handle_switch(struct list *code, struct op *next,
+                                struct address temp, struct address test,
+                                struct list *test_code);
 
 static void backpatch(struct list *code, struct op *first, struct op *follow);
 
@@ -220,8 +220,8 @@ void code_generate(struct tree *t)
 		/* call search for labels, tests, and breaks */
 		append_code(1); /* expr */
 		push_op(n, op_new(GOTO, NULL, get_label(test), e, e));
-		handle_switch(get_code(t, 2), next, &dflt,
-		              temp_new(&bool_type), s, test_code);
+		dflt = handle_switch(get_code(t, 2), next,
+		                     temp_new(&bool_type), s, test_code);
 		append_code(2);
 
 		/* concat test code and follow label */
@@ -451,13 +451,14 @@ void code_generate(struct tree *t)
  * Creates test code given a the body's code list with marked nodes
  * for labels and breaks.
  *
- * Returns the default label through dflt, with GOTO dflt appended
- * after this function returns.
+ * Returns the default label with GOTO dflt appended after this
+ * function returns.
  */
-static void handle_switch(struct list *code, struct op *next, struct op **dflt,
-                          struct address temp, struct address test,
-                          struct list *test_code)
+static struct op *handle_switch(struct list *code, struct op *next,
+                                struct address temp, struct address test,
+                                struct list *test_code)
 {
+	struct op *dflt = NULL;
 	struct list_node *iter = list_head(code);
 	while (!list_end(iter)) {
 		struct op *op = iter->data;
@@ -473,11 +474,12 @@ static void handle_switch(struct list *code, struct op *next, struct op **dflt,
 			iter->data = op_new(GOTO, NULL, get_label(next), e, e);
 		} else if (op == &default_op) {
 			/* replace marker with default label and pass back */
-			*dflt = label_new();
-			iter->data = *dflt;
+			dflt = label_new();
+			iter->data = dflt;
 		}
 		iter = iter->next;
 	}
+	return dflt;
 }
 
 static void backpatch(struct list *code, struct op *first, struct op *follow)

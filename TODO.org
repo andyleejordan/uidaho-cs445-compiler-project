@@ -4,14 +4,16 @@
 ** TODO Handle field accessors (./->)
 ** TODO Handle short-circuit booleans
 ** TODO Handle new expressions
+* Additional tasks
+** TODO Align memory addresses
 ** TODO Handle shortcut assignments (+= etc.)
 Will require additional grammar rules
 
-* Additional tasks
-** TODO Align memory addresses
 ** TODO Support class instance initializers
+** TODO Refactor type checking
+With type promotion supported via (=typeinfo_compatible(a, b)=) rather
+than multiple complex comparisons.
 ** TODO Expand type checking
-*** refactor for type promotion (=typeinfo_compatible(a, b)=)
 *** pass by reference
 *** ternary operator
 ** TODO Expand list library
