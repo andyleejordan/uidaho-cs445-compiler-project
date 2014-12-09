@@ -40,6 +40,8 @@ enum opcode {
 	BGE,    /* x >= y */
 	BEQ,    /* x == y */
 	BNE,    /* x != y */
+	BOR,    /* x || y */
+	BAND,   /* x && y */
 	BIF,    /* if x then goto L   unary conditional jump to L */
 	BNIF,   /* if !x then goto L  unary negative conditional jump to L */
 	ARR,    /* x = array[y]   retrieve array element at index y */

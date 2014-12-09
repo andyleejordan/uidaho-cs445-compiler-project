@@ -218,7 +218,9 @@ void code_generate(struct tree *t)
 	case REL_EXPR4:
 	case REL_EXPR5:
 	case EQUAL_EXPR3:
-	case EQUAL_EXPR2: {
+	case EQUAL_EXPR2:
+	case LOGICAL_OR_EXPR2:
+	case LOGICAL_AND_EXPR2: {
 		/* TODO: handle short circuiting */
 		n->place = temp_new(&bool_type);
 		struct address l = get_place(t, 0);
@@ -263,6 +265,12 @@ void code_generate(struct tree *t)
 		n->place = temp_new(&int_type);
 		append_code(1);
 		push_op(n, op_new(ADDR, NULL, n->place, get_place(t, 1), e));
+		break;
+	}
+	case UNARY_EXPR6: { /* logical not */
+		n->place = temp_new(&bool_type);
+		append_code(1);
+		push_op(n, op_new(NEG, NULL, n->place, get_place(t, 1), e));
 		break;
 	}
 	case UNARY_EXPR7:
@@ -396,6 +404,10 @@ static enum opcode map_code(enum rule r)
 		return BEQ; /* == */
 	case EQUAL_EXPR3:
 		return BNE; /* != */
+	case LOGICAL_OR_EXPR2:
+		return BOR;
+	case LOGICAL_AND_EXPR2:
+		return BAND;
 	case ADD_EXPR2:
 	case UNARY_EXPR2:
 	case POSTFIX_EXPR9:
@@ -546,6 +558,8 @@ static char *print_opcode(enum opcode code)
 		R(BGE);
 		R(BEQ);
 		R(BNE);
+		R(BOR);
+		R(BAND);
 		R(BIF);
 		R(BNIF);
 		R(ARR);

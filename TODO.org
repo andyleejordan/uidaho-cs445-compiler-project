@@ -1,5 +1,4 @@
 * Required tasks
-** TODO Handle logical NOT
 ** TODO Handle short-circuit booleans
 ** TODO Handle field accessors (./->)
 ** TODO Handle classes
