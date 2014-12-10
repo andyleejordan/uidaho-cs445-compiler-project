@@ -49,7 +49,6 @@ static struct token *get_category(struct tree *n, int target, int before);
 static struct token *get_category_(struct tree *n, int target, int before);
 static bool get_public(struct tree *n);
 static bool get_private(struct tree *n);
-static char *class_member(struct tree *n);
 
 static struct typeinfo *get_left_type(struct tree *n);
 static struct typeinfo *get_right_type(struct tree *n);
@@ -273,7 +272,7 @@ static bool get_private(struct tree *t)
 /*
  * Returns class name only if like class::something
  */
-static char *class_member(struct tree *t)
+char *class_member(struct tree *t)
 {
 	struct tree *prod = NULL;
 	if ((prod = get_production(t, DIRECT_DECL4))     /* class::ident */
@@ -608,8 +607,8 @@ struct typeinfo *type_check(struct tree *n)
 	}
 	case ADD_EXPR:  /* + */
 	case SUB_EXPR:  /* - */
-	case MULT_EXPR: /* * */
-	case DIV_EXPR: /* / */ {
+	case MULT_EXPR:  /* * */
+	case DIV_EXPR: { /* / */
 		struct typeinfo *l = get_left_type(n);
 		if (!(typeinfo_compare(l, &int_type) || typeinfo_compare(l, &float_type)))
 			log_semantic(n, "left operand not an int or double");
@@ -624,8 +623,7 @@ struct typeinfo *type_check(struct tree *n)
 		log_check("binary arithmetic");
 		return l;
 	}
-	case MOD_EXPR: {
-		/* modulo operator */
+	case MOD_EXPR: { /* modulo operator */
 		struct typeinfo *l = get_left_type(n);
 		struct typeinfo *r = get_right_type(n);
 

@@ -31,5 +31,6 @@ struct address get_address(struct tree *t);
 bool get_pointer(struct tree *n);
 int get_array(struct tree *n);
 char *get_class(struct tree *n);
+char *class_member(struct tree *n);
 
 #endif /* SYMBOL_H */
