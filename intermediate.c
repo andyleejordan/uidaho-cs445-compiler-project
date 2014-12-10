@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "intermediate.h"
 #include "type.h"
@@ -145,6 +146,22 @@ void code_generate(struct tree *t)
 			break;
 		append_code(1);
 		push_op(n, op_new(ASN, get_identifier(t), n->place, init->place, e));
+		break;
+	}
+	case SIMPLE_DECL: {
+		n->place = get_place(t, 1);
+		append_code(1);
+		char *class = get_class(t);
+		/* default constructor call */
+		if (class && !get_pointer(t)) {
+			struct address count = { CONST_R, 1, &int_type };
+			char *name = calloc(2 * strlen(class) + 3, sizeof(char));
+			strcat(name, class);
+			strcat(name, "::");
+			strcat(name, class);
+			push_op(n, op_new(PARAM, NULL, n->place, e, e));
+			push_op(n, op_new(CALL, name, n->place, count, e));
+		}
 		break;
 	}
 	case POSTFIX_CALL: {
