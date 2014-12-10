@@ -483,8 +483,20 @@ void code_generate(struct tree *t)
 		if (ret == NULL)
 			break;
 		n->place = ret->place;
-		push_op(n, op_new(RET, NULL, n->place, e, e));
 		append_code(1);
+		push_op(n, op_new(RET, NULL, n->place, e, e));
+		break;
+	}
+	case CTOR_FUNCTION_DEF: {
+		char *k = class_member(t);
+		char *name = calloc(2 * strlen(k) + 3, sizeof(char));
+		strcat(name, k);
+		strcat(name, "::");
+		strcat(name, k);
+		push_op(n, label_new());
+		push_op(n, op_new(PROC, name, e, e, e));
+		append_code(1);
+		push_op(n, op_new(END, NULL, e, e, e));
 		break;
 	}
 	case FUNCTION_DEF: {
