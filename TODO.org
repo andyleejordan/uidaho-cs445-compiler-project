@@ -1,6 +1,5 @@
 * Required tasks
 ** TODO Handle cout and shift expressions
-** TODO Handle new expressions
 ** TODO Handle short-circuit booleans
 * Additional tasks
 ** TODO Align memory addresses

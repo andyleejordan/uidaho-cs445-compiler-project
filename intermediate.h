@@ -35,6 +35,9 @@ enum opcode {
 	LCONT,  /* x := *y      store contents pointed to by y to x */
 	SCONT,  /* *x := y      store y to location pointed to by x */
 	GOTO,   /* goto L       unconditional jump to L */
+	NEWC,   /* x := new Foo, n  create a new instance of class named Foo,
+	                            store address to x, call constructor with
+                                    n parameters */
 	BLT,    /* x < y */
 	BLE,    /* x <= y */
 	BGT,    /* x > y */

@@ -165,6 +165,24 @@ void code_generate(struct tree *t)
 		}
 		break;
 	}
+	case NEW_EXPR: {
+		append_code(2); /* parameters */
+		/* terribly hacky grabbing of class name */
+		char *k = get_node(tree_index(child(1), 0), 0)->token->text;
+		struct typeinfo *class = scope_search(k);
+		if (class) {
+			/* push a NEWC op with number of paramters */
+			struct typeinfo *ctor = hasht_search(class->class.public, k);
+			struct address count = { CONST_R,
+			                         list_size(ctor->function.parameters),
+			                         &int_type };
+			class = typeinfo_copy(ctor->function.type);
+			class->pointer = true;
+			n->place = temp_new(class);
+			push_op(n, op_new(NEWC, k, n->place, count, e));
+		}
+		break;
+	}
 	case POSTFIX_CALL: {
 		char *k = get_identifier(t);
 		char *name = NULL;
@@ -759,6 +777,7 @@ static char *print_opcode(enum opcode code)
 		R(LCONT);
 		R(SCONT);
 		R(GOTO);
+		R(NEWC);
 		R(BLT);
 		R(BLE);
 		R(BGT);
