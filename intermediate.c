@@ -501,8 +501,18 @@ void code_generate(struct tree *t)
 	}
 	case FUNCTION_DEF: {
 		/* TODO: get procedure parameter and local sizes */
+		char *k = get_identifier(t);
+		/* some funky stuff to get class::function string */
+		char *class = class_member(t);
+		char *name = calloc(strlen(k) + (class ? strlen(class) + 2 : 0)
+		                    + 1, sizeof(char));
+		if (class) {
+			strcat(name, class);
+			strcat(name, "::");
+		}
+		strcat(name, k);
 		push_op(n, label_new());
-		push_op(n, op_new(PROC, get_identifier(t), e, e, e));
+		push_op(n, op_new(PROC, name, e, e, e));
 		append_code(2);
 		push_op(n, op_new(END, NULL, e, e, e));
 		break;

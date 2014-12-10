@@ -1,8 +1,5 @@
 * Required tasks
-** TODO Fix NEG, -1 et. al. should store into int not bool
 ** TODO Handle cout and shift expressions
-** TODO Handle classes
-** TODO Handle field accessors (./->)
 ** TODO Handle new expressions
 ** TODO Handle short-circuit booleans
 * Additional tasks
