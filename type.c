@@ -127,7 +127,8 @@ char *print_region(enum region r)
  */
 void print_address(FILE *stream, struct address a)
 {
-	fprintf(stream, "(%s)%s:%i", print_basetype(a.type),
+	fprintf(stream, "(%s%s)%s:%i", print_basetype(a.type),
+	        (a.type->pointer ? " *" : ""),
 	        print_region(a.region), a.offset);
 }
 
