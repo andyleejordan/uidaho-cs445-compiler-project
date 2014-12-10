@@ -79,12 +79,26 @@ void code_generate(struct tree *t)
 	case FUNCTION_DEF: {
 		/* manage scopes for function recursion */
 		scoped = true;
-		char *k = get_identifier(t);
+
+		/* retrieve class scopes */
+		char *class_name = class_member(t);
+		struct typeinfo *class = scope_search(class_name);
+		if (class) {
+			log_debug("pushing class %s scopes", class_name);
+			scope_push(class->class.public);
+			scope_push(class->class.private);
+		}
+
+		/* retrieve function scope */
+		char *k = (n->rule == CTOR_FUNCTION_DEF)
+			? get_class(t) /* ctor function name is class name */
+			: get_identifier(t);
+
 		struct typeinfo *f = scope_search(k);
 		log_assert(f);
 		log_debug("pushing function %s scope", k);
 		scope_push(f->function.symbols);
-		log_assert(list_size(yyscopes) == scopes + 1);
+
 		/* manage memory regions */
 		region = LOCAL_R;
 		offset = scope_size(f->function.symbols);
