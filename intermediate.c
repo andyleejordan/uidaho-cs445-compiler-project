@@ -75,8 +75,8 @@ void code_generate(struct tree *t)
 	size_t offset_ = offset;
 
 	switch (n->rule) {
-	case FUNCTION_DEF:
-	case CTOR_FUNCTION_DEF: {
+	case CTOR_FUNCTION_DEF:
+	case FUNCTION_DEF: {
 		/* manage scopes for function recursion */
 		scoped = true;
 		char *k = get_identifier(t);
@@ -420,7 +420,7 @@ void code_generate(struct tree *t)
 		append_code(1);
 		break;
 	}
-	case CTOR_FUNCTION_DEF: {
+	case FUNCTION_DEF: {
 		/* TODO: get procedure parameter and local sizes */
 		push_op(n, label_new());
 		push_op(n, op_new(PROC, get_identifier(t), e, e, e));

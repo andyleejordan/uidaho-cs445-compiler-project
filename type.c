@@ -141,7 +141,7 @@ struct typeinfo *typeinfo_new(struct tree *n)
 	struct typeinfo *t = calloc(1, sizeof(*t));
 	log_assert(t);
 
-	if (get_rule(n) == FUNCTION_DEF) {
+	if (get_rule(n) == CTOR_FUNCTION_DEF) {
 		/* constructor return type is always class */
 		t->base = CLASS_T;
 	} else {

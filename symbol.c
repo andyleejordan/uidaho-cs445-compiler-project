@@ -889,8 +889,8 @@ struct typeinfo *type_check(struct tree *n)
 		return NULL;
 
 	}
-	case FUNCTION_DEF:
-	case CTOR_FUNCTION_DEF: {
+	case CTOR_FUNCTION_DEF:
+	case FUNCTION_DEF: {
 		/* manage scopes for function recursion */
 		size_t scopes = list_size(yyscopes);
 
@@ -903,7 +903,7 @@ struct typeinfo *type_check(struct tree *n)
 		}
 
 		/* retrieve function scope */
-		char *k = (production == FUNCTION_DEF)
+		char *k = (production == CTOR_FUNCTION_DEF)
 			? get_class(n) /* ctor function name is class name */
 			: get_identifier(n);
 
@@ -917,7 +917,7 @@ struct typeinfo *type_check(struct tree *n)
 		/* check return type of function */
 		struct tree *jump = get_production(n, RETURN_STATEMENT);
 		struct typeinfo *ret = NULL;
-		if (production == FUNCTION_DEF)
+		if (production == CTOR_FUNCTION_DEF)
 			/* constructor always returns class */
 			ret = typeinfo_return(function);
 		else if (jump == NULL || tree_size(jump) == 2)
@@ -972,7 +972,7 @@ struct typeinfo *type_check(struct tree *n)
 
 /*
  * Recursively handles nodes, processing SIMPLE_DECL and
- * CTOR_FUNCTION_DEF for symbols.
+ * FUNCTION_DEF for symbols.
  */
 static bool handle_node(struct tree *n, int d)
 {
@@ -981,11 +981,11 @@ static bool handle_node(struct tree *n, int d)
 		handle_init_list(typeinfo_new(n), child(1));
 		return false;
 	}
-	case FUNCTION_DEF: { /* constructor definition */
+	case CTOR_FUNCTION_DEF: { /* constructor definition */
 		handle_function(typeinfo_new(n), n, get_class(n));
 		return false;
 	}
-	case CTOR_FUNCTION_DEF: { /* function or member definition */
+	case FUNCTION_DEF: { /* function or member definition */
 		handle_function(typeinfo_new(n), n, get_identifier(n));
 		return false;
 	}

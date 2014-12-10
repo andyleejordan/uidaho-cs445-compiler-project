@@ -112,8 +112,8 @@ char *print_rule(enum rule r)
 		R(PARAM_DECL2);
 		R(PARAM_DECL3);
 		R(PARAM_DECL4);
-		R(FUNCTION_DEF);
 		R(CTOR_FUNCTION_DEF);
+		R(FUNCTION_DEF);
 		R(INITIALIZER);
 		R(INIT1);
 		R(INIT_CLAUSE2);

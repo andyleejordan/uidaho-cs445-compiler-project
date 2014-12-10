@@ -551,8 +551,8 @@ parameter_declaration:
         ;
 
 function_definition:
-        declarator ctor_initializer_opt function_body                      { $$ = P(FUNCTION_DEF, 3, $1, $2, $3); }
-        | decl_specifier_seq declarator ctor_initializer_opt function_body { $$ = P(CTOR_FUNCTION_DEF, 4, $1, $2, $3, $4); }
+        declarator ctor_initializer_opt function_body                      { $$ = P(CTOR_FUNCTION_DEF, 3, $1, $2, $3); }
+        | decl_specifier_seq declarator ctor_initializer_opt function_body { $$ = P(FUNCTION_DEF, 4, $1, $2, $3, $4); }
         ;
 
 function_body:
