@@ -22,6 +22,7 @@
 #include "node.h"
 #include "list.h"
 #include "tree.h"
+#include "hasht.h"
 
 extern size_t yylabels;
 extern struct typeinfo int_type;
@@ -351,7 +352,9 @@ void code_generate(struct tree *t)
 			break;
 		}
 		/* otherwise dereference for value */
-		n->place = temp_new(get_place(t, 1).type);
+		struct typeinfo *type = typeinfo_copy(get_place(t, 1).type);
+		type->pointer = false;
+		n->place = temp_new(type);
 		push_op(n, op_new(LCONT, NULL, n->place, get_place(t, 1), e));
 		break;
 	}
