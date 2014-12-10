@@ -97,11 +97,9 @@ int main()
 
 	testing("forward iteration:");
 	test_iter_forward(list);
-	printf("\n");
 
 	testing("backward iteration:");
 	test_iter_backward(list);
-	printf("\n");
 
 	list_free(list);
 
@@ -201,9 +199,12 @@ void test_iter_forward(struct list *list)
 	size_t counter = 0;
 	while (!list_end(iter)) {
 		++counter;
-		printf("%s ", (char *)iter->data);
+		if (LIST_DEBUG)
+			printf("%s ", (char *)iter->data);
 		iter = iter->next;
 	}
+	if (LIST_DEBUG)
+		printf("\n");
 	if (counter != list_size(list))
 		failure("iter forward counted %lu, but had size %lu",
 		        counter, list_size(list));
@@ -215,9 +216,12 @@ void test_iter_backward(struct list *list)
 	size_t counter = 0;
 	while (!list_end(iter)) {
 		++counter;
-		printf("%s ", (char *)iter->data);
+		if (LIST_DEBUG)
+			printf("%s ", (char *)iter->data);
 		iter = iter->prev;
 	}
+	if (LIST_DEBUG)
+		printf("\n");
 	if (counter != list_size(list))
 		failure("iter backward counted %lu, but had size %lu",
 		        counter, list_size(list));

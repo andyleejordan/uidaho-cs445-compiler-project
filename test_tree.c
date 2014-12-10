@@ -50,7 +50,8 @@ int main()
 
 	testing("printing:");
 	tree_traverse(root, 0, &print_tree, NULL, NULL);
-	printf("\n");
+	if (TREE_DEBUG)
+		printf("\n");
 
 	tree_free(root);
 
@@ -110,7 +111,8 @@ void test_new_group(struct tree *t)
 
 bool print_tree(struct tree *t, int d)
 {
-	printf("%*s\n", d*2, (char *)t->data);
+	if (TREE_DEBUG)
+		printf("%*s\n", d*2, (char *)t->data);
 	return true;
 }
 
