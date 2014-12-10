@@ -29,7 +29,7 @@
 #include "hasht.h"
 
 /* argument parser */
-const char *argp_program_version = "120++ hw3";
+const char *argp_program_version = "120++ hw4";
 const char *argp_program_bug_address = "<andrew@schwartzmeyer.com>";
 
 static char doc[] = "Andrew Schwartzmeyer's 120++ compiler.\v"
