@@ -22,6 +22,7 @@
 #include "symbol.h"
 #include "node.h"
 #include "intermediate.h"
+#include "scope.h"
 
 #include "list.h"
 #include "tree.h"
@@ -172,7 +173,35 @@ void parse_program(char *filename)
 	log_debug("generating intermediate code");
 	yylabels = 0; /* reset label counter */
 	code_generate(yyprogram);
-	print_code(stderr, ((struct node *)yyprogram->data)->code);
+
+	/* open output file and print TAC */
+	char *output_file = calloc(strlen(filename) + 4, sizeof(char));
+	strcat(output_file, filename);
+	strcat(output_file, ".ic");
+	FILE *ic = fopen(output_file, "w");
+	if (ic == NULL)
+		log_error("could not save to output file: %s", output_file);
+	/* TODO: print .string and .data */
+	fprintf(ic, ".string %zu\n", scope_size(constant));
+	for (size_t i = 0; i < constant->size; ++i) {
+		struct hasht_node *slot = constant->table[i];
+		if (slot && !hasht_node_deleted(slot)) {
+			fprintf(ic, "    ");
+			print_typeinfo(ic, slot->key, slot->value);
+		}
+	}
+	fprintf(ic, ".data\n");
+	for (size_t i = 0; i < global->size; ++i) {
+		struct hasht_node *slot = global->table[i];
+		if (slot && !hasht_node_deleted(slot)) {
+			fprintf(ic, "    ");
+			print_typeinfo(ic, slot->key, slot->value);
+		}
+	}
+	fprintf(ic, ".code\n");
+	print_code(ic, ((struct node *)yyprogram->data)->code);
+	fclose(ic);
+	free(output_file);
 
 	/* clean up */
 	log_debug("cleaning up");
