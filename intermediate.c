@@ -167,14 +167,47 @@ void code_generate(struct tree *t)
 	}
 	case POSTFIX_CALL: {
 		char *k = get_identifier(t);
-		n->place = temp_new(scope_search(k));
+		char *name = NULL;
+		struct typeinfo *f = scope_search(k);
+		enum rule child_rule = get_rule(child(0));
+		bool member_call = (child_rule == POSTFIX_DOT_FIELD ||
+		                    child_rule == POSTFIX_ARROW_FIELD);
+		if (member_call) {
+			/* get name of field */
+			log_assert(f);
+			char *field = get_identifier(tree_index(child(0), 2));
+			name = calloc(strlen(k) + strlen(field) + 2, sizeof(char));
+			strcat(name, k);
+			strcat(name, ".");
+			strcat(name, field);
+
+			struct typeinfo *class = scope_search(f->class.type);
+			f = hasht_search(class->class.public, field);
+			struct address instance;
+			struct address place = scope_search(k)->place;
+			if (child_rule == POSTFIX_ARROW_FIELD) {
+				struct typeinfo *type = typeinfo_copy(place.type);
+				type->pointer = false;
+				instance = temp_new(type);
+				push_op(n, op_new(LCONT, NULL, instance, place, e));
+			} else {
+				instance = place;
+			}
+			push_op(n, op_new(PARAM, NULL, instance, e, e));
+		} else {
+			name = strdup(k);
+		}
+		log_assert(k && f);
+
+		n->place = temp_new(f);
 		/* count number of parameters */
-		struct address count;
-		count.region = CONST_R;
-		count.type = &int_type;
-		count.offset = list_size(scope_search(k)->function.parameters);
+		struct address count = { CONST_R,
+		                         list_size(f->function.parameters),
+		                         &int_type };
+		if (member_call)
+			++count.offset;
 		append_code(1); /* parameters */
-		push_op(n, op_new(CALL, k, n->place, count, e));
+		push_op(n, op_new(CALL, name, n->place, count, e));
 		break;
 	}
 	case EXPR_LIST: {
