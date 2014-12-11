@@ -511,7 +511,6 @@ void code_generate(struct tree *t)
 		strcat(name, k);
 		strcat(name, "::");
 		strcat(name, k);
-		push_op(n, label_new());
 		push_op(n, op_new(PROC, name, e, e, e));
 		append_code(1);
 		push_op(n, op_new(END, NULL, e, e, e));
@@ -529,7 +528,6 @@ void code_generate(struct tree *t)
 			strcat(name, "::");
 		}
 		strcat(name, k);
-		push_op(n, label_new());
 		push_op(n, op_new(PROC, name, e, e, e));
 		append_code(2);
 		push_op(n, op_new(END, NULL, e, e, e));
