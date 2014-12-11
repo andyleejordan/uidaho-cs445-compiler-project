@@ -154,7 +154,7 @@ void code_generate(struct tree *t)
 		append_code(1);
 		char *class = get_class(t);
 		/* default constructor call */
-		if (class && !get_pointer(t)) {
+		if (class && !get_pointer(child(1))) {
 			struct address count = { CONST_R, 1, &int_type };
 			char *name = calloc(2 * strlen(class) + 3, sizeof(char));
 			strcat(name, class);
