@@ -197,8 +197,11 @@ void parse_program(char *filename)
 	for (size_t i = 0; i < global->size; ++i) {
 		struct hasht_node *slot = global->table[i];
 		if (slot && !hasht_node_deleted(slot)) {
-			fprintf(ic, "    ");
-			print_typeinfo(ic, slot->key, slot->value);
+			struct typeinfo *value = slot->value;
+			if (value->base != FUNCTION_T) {
+				fprintf(ic, "    ");
+				print_typeinfo(ic, slot->key, value);
+			}
 		}
 	}
 	fprintf(ic, ".code\n");
