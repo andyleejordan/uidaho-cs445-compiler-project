@@ -130,12 +130,11 @@ void token_push_sval_string(struct token *t, const char *s)
  * Resets token_sval_size to 0. Appends terminating null
  * character. Shrinks string with realloc to recorded length of
  * string. 'strlen' cannot be used because of potentially embedded
- * null charaters.
+ * null characters.
  */
 void token_finish_sval(struct token *t)
 {
 	token_sval_size = 0;
-	++t->ssize;
 	token_push_sval_char(t, '\0');
 	t->sval = realloc(t->sval, t->ssize);
 	log_assert(t->sval);
