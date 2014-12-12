@@ -14,6 +14,7 @@
 #include <stddef.h>
 #include <stdio.h>
 
+#include "token.h"
 #include "parser.tab.h"
 
 struct tree;

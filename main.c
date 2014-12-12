@@ -181,18 +181,35 @@ void parse_program(char *filename)
 	FILE *ic = fopen(output_file, "w");
 	if (ic == NULL)
 		log_error("could not save to output file: %s", output_file);
-	/* TODO: print .string and .data */
-	fprintf(ic, ".string %zu\n", scope_size(constant));
+
+	/* print .string region */
+	size_t string_size = 0;
+	/* iterate to properly get size of constants */
 	for (size_t i = 0; i < constant->size; ++i) {
 		struct hasht_node *slot = constant->table[i];
 		if (slot && !hasht_node_deleted(slot)) {
-			struct typeinfo *value = slot->value;
-			if (value->base != INT_T) {
+			struct typeinfo *v = slot->value;
+			if (v->base == FLOAT_T)
+				string_size += 8;
+			else if (v->base == CHAR_T && v->pointer)
+				/* keys have surrounding quotes but no null */
+				string_size += v->token->ssize;
+		}
+	}
+	fprintf(ic, ".string %zu\n", string_size);
+	/* iterate to print everything but ints, chars, and bools */
+	for (size_t i = 0; i < constant->size; ++i) {
+		struct hasht_node *slot = constant->table[i];
+		if (slot && !hasht_node_deleted(slot)) {
+			struct typeinfo *v = slot->value;
+			if (v->base == FLOAT_T || (v->base == CHAR_T && v->pointer)) {
 				fprintf(ic, "    ");
-				print_typeinfo(ic, slot->key, value);
+				print_typeinfo(ic, slot->key, v);
 			}
 		}
 	}
+
+	/* print .data region */
 	fprintf(ic, ".data\n");
 	for (size_t i = 0; i < global->size; ++i) {
 		struct hasht_node *slot = global->table[i];
