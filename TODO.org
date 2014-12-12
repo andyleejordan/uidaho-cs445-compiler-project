@@ -1,12 +1,15 @@
 * Required tasks
-** DONE Output to file
-Output from this phase should consist of a file containing
-intermediate code instructions. It should contain a .string region for
-string constants, a .data region for global variables, and a .code
-region for instructions. If the input was foo.c, the output file
-should be named foo.ic ("intermediate code").
 ** TODO Handle cout and shift expressions
+TAC pseudo-code ops for output float/int/string
+** TODO Add floating point ops
 ** TODO Handle short-circuit booleans
+** DONE Remove ints from .string region print out
+** DONE Remove functions from .data
+** DONE Remove labels before functions
+** DONE Fix bug with class pointer declarations
+** DONE Fix size of constant table
+Don't count size of ints, bools, chars
+** DONE Fix constant strings
 * Additional tasks
 ** TODO Align memory addresses
 ** TODO Handle shortcut assignments (+= etc.)
