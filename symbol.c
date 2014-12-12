@@ -104,12 +104,20 @@ static void symbol_insert(char *k, struct typeinfo *v, struct tree *t,
 		hasht_insert(constant ? scope_constant() : scope_current(), k, v);
 		log_symbol(k, v);
 
-		/* increment offset if not a constant int */
-		if (!(constant && (v->base == INT_T || v->base == BOOL_T)))
+		/* increment offset if not a constant int, bool, or char */
+		if (constant) {
+			/* floats get 8 bytes in .string */
+			if (v->base == FLOAT_T)
+				offset += 8;
+			/* strings get ssize */
+			else if (v->base == CHAR_T && v->pointer)
+				offset += v->token->ssize;
+			/* ints, chars, and bools use ival directly */
+			else
+				v->place.offset = n->place.offset = v->token->ival;
+		} else {
 			offset += typeinfo_size(v);
-		/* otherwise use ival for offset */
-		else
-			v->place.offset = n->place.offset = v->token->ival;
+		}
 
 	} else if (e->base == FUNCTION_T && v->base == FUNCTION_T) {
 		if (!typeinfo_compare(e, v)) {
