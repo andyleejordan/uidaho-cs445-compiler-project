@@ -371,7 +371,7 @@ char *print_basetype(struct typeinfo *t)
 	case INT_T:
 		return "int";
 	case FLOAT_T:
-		return "float";
+		return "double";
 	case CHAR_T:
 		return "char";
 	case BOOL_T:
@@ -394,7 +394,7 @@ char *print_basetype(struct typeinfo *t)
 /*
  * Prints a realistic reprensentation of a symbol to the stream.
  *
- * Example: FLOAT_T foobar(INT_T *, AClass)
+ * Example: double foobar(int *, AClass)
  */
 void print_typeinfo(FILE *stream, const char *k, struct typeinfo *v)
 {

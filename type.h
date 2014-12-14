@@ -56,6 +56,7 @@ extern enum region region;
 extern size_t offset;
 
 struct typeinfo;
+
 struct address {
 	enum region region;
 	int offset;
