@@ -203,14 +203,14 @@ void code_generate(struct tree *t)
 			struct typeinfo *class = scope_search(f->class.type);
 			f = hasht_search(class->class.public, field);
 			struct address instance;
-			struct address place = scope_search(k)->place;
+			struct address p = scope_search(k)->place;
 			if (child_rule == POSTFIX_ARROW_FIELD) {
-				struct typeinfo *type = typeinfo_copy(place.type);
+				struct typeinfo *type = typeinfo_copy(p.type);
 				type->pointer = false;
 				instance = temp_new(type);
-				push_op(n, op_new(LCONT_O, NULL, instance, place, e));
+				push_op(n, op_new(LCONT_O, NULL, instance, p, e));
 			} else {
-				instance = place;
+				instance = p;
 			}
 			push_op(n, op_new(PARAM_O, NULL, instance, e, e));
 		} else {
@@ -236,9 +236,9 @@ void code_generate(struct tree *t)
 			struct node *n_ = child->data;
 			n->code = list_concat(n->code, n_->code);
 			/* if child has a place, add a param */
-			struct address place = get_place(child, -1);
-			if (place.region != UNKNOWN_R)
-				push_op(n, op_new(PARAM_O, NULL, place, e, e));
+			struct address p = get_place(child, -1);
+			if (p.region != UNKNOWN_R)
+				push_op(n, op_new(PARAM_O, NULL, p, e, e));
 			iter = iter->next;
 		}
 		break;
@@ -423,10 +423,10 @@ void code_generate(struct tree *t)
 		break;
 	}
 	case UNARY_MINUS: { /* negative number */
-		struct address place = get_place(t, 1);
-		n->place = temp_new(place.type);
+		struct address p = get_place(t, 1);
+		n->place = temp_new(p.type);
 		append_code(1);
-		push_op(n, op_new(map_c(place.type), NULL, n->place, place, e));
+		push_op(n, op_new(map_c(p.type), NULL, n->place, p, e));
 		break;
 	}
 	case UNARY_SIZEOF_EXPR:
@@ -694,9 +694,9 @@ static void push_op(struct node *n, struct op *op)
  */
 static struct op *label_new()
 {
-	struct address place = { LABEL_R, yylabels, &unknown_type };
+	struct address p = { LABEL_R, yylabels, &unknown_type };
 	++yylabels;
-	return op_new(LABEL_O, NULL, place, e, e);
+	return op_new(LABEL_O, NULL, p, e, e);
 }
 
 /*
@@ -705,9 +705,9 @@ static struct op *label_new()
  */
 static struct address temp_new(struct typeinfo *t)
 {
-	struct address place = { region, offset, t };
+	struct address p = { region, offset, t };
 	offset += typeinfo_size(t);
-	return place;
+	return p;
 }
 
 /*
