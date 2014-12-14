@@ -19,3 +19,8 @@ string::string(char *s)
 {
 	data = s;
 }
+
+char *string::c_str()
+{
+	return data;
+}
