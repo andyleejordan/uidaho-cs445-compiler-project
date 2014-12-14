@@ -1,15 +1,7 @@
 * Required tasks
 ** TODO Handle cout and shift expressions
 TAC pseudo-code ops for output float/int/string
-** TODO Add floating point ops
 ** TODO Handle short-circuit booleans
-** DONE Remove ints from .string region print out
-** DONE Remove functions from .data
-** DONE Remove labels before functions
-** DONE Fix bug with class pointer declarations
-** DONE Fix size of constant table
-Don't count size of ints, bools, chars
-** DONE Fix constant strings
 * Additional tasks
 ** TODO Align memory addresses
 ** TODO Handle shortcut assignments (+= etc.)

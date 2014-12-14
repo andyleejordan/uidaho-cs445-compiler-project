@@ -34,7 +34,7 @@ extern struct typeinfo void_type;
 extern struct typeinfo class_type;
 extern struct typeinfo unknown_type;
 
-static enum opcode map_code(enum rule r);
+static enum opcode map_code(enum rule r, struct typeinfo *type);
 static struct op *op_new(enum opcode code, char *name,
                          struct address a, struct address b, struct address c);
 static void push_op(struct node *n, struct op *op);
@@ -58,6 +58,7 @@ struct op default_op;
  */
 #define append_code(i) do { n->code = list_concat(n->code, get_code(t, i)); } while (0)
 #define child(i) tree_index(t, i)
+#define map_c(a) map_code(n->rule, a)
 
 static struct op *handle_switch(struct list *code, struct op *next,
                                 struct address temp, struct address test,
@@ -146,7 +147,7 @@ void code_generate(struct tree *t)
 		if (init == NULL)
 			break;
 		append_code(1);
-		push_op(n, op_new(ASN, get_identifier(t), n->place, init->place, e));
+		push_op(n, op_new(ASN_O, get_identifier(t), n->place, init->place, e));
 		break;
 	}
 	case SIMPLE_DECL: {
@@ -160,8 +161,8 @@ void code_generate(struct tree *t)
 			strcat(name, class);
 			strcat(name, "::");
 			strcat(name, class);
-			push_op(n, op_new(PARAM, NULL, n->place, e, e));
-			push_op(n, op_new(CALL, name, n->place, count, e));
+			push_op(n, op_new(PARAM_O, NULL, n->place, e, e));
+			push_op(n, op_new(CALL_O, name, n->place, count, e));
 		}
 		break;
 	}
@@ -179,7 +180,7 @@ void code_generate(struct tree *t)
 			class = typeinfo_copy(ctor->function.type);
 			class->pointer = true;
 			n->place = temp_new(class);
-			push_op(n, op_new(NEWC, k, n->place, count, e));
+			push_op(n, op_new(NEW_O, k, n->place, count, e));
 		}
 		break;
 	}
@@ -207,11 +208,11 @@ void code_generate(struct tree *t)
 				struct typeinfo *type = typeinfo_copy(place.type);
 				type->pointer = false;
 				instance = temp_new(type);
-				push_op(n, op_new(LCONT, NULL, instance, place, e));
+				push_op(n, op_new(LCONT_O, NULL, instance, place, e));
 			} else {
 				instance = place;
 			}
-			push_op(n, op_new(PARAM, NULL, instance, e, e));
+			push_op(n, op_new(PARAM_O, NULL, instance, e, e));
 		} else {
 			name = strdup(k);
 		}
@@ -225,7 +226,7 @@ void code_generate(struct tree *t)
 		if (member_call)
 			++count.offset;
 		append_code(1); /* parameters */
-		push_op(n, op_new(CALL, name, n->place, count, e));
+		push_op(n, op_new(CALL_O, name, n->place, count, e));
 		break;
 	}
 	case EXPR_LIST: {
@@ -237,7 +238,7 @@ void code_generate(struct tree *t)
 			/* if child has a place, add a param */
 			struct address place = get_place(child, -1);
 			if (place.region != UNKNOWN_R)
-				push_op(n, op_new(PARAM, NULL, place, e, e));
+				push_op(n, op_new(PARAM_O, NULL, place, e, e));
 			iter = iter->next;
 		}
 		break;
@@ -268,8 +269,8 @@ void code_generate(struct tree *t)
 		struct op *first = label_new();
 		struct op *follow = label_new();
 		append_code(1); /* condition */
-		push_op(n, op_new(BIF, NULL, get_place(t, 1), get_label(first), e));
-		push_op(n, op_new(GOTO, NULL, get_label(follow), e, e));
+		push_op(n, op_new(IF_O, NULL, get_place(t, 1), get_label(first), e));
+		push_op(n, op_new(GOTO_O, NULL, get_label(follow), e, e));
 		push_op(n, first);
 		append_code(2); /* true */
 		push_op(n, follow);
@@ -282,8 +283,8 @@ void code_generate(struct tree *t)
 		struct op *first = label_new();
 		struct op *follow = label_new();
 		append_code(1); /* condition */
-		push_op(n, op_new(BIF, NULL, get_place(t, 1), get_label(first), e));
-		push_op(n, op_new(GOTO, NULL, get_label(follow), e, e));
+		push_op(n, op_new(IF_O, NULL, get_place(t, 1), get_label(first), e));
+		push_op(n, op_new(GOTO_O, NULL, get_label(follow), e, e));
 		push_op(n, first);
 		append_code(2); /* true */
 		push_op(n, follow);
@@ -302,7 +303,7 @@ void code_generate(struct tree *t)
 
 		/* call search for labels, tests, and breaks */
 		append_code(1); /* expr */
-		push_op(n, op_new(GOTO, NULL, get_label(test), e, e));
+		push_op(n, op_new(GOTO_O, NULL, get_label(test), e, e));
 		dflt = handle_switch(get_code(t, 2), next,
 		                     temp_new(&bool_type), s, test_code);
 		append_code(2);
@@ -311,7 +312,7 @@ void code_generate(struct tree *t)
 		n->code = list_concat(n->code, test_code);
 		/* push GOTO default if found */
 		if (dflt)
-			push_op(n, op_new(GOTO, NULL, get_label(dflt), e, e));
+			push_op(n, op_new(GOTO_O, NULL, get_label(dflt), e, e));
 		push_op(n, next);
 
 		break;
@@ -322,12 +323,12 @@ void code_generate(struct tree *t)
 		struct op *follow = label_new();
 		push_op(n, first); /* before condition */
 		append_code(1); /* expr */
-		push_op(n, op_new(BIF, NULL, get_place(t, 1), get_label(body), e));
-		push_op(n, op_new(GOTO, NULL, get_label(follow), e, e));
+		push_op(n, op_new(IF_O, NULL, get_place(t, 1), get_label(body), e));
+		push_op(n, op_new(GOTO_O, NULL, get_label(follow), e, e));
 		push_op(n, body);
 		backpatch(get_code(t, 2), first, follow);
 		append_code(2); /* body */
-		push_op(n, op_new(GOTO, NULL, get_label(first), e, e));
+		push_op(n, op_new(GOTO_O, NULL, get_label(first), e, e));
 		push_op(n, follow);
 		break;
 	}
@@ -338,7 +339,7 @@ void code_generate(struct tree *t)
 		backpatch(get_code(t, 1), first, follow);
 		append_code(1); /* body */
 		append_code(3); /* expr */
-		push_op(n, op_new(BIF, NULL, get_place(t, 3), get_label(first), e));
+		push_op(n, op_new(IF_O, NULL, get_place(t, 3), get_label(first), e));
 		push_op(n, follow);
 		break;
 	}
@@ -349,13 +350,13 @@ void code_generate(struct tree *t)
 		struct op *follow = label_new();
 		push_op(n, first); /* before condition */
 		append_code(2); /* expr 2 */
-		push_op(n, op_new(BIF, NULL, get_place(t, 2), get_label(body), e));
-		push_op(n, op_new(GOTO, NULL, get_label(follow), e, e));
+		push_op(n, op_new(IF_O, NULL, get_place(t, 2), get_label(body), e));
+		push_op(n, op_new(GOTO_O, NULL, get_label(follow), e, e));
 		push_op(n, body);
 		backpatch(get_code(t, 4), first, follow);
 		append_code(4); /* body */
 		append_code(3); /* expr3 */
-		push_op(n, op_new(GOTO, NULL, get_label(first), e, e));
+		push_op(n, op_new(GOTO_O, NULL, get_label(first), e, e));
 		push_op(n, follow);
 		break;
 	}
@@ -373,7 +374,7 @@ void code_generate(struct tree *t)
 		append_code(0); /* left */
 		struct address r = get_place(t, 2);
 		append_code(2); /* right */
-		push_op(n, op_new(map_code(n->rule), NULL, n->place, l, r));
+		push_op(n, op_new(map_c(l.type), NULL, n->place, l, r));
 		break;
 	}
 	case ADD_EXPR:
@@ -381,18 +382,18 @@ void code_generate(struct tree *t)
 	case MULT_EXPR:
 	case DIV_EXPR:
 	case MOD_EXPR: {
-		n->place = temp_new(&int_type);
 		struct address l = get_place(t, 0);
 		append_code(0); /* left */
 		struct address r = get_place(t, 2);
 		append_code(2); /* right */
-		push_op(n, op_new(map_code(n->rule), NULL, n->place, l, r));
+		n->place = temp_new(l.type);
+		push_op(n, op_new(map_c(l.type), NULL, n->place, l, r));
 		break;
 	}
 	case UNARY_PLUSPLUS: /* unary increment and decrement */
 	case UNARY_MINUSMINUS: {
 		n->place = get_place(t, 1);
-		push_op(n, op_new(map_code(n->rule), NULL, n->place, one, e));
+		push_op(n, op_new(map_c(n->place.type), NULL, n->place, one, e));
 		break;
 	}
 	case UNARY_STAR: { /* dereference */
@@ -406,25 +407,26 @@ void code_generate(struct tree *t)
 		struct typeinfo *type = typeinfo_copy(get_place(t, 1).type);
 		type->pointer = false;
 		n->place = temp_new(type);
-		push_op(n, op_new(LCONT, NULL, n->place, get_place(t, 1), e));
+		push_op(n, op_new(LCONT_O, NULL, n->place, get_place(t, 1), e));
 		break;
 	}
 	case UNARY_AMPERSAND: { /* address-of */
 		n->place = temp_new(&int_type);
 		append_code(1);
-		push_op(n, op_new(ADDR, NULL, n->place, get_place(t, 1), e));
+		push_op(n, op_new(ADDR_O, NULL, n->place, get_place(t, 1), e));
 		break;
 	}
 	case UNARY_NOT: { /* logical not */
 		n->place = temp_new(&bool_type);
 		append_code(1);
-		push_op(n, op_new(NOT, NULL, n->place, get_place(t, 1), e));
+		push_op(n, op_new(NOT_O, NULL, n->place, get_place(t, 1), e));
 		break;
 	}
-	case UNARY_MINUS: { /* negative integer */
-		n->place = temp_new(&int_type);
+	case UNARY_MINUS: { /* negative number */
+		struct address place = get_place(t, 1);
+		n->place = temp_new(place.type);
 		append_code(1);
-		push_op(n, op_new(NEG, NULL, n->place, get_place(t, 1), e));
+		push_op(n, op_new(map_c(place.type), NULL, n->place, place, e));
 		break;
 	}
 	case UNARY_SIZEOF_EXPR:
@@ -472,13 +474,13 @@ void code_generate(struct tree *t)
 		struct typeinfo *array = scope_search(k);
 		struct address index = get_place(t, 2);
 		n->place = temp_new(array->array.type);
-		push_op(n, op_new(ARR, NULL, n->place, array->place, index));
+		push_op(n, op_new(ARR_O, NULL, n->place, array->place, index));
 		break;
 	}
 	case POSTFIX_PLUSPLUS:
 	case POSTFIX_MINUSMINUS: {
 		n->place = get_place(t, 0);
-		push_op(n, op_new(map_code(n->rule), NULL, n->place, one, e));
+		push_op(n, op_new(map_c(n->place.type), NULL, n->place, one, e));
 		break;
 	}
 	case ASSIGN_EXPR: {
@@ -487,12 +489,12 @@ void code_generate(struct tree *t)
 		struct address r = get_place(t, 2);
 		append_code(0); /* left */
 		append_code(2); /* right */
-		enum opcode code = ASN;
+		enum opcode code = ASN_O;
 		/* handle doing assignment with pointers */
 		if (get_rule(child(0)) == UNARY_STAR)
-			code = SCONT;
+			code = SCONT_O;
 		else if (get_rule(child(2)) == UNARY_STAR)
-			code = LCONT;
+			code = LCONT_O;
 		push_op(n, op_new(code, k, n->place, r, e));
 		break;
 	}
@@ -502,7 +504,7 @@ void code_generate(struct tree *t)
 			break;
 		n->place = ret->place;
 		append_code(1);
-		push_op(n, op_new(RET, NULL, n->place, e, e));
+		push_op(n, op_new(RET_O, NULL, n->place, e, e));
 		break;
 	}
 	case CTOR_FUNCTION_DEF: {
@@ -511,9 +513,9 @@ void code_generate(struct tree *t)
 		strcat(name, k);
 		strcat(name, "::");
 		strcat(name, k);
-		push_op(n, op_new(PROC, name, e, e, e));
+		push_op(n, op_new(PROC_O, name, e, e, e));
 		append_code(1);
-		push_op(n, op_new(END, NULL, e, e, e));
+		push_op(n, op_new(END_O, NULL, e, e, e));
 		break;
 	}
 	case FUNCTION_DEF: {
@@ -528,9 +530,9 @@ void code_generate(struct tree *t)
 			strcat(name, "::");
 		}
 		strcat(name, k);
-		push_op(n, op_new(PROC, name, e, e, e));
+		push_op(n, op_new(PROC_O, name, e, e, e));
 		append_code(2);
-		push_op(n, op_new(END, NULL, e, e, e));
+		push_op(n, op_new(END_O, NULL, e, e, e));
 		break;
 	}
 	default: {
@@ -573,16 +575,16 @@ static struct op *handle_switch(struct list *code, struct op *next,
 	struct list_node *iter = list_head(code);
 	while (!list_end(iter)) {
 		struct op *op = iter->data;
-		if (op->code == LABEL) {
-			/* append BIF(BEQ(s, case), label), clear label */
-			list_push_back(test_code, op_new(BEQ, NULL, temp,
+		if (op->code == LABEL_O) {
+			/* append IF(EQ(s, case), label), clear label */
+			list_push_back(test_code, op_new(EQ_O, NULL, temp,
 			                                 test, op->address[1]));
-			list_push_back(test_code, op_new(BIF, NULL, temp,
+			list_push_back(test_code, op_new(IF_O, NULL, temp,
 			                                 get_label(op), e));
 			op->address[1] = e;
 		} else if (op == &break_op) {
 			/* replace marker with GOTO next for break statements */
-			iter->data = op_new(GOTO, NULL, get_label(next), e, e);
+			iter->data = op_new(GOTO_O, NULL, get_label(next), e, e);
 		} else if (op == &default_op) {
 			/* replace marker with default label and pass back */
 			dflt = label_new();
@@ -599,53 +601,57 @@ static void backpatch(struct list *code, struct op *first, struct op *follow)
 	while (!list_end(iter)) {
 		struct op *op = iter->data;
 		if (follow && op == &break_op)
-			iter->data = op_new(GOTO, NULL, get_label(follow), e, e);
+			iter->data = op_new(GOTO_O, NULL, get_label(follow), e, e);
 		if (first && op == &continue_op)
-			iter->data = op_new(GOTO, NULL, get_label(first), e, e);
+			iter->data = op_new(GOTO_O, NULL, get_label(first), e, e);
 		iter = iter->next;
 	}
 }
 #undef append_code
 #undef child
+#undef map_c
 
 /*
  * Maps a production rule to an opcode if supported.
  */
-static enum opcode map_code(enum rule r)
+static enum opcode map_code(enum rule r, struct typeinfo *t)
 {
+	bool floating = t->base == FLOAT_T;
 	switch (r) {
 	case REL_LT:
-		return BLT; /* < */
+		return floating ? FLT_O : LT_O; /* < */
 	case REL_GT:
-		return BGT; /* > */
+		return floating ? FGT_O : GT_O; /* > */
 	case REL_LTEQ:
-		return BLE; /* <= */
+		return floating ? FLE_O : LE_O; /* <= */
 	case REL_GTEQ:
-		return BGE; /* >= */
+		return floating ? FGE_O : GE_O; /* >= */
 	case EQUAL_EXPR:
-		return BEQ; /* == */
+		return floating ? FEQ_O : EQ_O; /* == */
 	case NOTEQUAL_EXPR:
-		return BNE; /* != */
+		return floating ? FNE_O : NE_O; /* != */
 	case LOGICAL_OR_EXPR:
-		return BOR;
+		return OR_O;
 	case LOGICAL_AND_EXPR:
-		return BAND;
+		return AND_O;
 	case ADD_EXPR:
 	case UNARY_PLUSPLUS:
 	case POSTFIX_PLUSPLUS:
-		return ADD; /* + */
+		return floating ? FADD_O : ADD_O; /* + */
 	case SUB_EXPR:
 	case UNARY_MINUSMINUS:
 	case POSTFIX_MINUSMINUS:
-		return SUB; /* - */
+		return floating ? FSUB_O : SUB_O; /* - */
 	case MULT_EXPR:
-		return MUL; /* * */
+		return floating ? FMUL_O : MUL_O; /* * */
 	case DIV_EXPR:
-		return DIV; /* / */
+		return floating ? FDIV_O : DIV_O; /* / */
+	case UNARY_MINUS:
+		return floating ? FNEG_O : NEG_O;
 	case MOD_EXPR:
-		return MOD; /* % */
+		return MOD_O; /* % */
 	default:
-		return ERRC; /* unknown */
+		return ERRC_O; /* unknown */
 	}
 }
 
@@ -691,7 +697,7 @@ static struct op *label_new()
 {
 	struct address place = { LABEL_R, yylabels, &unknown_type };
 	++yylabels;
-	return op_new(LABEL, NULL, place, e, e);
+	return op_new(LABEL_O, NULL, place, e, e);
 }
 
 /*
@@ -747,7 +753,7 @@ static struct address get_place(struct tree *t, int i)
  */
 static struct address get_label(struct op *op)
 {
-	log_assert(op->code == LABEL);
+	log_assert(op->code == LABEL_O);
 	return op->address[0];
 }
 
@@ -758,39 +764,50 @@ static struct address get_label(struct op *op)
 static char *print_opcode(enum opcode code)
 {
 	switch (code) {
-		R(GLOBAL);
-		R(PROC);
-		R(LOCAL);
-		R(LABEL);
-		R(END);
-		R(ADD);
-		R(SUB);
-		R(MUL);
-		R(DIV);
-		R(MOD);
-		R(NEG);
-		R(NOT);
-		R(ASN);
-		R(ADDR);
-		R(LCONT);
-		R(SCONT);
-		R(GOTO);
-		R(NEWC);
-		R(BLT);
-		R(BLE);
-		R(BGT);
-		R(BGE);
-		R(BEQ);
-		R(BNE);
-		R(BOR);
-		R(BAND);
-		R(BIF);
-		R(BNIF);
-		R(ARR);
-		R(PARAM);
-		R(CALL);
-		R(RET);
-		R(ERRC);
+		R(GLOBAL_O);
+		R(PROC_O);
+		R(LOCAL_O);
+		R(LABEL_O);
+		R(END_O);
+		R(ADD_O);
+		R(FADD_O);
+		R(SUB_O);
+		R(FSUB_O);
+		R(MUL_O);
+		R(FMUL_O);
+		R(DIV_O);
+		R(FDIV_O);
+		R(MOD_O);
+		R(NEG_O);
+		R(FNEG_O);
+		R(NOT_O);
+		R(ASN_O);
+		R(ADDR_O);
+		R(LCONT_O);
+		R(SCONT_O);
+		R(GOTO_O);
+		R(NEW_O);
+		R(LT_O);
+		R(FLT_O);
+		R(LE_O);
+		R(FLE_O);
+		R(GT_O);
+		R(FGT_O);
+		R(GE_O);
+		R(FGE_O);
+		R(EQ_O);
+		R(FEQ_O);
+		R(NE_O);
+		R(FNE_O);
+		R(OR_O);
+		R(AND_O);
+		R(IF_O);
+		R(NIF_O);
+		R(ARR_O);
+		R(PARAM_O);
+		R(CALL_O);
+		R(RET_O);
+		R(ERRC_O);
 	}
 	return NULL;
 }
