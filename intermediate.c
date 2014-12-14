@@ -499,10 +499,9 @@ void code_generate(struct tree *t)
 		break;
 	}
 	case RETURN_STATEMENT: {
-		struct node *ret = get_node(t, 1);
-		if (ret == NULL)
+		if (get_node(t, 1) == NULL)
 			break;
-		n->place = ret->place;
+		n->place = get_place(t, 1);
 		append_code(1);
 		push_op(n, op_new(RET_O, NULL, n->place, e, e));
 		break;
