@@ -768,6 +768,11 @@ static char *print_opcode(enum opcode code)
 		R(LOCAL_O);
 		R(LABEL_O);
 		R(END_O);
+		R(PINT_O);
+		R(PCHAR_O);
+		R(PBOOL_O);
+		R(PFLOAT_O);
+		R(PSTR_O);
 		R(ADD_O);
 		R(FADD_O);
 		R(SUB_O);

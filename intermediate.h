@@ -22,6 +22,12 @@ enum opcode {
 	LOCAL_O,  /* name, address in LOCAL_R */
 	LABEL_O,  /* name (optional), address in LABEL_R */
 	END_O,    /* declares end of current procedure */
+	/* psudeo opcodes for printing types with cout << thing */
+	PINT_O,
+	PCHAR_O,
+	PBOOL_O,
+	PFLOAT_O,
+	PSTR_O,
 	/* actual opcodes */
 	ADD_O,    /* x := y op z  store result of binary operation on y and z to x */
 	FADD_O,   /* floating point versions */
