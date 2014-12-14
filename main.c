@@ -21,8 +21,9 @@
 #include "lexer.h"
 #include "symbol.h"
 #include "node.h"
-#include "intermediate.h"
 #include "scope.h"
+#include "intermediate.h"
+#include "final.h"
 
 #include "list.h"
 #include "tree.h"
@@ -224,7 +225,8 @@ void parse_program(char *filename)
 		}
 	}
 	fprintf(ic, ".code\n");
-	print_code(ic, ((struct node *)yyprogram->data)->code);
+	struct list *code = ((struct node *)yyprogram->data)->code;
+	print_code(ic, code);
 	fclose(ic);
 	free(output_file);
 
@@ -250,14 +252,14 @@ void parse_program(char *filename)
 		if (slot && !hasht_node_deleted(slot)) {
 			struct typeinfo *v = slot->value;
 			if (v->base == FLOAT_T || (v->base == CHAR_T && v->pointer)) {
-				fprintf(ic, "\t(*(%s %s*)(constant + %d)) = %s;\n",
-				        print_basetype(v), v->pointer ? "*" : "",
-				        v->place.offset, slot->key);
+				fprintf(fc, "\t");
+				map_address(fc, v->place);
+				fprintf(fc, " = %s;\n", slot->key);
 			}
 		}
 	}
 	fprintf(fc, "}");
-	/* TODO: generate final code */
+	final_code(fc, code);
 	fclose(fc);
 	free(output_file);
 
