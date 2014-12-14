@@ -1,5 +1,5 @@
 /*
- * intermediate.c -
+ * intermediate.c - Implementation of intermediate code generation.
  *
  * Copyright (C) 2014 Andrew Schwartzmeyer
  *
@@ -54,7 +54,7 @@ struct op default_op;
 /*
  * Tree traversal(s) to generate a list of three-address code
  * instructions given a parse tree. Handles scopes in pre-order,
- * instructions in post-order.
+ * instructions in post-order. Final list naturally saved to t->code.
  */
 #define append_code(i) do { n->code = list_concat(n->code, get_code(t, i)); } while (0)
 #define child(i) tree_index(t, i)
@@ -69,9 +69,8 @@ static void backpatch(struct list *code, struct op *first, struct op *follow);
 void code_generate(struct tree *t)
 {
 	struct node *n = t->data;
-	/** pre-order **/
-	/* function invocation; public class member/function access; private
-	   class member/function access when inside n-1 */
+
+	/* pre-order handling of scopes */
 	size_t scopes = list_size(yyscopes);
 	bool scoped = false;
 	enum region region_ = region;
@@ -132,15 +131,12 @@ void code_generate(struct tree *t)
 	/** post-order **/
 	switch(n->rule) {
 	case INITIALIZER:
-	case LITERAL: {
-		/* this passes up place for symbols, but get_address()
-		   may make it unnecessary */
-		/* TODO: get ident, search, get address */
+	case LITERAL: { /* pass up .place for symbols */
 		n->place = get_place(t, 0);
 		append_code(0);
 		break;
 	}
-	case INIT_DECL: {
+	case INIT_DECL: { /* initializer assignment */
 		n->place = get_place(t, 0);
 
 		struct node *init = get_node(t, 1);
@@ -150,11 +146,10 @@ void code_generate(struct tree *t)
 		push_op(n, op_new(ASN_O, get_identifier(t), n->place, init->place, e));
 		break;
 	}
-	case SIMPLE_DECL: {
+	case SIMPLE_DECL: { /* default constructor call if class declaration */
 		n->place = get_place(t, 1);
 		append_code(1);
 		char *class = get_class(t);
-		/* default constructor call */
 		if (class && !get_pointer(child(1))) {
 			struct address count = { CONST_R, 1, &int_type };
 			char *name = calloc(2 * strlen(class) + 3, sizeof(char));
@@ -166,7 +161,7 @@ void code_generate(struct tree *t)
 		}
 		break;
 	}
-	case NEW_EXPR: {
+	case NEW_EXPR: { /* explicit constructor call */
 		append_code(2); /* parameters */
 		/* terribly hacky grabbing of class name */
 		char *k = get_node(tree_index(child(1), 0), 0)->token->text;
@@ -184,7 +179,7 @@ void code_generate(struct tree *t)
 		}
 		break;
 	}
-	case POSTFIX_CALL: {
+	case POSTFIX_CALL: { /* function invocation */
 		char *k = get_identifier(t);
 		char *name = NULL;
 		struct typeinfo *f = scope_search(k);
@@ -229,7 +224,7 @@ void code_generate(struct tree *t)
 		push_op(n, op_new(CALL_O, name, n->place, count, e));
 		break;
 	}
-	case EXPR_LIST: {
+	case EXPR_LIST: { /* recursive list of parameters */
 		iter = list_head(t->children);
 		while (!list_end(iter)) {
 			struct tree *child = iter->data;
@@ -243,15 +238,15 @@ void code_generate(struct tree *t)
 		}
 		break;
 	}
-	case BREAK_STATEMENT: {
+	case BREAK_STATEMENT: { /* mark a break statement */
 		push_op(n, &break_op);
 		break;
 	}
-	case CONTINUE_STATEMENT: {
+	case CONTINUE_STATEMENT: { /* mark a continue statement */
 		push_op(n, &continue_op);
 		break;
 	}
-	case CASE_STATEMENT: {
+	case CASE_STATEMENT: { /* mark a case in a switch */
 		/* this label stores the case in address[1]
 		   temporarily so that handle_switch() can get it */
 		struct op *label = label_new();
@@ -260,15 +255,15 @@ void code_generate(struct tree *t)
 		append_code(2);
 		break;
 	}
-	case DEFAULT_STATEMENT: {
+	case DEFAULT_STATEMENT: { /* mark a default case */
 		push_op(n, &default_op);
 		append_code(1);
 		break;
 	}
-	case IF_STATEMENT: { /* IF */
+	case IF_STATEMENT: { /* if (test) { body } */
 		struct op *first = label_new();
 		struct op *follow = label_new();
-		append_code(1); /* condition */
+		append_code(1); /* test */
 		push_op(n, op_new(IF_O, NULL, get_place(t, 1), get_label(first), e));
 		push_op(n, op_new(GOTO_O, NULL, get_label(follow), e, e));
 		push_op(n, first);
@@ -276,13 +271,10 @@ void code_generate(struct tree *t)
 		push_op(n, follow);
 		break;
 	}
-	case IF_ELSE_STATEMENT: { /* IF-ELSE chains */
-		/* ASN(temp, condition) -> BIF(temp, first) -> GOTO(follow) ->
-		   LABEL(first) -> get_code(n, 2) ->
-		   LABEL(FOLLOW) -> get_code(n, 4) */
+	case IF_ELSE_STATEMENT: { /* if (test) { true } else { false } chains */
 		struct op *first = label_new();
 		struct op *follow = label_new();
-		append_code(1); /* condition */
+		append_code(1); /* test */
 		push_op(n, op_new(IF_O, NULL, get_place(t, 1), get_label(first), e));
 		push_op(n, op_new(GOTO_O, NULL, get_label(follow), e, e));
 		push_op(n, first);
@@ -291,7 +283,7 @@ void code_generate(struct tree *t)
 		append_code(4); /* false */
 		break;
 	}
-	case SWITCH_STATEMENT: { /* switch (expr) { body; } */
+	case SWITCH_STATEMENT: { /* switch (test) { body } */
 		struct address s = get_place(t, 1);
 		struct op *test = label_new();
 		struct op *next = label_new();
@@ -302,11 +294,11 @@ void code_generate(struct tree *t)
 		list_push_back(test_code, test);
 
 		/* call search for labels, tests, and breaks */
-		append_code(1); /* expr */
+		append_code(1); /* test */
 		push_op(n, op_new(GOTO_O, NULL, get_label(test), e, e));
 		dflt = handle_switch(get_code(t, 2), next,
 		                     temp_new(&bool_type), s, test_code);
-		append_code(2);
+		append_code(2); /* body */
 
 		/* concat test code and follow label */
 		n->code = list_concat(n->code, test_code);
@@ -317,12 +309,12 @@ void code_generate(struct tree *t)
 
 		break;
 	}
-	case WHILE_LOOP: { /* while (expr) { body; } */
+	case WHILE_LOOP: { /* while (test) { body } */
 		struct op *first = label_new();
 		struct op *body = label_new();
 		struct op *follow = label_new();
-		push_op(n, first); /* before condition */
-		append_code(1); /* expr */
+		push_op(n, first); /* before test */
+		append_code(1); /* test */
 		push_op(n, op_new(IF_O, NULL, get_place(t, 1), get_label(body), e));
 		push_op(n, op_new(GOTO_O, NULL, get_label(follow), e, e));
 		push_op(n, body);
@@ -332,37 +324,37 @@ void code_generate(struct tree *t)
 		push_op(n, follow);
 		break;
 	}
-	case DO_WHILE_LOOP: { /* do { body; } while (expr); */
+	case DO_WHILE_LOOP: { /* do { body } while (test); */
 		struct op *first = label_new();
 		struct op *follow = label_new();
 		push_op(n, first); /* before body */
 		backpatch(get_code(t, 1), first, follow);
 		append_code(1); /* body */
-		append_code(3); /* expr */
+		append_code(3); /* test */
 		push_op(n, op_new(IF_O, NULL, get_place(t, 3), get_label(first), e));
 		push_op(n, follow);
 		break;
 	}
-	case FOR_LOOP: { /* for (expr1; expr2; expr3) { body; } */
-		append_code(1); /* expr 1 */
+	case FOR_LOOP: { /* for (init; test; post) { body } */
+		append_code(1); /* init */
 		struct op *first = label_new();
 		struct op *body = label_new();
 		struct op *follow = label_new();
 		push_op(n, first); /* before condition */
-		append_code(2); /* expr 2 */
+		append_code(2); /* test */
 		push_op(n, op_new(IF_O, NULL, get_place(t, 2), get_label(body), e));
 		push_op(n, op_new(GOTO_O, NULL, get_label(follow), e, e));
 		push_op(n, body);
 		backpatch(get_code(t, 4), first, follow);
 		append_code(4); /* body */
-		append_code(3); /* expr3 */
+		append_code(3); /* post */
 		push_op(n, op_new(GOTO_O, NULL, get_label(first), e, e));
 		push_op(n, follow);
 		break;
 	}
 	case SHIFT_LEFT: { /* for cout << thing */
-		append_code(0);
-		append_code(1);
+		append_code(0); /* recursive couts */
+		append_code(1); /* thing */
 		struct address p = get_place(t, 1);
 		/* if std::string, call c_str() */
 		if (p.type->base == CLASS_T
@@ -385,7 +377,7 @@ void code_generate(struct tree *t)
 	case NOTEQUAL_EXPR:
 	case EQUAL_EXPR:
 	case LOGICAL_OR_EXPR:
-	case LOGICAL_AND_EXPR: {
+	case LOGICAL_AND_EXPR: { /* int and float comparisons */
 		/* TODO: handle short circuiting */
 		n->place = temp_new(&bool_type);
 		struct address l = get_place(t, 0);
@@ -399,7 +391,7 @@ void code_generate(struct tree *t)
 	case SUB_EXPR:
 	case MULT_EXPR:
 	case DIV_EXPR:
-	case MOD_EXPR: {
+	case MOD_EXPR: { /* int and float arithmetic */
 		struct address l = get_place(t, 0);
 		append_code(0); /* left */
 		struct address r = get_place(t, 2);
@@ -440,7 +432,7 @@ void code_generate(struct tree *t)
 		push_op(n, op_new(NOT_O, NULL, n->place, get_place(t, 1), e));
 		break;
 	}
-	case UNARY_MINUS: { /* negative number */
+	case UNARY_MINUS: { /* negative int or float */
 		struct address p = get_place(t, 1);
 		n->place = temp_new(p.type);
 		append_code(1);
@@ -448,7 +440,7 @@ void code_generate(struct tree *t)
 		break;
 	}
 	case UNARY_SIZEOF_EXPR:
-	case UNARY_SIZEOF_TYPE: { /* sizeof(symbol) */
+	case UNARY_SIZEOF_TYPE: { /* sizeof(symbol or type) */
 		/* obtain size as a const int */
 		struct address size;
 		size.region = CONST_R;
@@ -496,12 +488,12 @@ void code_generate(struct tree *t)
 		break;
 	}
 	case POSTFIX_PLUSPLUS:
-	case POSTFIX_MINUSMINUS: {
+	case POSTFIX_MINUSMINUS: { /* unary ++ and -- operators */
 		n->place = get_place(t, 0);
 		push_op(n, op_new(map_c(n->place.type), NULL, n->place, one, e));
 		break;
 	}
-	case ASSIGN_EXPR: {
+	case ASSIGN_EXPR: { /* non-initializer assignment */
 		char *k = get_identifier(t);
 		n->place = get_place(t, 0);
 		struct address r = get_place(t, 2);
@@ -516,15 +508,15 @@ void code_generate(struct tree *t)
 		push_op(n, op_new(code, k, n->place, r, e));
 		break;
 	}
-	case RETURN_STATEMENT: {
 		if (get_node(t, 1) == NULL)
 			break;
 		n->place = get_place(t, 1);
 		append_code(1);
 		push_op(n, op_new(RET_O, NULL, n->place, e, e));
+	case RETURN_STATEMENT: { /* return (optional expr) */
 		break;
 	}
-	case CTOR_FUNCTION_DEF: {
+	case CTOR_FUNCTION_DEF: { /* constructor function definition */
 		char *k = class_member(t);
 		char *name = calloc(2 * strlen(k) + 3, sizeof(char));
 		strcat(name, k);
@@ -535,8 +527,7 @@ void code_generate(struct tree *t)
 		push_op(n, op_new(END_O, NULL, e, e, e));
 		break;
 	}
-	case FUNCTION_DEF: {
-		/* TODO: get procedure parameter and local sizes */
+	case FUNCTION_DEF: { /* function definition */
 		char *k = get_identifier(t);
 		/* some funky stuff to get class::function string */
 		char *class = class_member(t);
@@ -552,8 +543,7 @@ void code_generate(struct tree *t)
 		push_op(n, op_new(END_O, NULL, e, e, e));
 		break;
 	}
-	default: {
-		/* concatenate all children code to build list */
+	default: { /* concatenate all children code to build list */
 		iter = list_head(t->children);
 		while (!list_end(iter)) {
 			struct tree *child = iter->data;
@@ -565,6 +555,7 @@ void code_generate(struct tree *t)
 	}
 	}
 
+	/* handle exit of scopes */
 	if (scoped) {
 		while (list_size(yyscopes) != scopes) {
 			log_debug("popping scope");

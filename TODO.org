@@ -1,7 +1,9 @@
 * Required tasks
-** TODO Handle short-circuit booleans
+** TODO Add parameter and local sizes to functions
+** TODO Generate assembly code
 * Additional tasks
 ** TODO Align memory addresses
+** TODO Handle short-circuit booleans
 ** TODO Handle shortcut assignments (+= etc.)
 Will require additional grammar rules
 
