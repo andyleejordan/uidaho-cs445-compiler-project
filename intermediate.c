@@ -154,7 +154,7 @@ void code_generate(struct tree *t)
 			struct address count = { CONST_R, 1, &int_type };
 			char *name = calloc(2 * strlen(class) + 3, sizeof(char));
 			strcat(name, class);
-			strcat(name, "::");
+			strcat(name, "__");
 			strcat(name, class);
 			push_op(n, op_new(PARAM_O, NULL, n->place, e, e));
 			push_op(n, op_new(CALL_O, name, n->place, count, e));
@@ -192,7 +192,7 @@ void code_generate(struct tree *t)
 			char *field = get_identifier(tree_index(child(0), 2));
 			name = calloc(strlen(k) + strlen(field) + 2, sizeof(char));
 			strcat(name, k);
-			strcat(name, ".");
+			strcat(name, "_");
 			strcat(name, field);
 
 			struct typeinfo *class = scope_search(f->class.type);
@@ -523,7 +523,7 @@ void code_generate(struct tree *t)
 		char *k = class_member(t);
 		char *name = calloc(2 * strlen(k) + 3, sizeof(char));
 		strcat(name, k);
-		strcat(name, "::");
+		strcat(name, "__");
 		strcat(name, k);
 		struct typeinfo *f = scope_search(k);
 		log_assert(f);
@@ -543,7 +543,7 @@ void code_generate(struct tree *t)
 		                    + 1, sizeof(char));
 		if (class) {
 			strcat(name, class);
-			strcat(name, "::");
+			strcat(name, "__");
 		}
 		strcat(name, k);
 		struct typeinfo *f = scope_search(k);
