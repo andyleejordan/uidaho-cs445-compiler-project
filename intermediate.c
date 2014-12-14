@@ -853,7 +853,7 @@ static char *print_opcode(enum opcode code)
  */
 static void print_op(FILE *stream, struct op *op)
 {
-	fprintf(stream, "%-8s", print_opcode(op->code));
+	fprintf(stream, "%-10s", print_opcode(op->code));
 	fprintf(stream, "%-24s", op->name ? op->name : "");
 	for (int i = 0; i < 3; ++i) {
 		struct address a = op->address[i];
