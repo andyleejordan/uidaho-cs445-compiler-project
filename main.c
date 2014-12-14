@@ -236,21 +236,27 @@ void parse_program(char *filename)
 	if (fc == NULL)
 		log_error("could not save to output file: %s", output_file);
 
-	/* setup constant region */
+	/* setup includes */
+	if (libs.usingstd && libs.iostream)
+		fprintf(fc, "#include <stdio.h>\n");
+
+	/* setup constant and global region space */
 	fprintf(fc, "char constant[%zu];\n", string_size);
+	fprintf(fc, "char global[%zu];\n", global->size);
+	fprintf(fc, "int main()\n{\n");
+	fprintf(fc, "\t/* initializing constant region */\n");
 	for (size_t i = 0; i < constant->size; ++i) {
 		struct hasht_node *slot = constant->table[i];
 		if (slot && !hasht_node_deleted(slot)) {
 			struct typeinfo *v = slot->value;
 			if (v->base == FLOAT_T || (v->base == CHAR_T && v->pointer)) {
-				fprintf(ic, "constant[%d] = %s;\n",
+				fprintf(ic, "\t(*(%s %s*)(constant + %d)) = %s;\n",
+				        print_basetype(v), v->pointer ? "*" : "",
 				        v->place.offset, slot->key);
 			}
 		}
 	}
-
-	/* setup global region */
-	fprintf(fc, "char global[%zu];\n", global->size);
+	fprintf(fc, "}");
 	/* TODO: generate final code */
 	fclose(fc);
 	free(output_file);
