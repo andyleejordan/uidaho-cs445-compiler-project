@@ -508,12 +508,15 @@ void code_generate(struct tree *t)
 		push_op(n, op_new(code, k, n->place, r, e));
 		break;
 	}
-		if (get_node(t, 1) == NULL)
-			break;
-		n->place = get_place(t, 1);
-		append_code(1);
-		push_op(n, op_new(RET_O, NULL, n->place, e, e));
 	case RETURN_STATEMENT: { /* return (optional expr) */
+		if (get_node(t, 1)) {
+			n->place = get_place(t, 1);
+			append_code(1); /* expr */
+			push_op(n, op_new(RET_O, NULL, n->place, e, e));
+		}
+		else {
+			push_op(n, op_new(RET_O, NULL, e, e, e));
+		}
 		break;
 	}
 	case CTOR_FUNCTION_DEF: { /* constructor function definition */
