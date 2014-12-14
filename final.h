@@ -15,7 +15,6 @@
 
 struct list;
 
-void map_address(FILE *stream, struct address a);
 void final_code(FILE *stream, struct list *code);
 
 #endif /* FINAL_H */

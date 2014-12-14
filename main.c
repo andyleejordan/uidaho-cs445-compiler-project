@@ -245,20 +245,8 @@ void parse_program(char *filename)
 	/* setup constant and global region space */
 	fprintf(fc, "char constant[%zu];\n", string_size);
 	fprintf(fc, "char global[%zu];\n", global->size);
-	fprintf(fc, "int main()\n{\n");
-	fprintf(fc, "\t/* initializing constant region */\n");
-	for (size_t i = 0; i < constant->size; ++i) {
-		struct hasht_node *slot = constant->table[i];
-		if (slot && !hasht_node_deleted(slot)) {
-			struct typeinfo *v = slot->value;
-			if (v->base == FLOAT_T || (v->base == CHAR_T && v->pointer)) {
-				fprintf(fc, "\t");
-				map_address(fc, v->place);
-				fprintf(fc, " = %s;\n", slot->key);
-			}
-		}
-	}
-	fprintf(fc, "}");
+
+	/* generate final code instructions */
 	final_code(fc, code);
 	fclose(fc);
 	free(output_file);
