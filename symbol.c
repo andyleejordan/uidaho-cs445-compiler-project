@@ -401,15 +401,8 @@ struct typeinfo *type_check(struct tree *n)
 		v->token = token;
 
 		/* constants are only inserted on first appearance */
-		if (!scope_search(token->text)) {
+		if (!scope_search(token->text))
 			symbol_insert(token->text, v, t, NULL, true);
-
-			/* if string, get size, otherwise calculate for type */
-			if (token->ssize)
-				offset += token->ssize;
-			else
-				offset += typeinfo_size(v);
-		}
 
 		return v;
 	}
