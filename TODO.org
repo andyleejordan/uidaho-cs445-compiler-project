@@ -1,6 +1,4 @@
 * Required tasks
-** TODO Handle cout and shift expressions
-TAC pseudo-code ops for output float/int/string
 ** TODO Handle short-circuit booleans
 * Additional tasks
 ** TODO Align memory addresses

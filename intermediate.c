@@ -360,6 +360,24 @@ void code_generate(struct tree *t)
 		push_op(n, follow);
 		break;
 	}
+	case SHIFT_LEFT: { /* for cout << thing */
+		append_code(0);
+		append_code(1);
+		struct address p = get_place(t, 1);
+		/* if std::string, call c_str() */
+		if (p.type->base == CLASS_T
+		    && (strcmp(p.type->class.type, "string") == 0)) {
+			struct address temp = temp_new(&string_type);
+			struct address count = { CONST_R,
+			                         1,
+			                         &int_type };
+			push_op(n, op_new(PARAM_O, NULL, p, e, e));
+			push_op(n, op_new(CALL_O, "c_str", temp, count, e));
+			p = temp;
+		}
+		push_op(n, op_new(map_c(p.type), NULL, p, e, e));
+		break;
+	}
 	case REL_LT:
 	case REL_GT:
 	case REL_LTEQ:
@@ -649,6 +667,17 @@ static enum opcode map_code(enum rule r, struct typeinfo *t)
 		return floating ? FNEG_O : NEG_O;
 	case MOD_EXPR:
 		return MOD_O; /* % */
+	case SHIFT_LEFT:
+		if (t->base == INT_T)
+			return PINT_O;
+		else if (t->base == CHAR_T && !t->pointer)
+			return PCHAR_O;
+		else if (t->base == BOOL_T)
+			return PBOOL_O;
+		else if (t->base == FLOAT_T)
+			return PFLOAT_O;
+		else if (t->base == CHAR_T && t->pointer)
+			return PSTR_O;
 	default:
 		return ERRC_O; /* unknown */
 	}
