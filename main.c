@@ -182,6 +182,8 @@ void parse_program(char *filename)
 	if (ic == NULL)
 		log_error("could not save to output file: %s", output_file);
 
+	fprintf(ic, ".file \"%s\"\n", filename);
+
 	/* print .string region */
 	size_t string_size = 0;
 	/* iterate to properly get size of constants */

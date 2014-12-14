@@ -796,9 +796,7 @@ static struct address get_label(struct op *op)
 static char *print_opcode(enum opcode code)
 {
 	switch (code) {
-		R(GLOBAL_O);
 		R(PROC_O);
-		R(LOCAL_O);
 		R(LABEL_O);
 		R(END_O);
 		R(PINT_O);
