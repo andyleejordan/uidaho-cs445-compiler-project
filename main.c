@@ -228,6 +228,33 @@ void parse_program(char *filename)
 	fclose(ic);
 	free(output_file);
 
+	log_debug("generating final code");
+	output_file = calloc(strlen(filename) + 3, sizeof(char));
+	strcat(output_file, filename);
+	strcat(output_file, ".c");
+	FILE *fc = fopen(output_file, "w");
+	if (fc == NULL)
+		log_error("could not save to output file: %s", output_file);
+
+	/* setup constant region */
+	fprintf(fc, "char constant[%zu];\n", string_size);
+	for (size_t i = 0; i < constant->size; ++i) {
+		struct hasht_node *slot = constant->table[i];
+		if (slot && !hasht_node_deleted(slot)) {
+			struct typeinfo *v = slot->value;
+			if (v->base == FLOAT_T || (v->base == CHAR_T && v->pointer)) {
+				fprintf(ic, "constant[%d] = %s;\n",
+				        v->place.offset, slot->key);
+			}
+		}
+	}
+
+	/* setup global region */
+	fprintf(fc, "char global[%zu];\n", global->size);
+	/* TODO: generate final code */
+	fclose(fc);
+	free(output_file);
+
 	/* clean up */
 	log_debug("cleaning up");
 	tree_free(yyprogram);
