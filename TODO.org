@@ -1,5 +1,4 @@
 * Required tasks
-** TODO Add parameter and local sizes to functions
 ** TODO Generate assembly code
 * Additional tasks
 ** TODO Align memory addresses

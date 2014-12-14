@@ -525,7 +525,12 @@ void code_generate(struct tree *t)
 		strcat(name, k);
 		strcat(name, "::");
 		strcat(name, k);
-		push_op(n, op_new(PROC_O, name, e, e, e));
+		struct typeinfo *f = scope_search(k);
+		log_assert(f);
+		struct address count = { CONST_R,
+		                         scope_size(f->function.symbols),
+		                         &int_type };
+		push_op(n, op_new(PROC_O, name, count, e, e));
 		append_code(1);
 		push_op(n, op_new(END_O, NULL, e, e, e));
 		break;
@@ -541,7 +546,12 @@ void code_generate(struct tree *t)
 			strcat(name, "::");
 		}
 		strcat(name, k);
-		push_op(n, op_new(PROC_O, name, e, e, e));
+		struct typeinfo *f = scope_search(k);
+		log_assert(f);
+		struct address count = { CONST_R,
+		                         scope_size(f->function.symbols),
+		                         &int_type };
+		push_op(n, op_new(PROC_O, name, count, e, e));
 		append_code(2);
 		push_op(n, op_new(END_O, NULL, e, e, e));
 		break;
