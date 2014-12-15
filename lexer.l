@@ -19,7 +19,6 @@ FS       (f|F|l|L)
 IS       (u|U|l|L)*
 
 %{
-
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
