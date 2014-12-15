@@ -38,7 +38,8 @@ void final_code(FILE *stream, struct list *code)
 				if (strcmp(slot->key, "main") == 0)
 					continue;
 				p("%s %s();\n",
-				  print_basetype(value->function.type), slot->key);
+				  print_basetype(value->function.type),
+				  (char *)slot->key);
 			}
 		}
 	}
@@ -54,7 +55,7 @@ void final_code(FILE *stream, struct list *code)
 			if (v->base == FLOAT_T || (v->base == CHAR_T && v->pointer)) {
 				p("\t");
 				map_address(stream, v->place);
-				p(" = %s;\n", slot->key);
+				p(" = %s;\n", (char *)slot->key);
 			}
 		}
 	}
