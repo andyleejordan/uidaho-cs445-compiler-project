@@ -238,12 +238,20 @@ void parse_program(char *filename)
 	if (fc == NULL)
 		log_error("could not save to output file: %s", output_file);
 
+	fprintf(fc, "/*\n");
+	fprintf(fc, " * 120++ Generated Three Address C Code\n");
+	fprintf(fc, " *\n");
+	fprintf(fc, " * Copyright (C) 2014 Andrew Schwartzmeyer\n");
+	fprintf(fc, " *\n");
+	fprintf(fc, " */\n\n");
+
 	/* setup includes */
 	fprintf(fc, "#include <stdlib.h>\n");
 	fprintf(fc, "#include <stdbool.h>\n");
 	fprintf(fc, "#include <string.h>\n");
 	if (libs.usingstd && libs.iostream)
 		fprintf(fc, "#include <stdio.h>\n");
+	fprintf(fc, "\n");
 
 	/* get maximum param size for faux stack */
 	size_t max_param_size = 0;
@@ -262,6 +270,7 @@ void parse_program(char *filename)
 	fprintf(fc, "char constant[%zu];\n", string_size);
 	fprintf(fc, "char global[%zu];\n", global->size);
 	fprintf(fc, "char stack[%zu];\n", max_param_size);
+	fprintf(fc, "\n");
 
 	/* generate final code instructions */
 	final_code(fc, code);
