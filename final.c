@@ -9,6 +9,7 @@
 
 #include <stdio.h>
 
+#include "intermediate.h"
 #include "type.h"
 
 #include "list.h"
@@ -18,6 +19,7 @@
 
 extern struct list *yyscopes;
 
+static void map_instruction(FILE *stream, struct op *op);
 static char *map_region(enum region r);
 static void map_address(FILE *stream, struct address a);
 
@@ -37,8 +39,24 @@ void final_code(FILE *stream, struct list *code)
 			}
 		}
 	}
-	fprintf(stream, "}");
+	p("\n\t/* setup shared local region and offset */\n");
+	p("\tchar *local = NULL;\n");
+	p("\tchar *local_ = NULL;\n");
+	p("\tint param = 0;\n");
+	p("\tint param_ = 0;\n");
+	p("\n");
 
+	/* generate C instructions for list of TAC ops */
+	struct list_node *iter = list_head(code);
+	while (!list_end(iter)) {
+		map_instruction(stream, iter->data);
+		iter = iter->next;
+	}
+	p("}");
+}
+
+static void map_instruction(FILE *stream, struct op *op)
+{
 }
 
 /* returns code to get value at address */
@@ -60,6 +78,9 @@ static void map_address(FILE *stream, struct address a)
 
 }
 
+}
+
+/* returns name of region variable in generated code */
 static char *map_region(enum region r)
 {
 	switch (r) {
@@ -67,6 +88,9 @@ static char *map_region(enum region r)
 		return "global";
 	case CONST_R:
 		return "constant";
+	case LOCAL_R:
+	case PARAM_R:
+		return "local";
 	default:
 		return "unimplemented";
 	}
