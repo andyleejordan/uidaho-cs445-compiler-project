@@ -31,8 +31,9 @@ SRCS = main.c type.c symbol.c node.c token.c rules.c scope.c intermediate.c fina
 	logger.c list.c tree.c hasht.c lookup3.c \
 	lex.yy.c parser.tab.c
 OBJS = $(SRCS:.c=.o)
-TESTDATA = data/pass/array.cpp data/pass/fibonacci.cpp \
-	data/pass/logic.cpp data/pass/hello_world.cpp
+
+TESTDIR = data/pass
+TESTDATA = array.cpp fibonacci.cpp logic.cpp hello_world.cpp
 TESTFLAGS =
 
 # targets
@@ -46,7 +47,8 @@ test: $(TESTS)
 	./test-hasht
 
 smoke: test all
-	./$(BIN) $(TESTFLAGS) $(TESTDATA)
+	for test in $(TESTDATA); do ./$(BIN) -o $$test.out $(TESTFLAGS) $(TESTDIR)/$$test; done
+	for test in $(TESTDATA); do ./$$test.out; done
 
 TAGS: $(SRCS)
 	etags $(SRCS)
@@ -54,7 +56,7 @@ dist:
 	git archive --format=tar $(GITREF) > $(GITREF).tar
 
 clean:
-	rm -f $(BIN) $(TESTS) *.o lexer.h lex.yy.c parser.tab.h parser.tab.c
+	rm -f $(BIN) $(TESTS) *.o *.out lexer.h lex.yy.c parser.tab.h parser.tab.c
 
 distclean: clean
 	rm -f TAGS *.tar
