@@ -83,12 +83,11 @@ static void map_instruction(FILE *stream, struct op *op)
 	case PROC_O:
 		p("%s %s()\n{\n",
 		  print_basetype(c.type->function.type), op->name);
-		p("\tint param = %d;\n", a.offset);
 		p("\tchar local[%d];\n", b.offset);
 		if (strcmp(op->name, "main") == 0)
 			p("\t_initialize_constants();\n");
 		/* copy parameters from faux stack into front of local region */
-		p("\tmemcpy(local, stack, param); /* copy parameters */\n");
+		p("\tmemcpy(local, stack, %d); /* copy parameters */\n", a.offset);
 		break;
 	case END_O:
 		p("}\n\n");
@@ -178,10 +177,9 @@ static void map_instruction(FILE *stream, struct op *op)
 		break;
 	case SCONT_O:
 		p("\t");
-		p("(**(%s %s*)(%s + %d%s))",
+		p("(**(%s %s*)(%s + %d))",
 		  print_basetype(a.type), a.type->pointer ? "*" : "",
-		  map_region(a.region), a.offset,
-		  a.region == LOCAL_R ? " + param" : "");
+		  map_region(a.region), a.offset);
 		p(" = ");
 		map_address(stream, b);
 		p(";\n");
@@ -190,23 +188,20 @@ static void map_instruction(FILE *stream, struct op *op)
 		p("\t");
 		map_address(stream, a);
 		p(" = ");
-		p("((%s %s*)(%s + %d%s))",
+		p("((%s %s*)(%s + %d))",
 		  print_basetype(b.type), b.type->pointer ? "*" : "",
-		  map_region(b.region), b.offset,
-		  b.region == LOCAL_R ? " + param" : "");
+		  map_region(b.region), b.offset);
 		p(";\n");
 		break;
 	case ARR_O:
 		p("\t");
-		p("(*(%s %s**)(%s + %d%s))",
+		p("(*(%s %s**)(%s + %d))",
 		  print_basetype(a.type), a.type->pointer ? "*" : "",
-		  map_region(a.region), a.offset,
-		  a.region == LOCAL_R ? " + param" : "");
+		  map_region(a.region), a.offset);
 		p(" = ");
-		p("((%s %s*)(%s + %d%s + ",
+		p("((%s %s*)(%s + %d + ",
 		  print_basetype(b.type), b.type->pointer ? "*" : "",
-		  map_region(b.region), b.offset,
-		  b.region == LOCAL_R ? " + param" : "");
+		  map_region(b.region), b.offset);
 		map_address(stream, c);
 		p("));\n");
 		break;
@@ -234,10 +229,9 @@ static void map_address(FILE *stream, struct address a)
 		p("(%d)", a.offset);
 	/* otherwise grab from region */
 	else
-		p("(*(%s %s*)(%s + %d%s))",
+		p("(*(%s %s*)(%s + %d))",
 		  print_basetype(a.type), a.type->pointer ? "*" : "",
-		  map_region(a.region), a.offset,
-		  a.region == LOCAL_R ? " + param" : "");
+		  map_region(a.region), a.offset);
 }
 
 /* returns string representation of binary operator */
