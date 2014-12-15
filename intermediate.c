@@ -403,7 +403,7 @@ void code_generate(struct tree *t)
 	case UNARY_PLUSPLUS: /* unary increment and decrement */
 	case UNARY_MINUSMINUS: {
 		n->place = get_place(t, 1);
-		push_op(n, op_new(map_c(n->place.type), NULL, n->place, one, e));
+		push_op(n, op_new(map_c(n->place.type), NULL, n->place, n->place, one));
 		break;
 	}
 	case UNARY_STAR: { /* dereference */
@@ -490,7 +490,7 @@ void code_generate(struct tree *t)
 	case POSTFIX_PLUSPLUS:
 	case POSTFIX_MINUSMINUS: { /* unary ++ and -- operators */
 		n->place = get_place(t, 0);
-		push_op(n, op_new(map_c(n->place.type), NULL, n->place, one, e));
+		push_op(n, op_new(map_c(n->place.type), NULL, n->place, n->place, one));
 		break;
 	}
 	case ASSIGN_EXPR: { /* non-initializer assignment */
