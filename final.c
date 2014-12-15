@@ -28,7 +28,6 @@ static void map_address(FILE *stream, struct address a);
 
 void final_code(FILE *stream, struct list *code)
 {
-	p("int main()\n{\n");
 	struct hasht *global = list_index(yyscopes, 1)->data;
 	for (size_t i = 0; i < global->size; ++i) {
 		struct hasht_node *slot = global->table[i];
@@ -43,6 +42,7 @@ void final_code(FILE *stream, struct list *code)
 		}
 	}
 
+	p("void _initialize_constants()\n{\n");
 	p("\t/* initializing constant region */\n");
 	struct hasht *constant = list_front(yyscopes);
 	for (size_t i = 0; i < constant->size; ++i) {
@@ -56,12 +56,7 @@ void final_code(FILE *stream, struct list *code)
 			}
 		}
 	}
-	p("\n\t/* setup shared local region and offset */\n");
-	p("\tchar *local = NULL;\n");
-	p("\tchar *local_ = NULL;\n");
-	p("\tint param = 0;\n");
-	p("\tint param_ = 0;\n");
-	p("\n");
+	p("}\n");
 
 	/* generate C instructions for list of TAC ops */
 	struct list_node *iter = list_head(code);
@@ -69,7 +64,6 @@ void final_code(FILE *stream, struct list *code)
 		map_instruction(stream, iter->data);
 		iter = iter->next;
 	}
-	p("}");
 }
 
 static void map_instruction(FILE *stream, struct op *op)
@@ -82,18 +76,17 @@ static void map_instruction(FILE *stream, struct op *op)
 	struct address c = op->address[2];
 	switch (op->code) {
 	case PROC_O:
-		p("L_%s:\n", op->name);
-		p("\tparam_ = param; /* save */\n");
-		p("\tparam = %d;\n", a.offset);
-		p("\tlocal_ = local; /* save */\n");
-		p("\tlocal = calloc(%d, sizeof(char));\n",
-		  op->address[1].offset);
+		p("%s %s(int n)\n{\n",
+		  print_basetype(c.type->function.type), op->name);
+		p("\tint param = %d;\n", a.offset);
+		p("\tchar local[%d];\n", b.offset);
+		if (strcmp(op->name, "main") == 0)
+			p("\t_initialize_constants();\n");
+		/* copy parameters from faux stack into front of local region */
+		p("\tmemcpy(local, stack, param); /* copy parameters */\n");
 		break;
 	case END_O:
-		p("\tparam = param_; /* restore */\n");
-		p("\tfree(local);\n");
-		p("\tlocal = local_; /* restore */\n");
-		p("\n");
+		p("}\n");
 		break;
 	case LABEL_O:
 		p("L_%d:\n", a.offset);
