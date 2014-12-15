@@ -852,7 +852,6 @@ static char *print_opcode(enum opcode code)
 		R(OR_O);
 		R(AND_O);
 		R(IF_O);
-		R(NIF_O);
 		R(ARR_O);
 		R(ERRC_O);
 	}
