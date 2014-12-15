@@ -71,6 +71,7 @@ static void map_instruction(FILE *stream, struct op *op)
 	p("/*\n");
 	print_op(stream, op);
 	p("*/\n");
+	static int param_offset = 0;
 	struct address a = op->address[0];
 	struct address b = op->address[1];
 	struct address c = op->address[2];
@@ -87,6 +88,31 @@ static void map_instruction(FILE *stream, struct op *op)
 		break;
 	case END_O:
 		p("}\n");
+		break;
+	case PARAM_O:
+		/* save parameters into faux stack */
+		p("(*(%s %s*)(stack + %d))",
+		  print_basetype(a.type), a.type->pointer ? "*" : "", param_offset);
+		p(" = ");
+		map_address(stream, a);
+		p(";\n");
+		param_offset += typeinfo_size(a.type);
+		break;
+	case CALL_O:
+		/* reset parameter offset and call function, saving return */
+		param_offset = 0;
+		p("\t");
+		if (!(a.type->base == VOID_T && !a.type->pointer)) {
+			map_address(stream, a);
+			p(" = ");
+		}
+		p("%s(%d);\n", op->name, b.offset);
+		break;
+	case RET_O:
+		p("\treturn");
+		if (!(a.type->base == VOID_T && !a.type->pointer))
+			map_address(stream, a);
+		p(";\n");
 		break;
 	case LABEL_O:
 		p("L_%d:\n", a.offset);
