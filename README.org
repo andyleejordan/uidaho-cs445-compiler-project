@@ -34,3 +34,12 @@ on the syntax tree.
 Per the [[http://www2.cs.uidaho.edu/~jeffery/courses/445/hw4.html][requirements]], my fourth goal was to implement intermediate
 code generation, i.e., a list of three-address instructions given the
 parse tree.
+
+** Assignment #5: Final Code Generation
+Per the [[http://www2.cs.uidaho.edu/~jeffery/courses/445/hw5.html][requirements]], my fifth goal was to implement final code
+generation, i.e., either native (assembly) code, or three-address C
+code to demonstrate the correctness of the compiler's memory layout
+and intermediate code logic.
+
+Seeing as how I dislike assembly and have a greater need for my time
+than a perfect grade, I have chosen to implement TAC-C.
