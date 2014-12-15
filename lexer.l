@@ -319,18 +319,16 @@ static void handle_quoted_include(const char *s)
 
 	/* path = realpath(dirname(current) + "/" + include) */
 	char *current = list_back(yyfiles);
-	/* lengths of current file + include + '/' + '\0'; dirname < current */
-	char *resolved = calloc(len + strlen(current) + 2, sizeof(char));
 
 	/* copy because Wormulon's dirname modifies */
-	strcpy(resolved, current);
-	const char *dir = dirname(resolved); /* do not pass to free */
-	strcpy(resolved, dir);
-	log_debug("dirname: %s", resolved);
+	char *copy = strdup(current);
+	const char *dir = dirname(copy); /* do not pass to free */
+	free(copy);
+	log_debug("dirname: %s", dir);
 
 	/* append POSIX directory separator and include path */
-	strcat(resolved, "/");
-	strcat(resolved, include);
+	char *resolved;
+	asprintf(&resolved, "%s/%s", dir, include);
 	log_debug("resolved: %s", resolved);
 
 	/* resolve abosolute path name */

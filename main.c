@@ -174,9 +174,8 @@ void parse_program(char *filename)
 	code_generate(yyprogram);
 
 	/* open output file and print TAC */
-	char *output_file = calloc(strlen(filename) + 4, sizeof(char));
-	strcat(output_file, filename);
-	strcat(output_file, ".ic");
+	char *output_file;
+	asprintf(&output_file, "%s.ic", filename);
 	FILE *ic = fopen(output_file, "w");
 	if (ic == NULL)
 		log_error("could not save to output file: %s", output_file);
@@ -229,9 +228,7 @@ void parse_program(char *filename)
 	free(output_file);
 
 	log_debug("generating final code");
-	output_file = calloc(strlen(filename) + 3, sizeof(char));
-	strcat(output_file, filename);
-	strcat(output_file, ".c");
+	asprintf(&output_file, "%s.c", filename);
 	FILE *fc = fopen(output_file, "w");
 	if (fc == NULL)
 		log_error("could not save to output file: %s", output_file);

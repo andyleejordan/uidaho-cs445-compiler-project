@@ -157,10 +157,8 @@ void code_generate(struct tree *t)
 			    || strcmp(class, "string") == 0)
 				break;
 			struct address count = { CONST_R, 1, &int_type };
-			char *name = calloc(2 * strlen(class) + 3, sizeof(char));
-			strcat(name, class);
-			strcat(name, "__");
-			strcat(name, class);
+			char *name;
+			asprintf(&name, "%s__%s", class, class);
 			push_op(n, op_new(PARAM_O, NULL, n->place, e, e));
 			push_op(n, op_new(CALL_O, name, n->place, count, e));
 		}
@@ -195,10 +193,7 @@ void code_generate(struct tree *t)
 			/* get name of field */
 			log_assert(f);
 			char *field = get_identifier(tree_index(child(0), 2));
-			name = calloc(strlen(k) + strlen(field) + 2, sizeof(char));
-			strcat(name, k);
-			strcat(name, "_");
-			strcat(name, field);
+			asprintf(&name, "%s_%s", f->class.type, field);
 
 			struct typeinfo *class = scope_search(f->class.type);
 			f = hasht_search(class->class.public, field);
@@ -530,10 +525,8 @@ void code_generate(struct tree *t)
 			    || strcmp(k, "ofstream") == 0
 			    || strcmp(k, "string") == 0)
 				break;
-		char *name = calloc(2 * strlen(k) + 3, sizeof(char));
-		strcat(name, k);
-		strcat(name, "__");
-		strcat(name, k);
+		char *name;
+		asprintf(&name, "%s__%s", k, k);
 		struct typeinfo *f = scope_search(k);
 		log_assert(f);
 		/* get size of parameters */
@@ -555,13 +548,11 @@ void code_generate(struct tree *t)
 		char *k = get_identifier(t);
 		/* some funky stuff to get class::function string */
 		char *class = class_member(t);
-		char *name = calloc(strlen(k) + (class ? strlen(class) + 2 : 0)
-		                    + 1, sizeof(char));
-		if (class) {
-			strcat(name, class);
-			strcat(name, "__");
-		}
-		strcat(name, k);
+		char *name;
+		if (class)
+			asprintf(&name, "%s__%s", class, k);
+		else
+			asprintf(&name, "%s", k);
 		struct typeinfo *f = scope_search(k);
 		log_assert(f);
 		/* get size of parameters */
