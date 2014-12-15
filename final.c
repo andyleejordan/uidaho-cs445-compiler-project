@@ -139,10 +139,23 @@ static void map_instruction(FILE *stream, struct op *op)
 		p(";\n");
 		break;
 	case SCONT_O:
-		p("\t*");
-		map_address(stream, op->address[0]);
+		p("\t");
+		p("(**(%s %s*)(%s + %d%s))",
+		  print_basetype(a.type), a.type->pointer ? "*" : "",
+		  map_region(a.region), a.offset,
+		  a.region == LOCAL_R ? " + param" : "");
 		p(" = ");
-		map_address(stream, op->address[1]);
+		map_address(stream, b);
+		p(";\n");
+		break;
+	case ADDR_O:
+		p("\t");
+		map_address(stream, a);
+		p(" = ");
+		p("((%s %s*)(%s + %d%s))",
+		  print_basetype(b.type), b.type->pointer ? "*" : "",
+		  map_region(b.region), b.offset,
+		  b.region == LOCAL_R ? " + param" : "");
 		p(";\n");
 		break;
 	default:
