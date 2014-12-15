@@ -65,7 +65,7 @@ enum opcode {
 	OR_O,    /* x || y */
 	AND_O,   /* x && y */
 	IF_O,    /* if x then goto L   unary conditional jump to L */
-	ARR_O,    /* x = array[y]   retrieve array element at index y */
+	ARR_O,    /* x = array[y]      retrieve array element at index y */
 	ERRC_O,
 };
 

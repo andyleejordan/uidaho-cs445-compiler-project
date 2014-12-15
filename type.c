@@ -377,7 +377,7 @@ char *print_basetype(struct typeinfo *t)
 	case BOOL_T:
 		return "bool";
 	case ARRAY_T:
-		return "array";
+		return print_basetype(t->array.type);
 	case VOID_T:
 		return "void";
 	case UNKNOWN_T:
