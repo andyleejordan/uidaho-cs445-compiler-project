@@ -41,11 +41,23 @@ void final_code(FILE *stream, struct list *code)
 
 }
 
+/* returns code to get value at address */
 static void map_address(FILE *stream, struct address a)
 {
-	fprintf(stream, "(*(%s %s*)(%s + %d))",
-	        print_basetype(a.type), a.type->pointer ? "*" : "",
-	        map_region(a.region), a.offset);
+	/* if an immediate, use it */
+	if (a.region == CONST_R && !a.type->pointer
+	    && (a.type->base == INT_T
+	        || a.type->base == CHAR_T
+	        || a.type->base == BOOL_T))
+		p("(%d)", a.offset);
+	/* otherwise grab from region */
+	else
+		p("(*(%s %s*)(%s + %d%s))",
+		  print_basetype(a.type), a.type->pointer ? "*" : "",
+		  map_region(a.region), a.offset,
+		  a.region == LOCAL_R ? " + param" : "");
+}
+
 }
 
 static char *map_region(enum region r)
