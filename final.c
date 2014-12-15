@@ -60,6 +60,20 @@ void final_code(FILE *stream, struct list *code)
 static void map_instruction(FILE *stream, struct op *op)
 {
 	switch (op->code) {
+	case PROC_O:
+		p("L_%s:\n", op->name);
+		p("\tparam_ = param; /* save */\n");
+		p("\tparam = %d;\n", op->address[0].offset);
+		p("\tlocal_ = local; /* save */\n");
+		p("\tlocal = calloc(%d, sizeof(char));\n",
+		  op->address[1].offset);
+		break;
+	case END_O:
+		p("\tparam = param_; /* restore */\n");
+		p("\tfree(local);\n");
+		p("\tlocal = local_; /* restore */\n");
+		p("\n");
+		break;
 	case PINT_O:
 	case PCHAR_O:
 	case PBOOL_O:
