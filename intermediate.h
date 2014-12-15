@@ -19,7 +19,14 @@ enum opcode {
 	/* pseudo opcodes */
 	PROC_O,   /* name, bytes of parameters, bytes of locals, in GLOBAL_R,  */
 	END_O,    /* declares end of current procedure */
+	PARAM_O,  /* param x        store x as a parameter */
+	CALL_O,   /* call p, x, n   call procedure p with n parameters, store result in x */
+	RET_O,    /* return x       return from procedure, use x as the result */
 	LABEL_O,  /* name (optional), in LABEL_R */
+	GOTO_O,   /* goto L         unconditional jump to L */
+	NEW_O,    /* x := new Foo, n  create a new instance of class named Foo,
+	                              store address to x, call constructor with
+                                      n parameters */
 	/* psudeo opcodes for printing types with cout << thing */
 	PINT_O,
 	PCHAR_O,
@@ -43,10 +50,6 @@ enum opcode {
 	ADDR_O,   /* x := &y      store address of y to x */
 	LCONT_O,  /* x := *y      store contents pointed to by y to x */
 	SCONT_O,  /* *x := y      store y to location pointed to by x */
-	GOTO_O,   /* goto L       unconditional jump to L */
-	NEW_O,    /* x := new Foo, n  create a new instance of class named Foo,
-	                              store address to x, call constructor with
-                                      n parameters */
 	LT_O,    /* x < y */
 	FLT_O,
 	LE_O,    /* x <= y */
@@ -64,9 +67,6 @@ enum opcode {
 	IF_O,    /* if x then goto L   unary conditional jump to L */
 	NIF_O,   /* if !x then goto L  unary negative conditional jump to L */
 	ARR_O,    /* x = array[y]   retrieve array element at index y */
-	PARAM_O,  /* param x        store x as a parameter */
-	CALL_O,   /* call p, x, n   call procedure p with n parameters, store result in x */
-	RET_O,    /* return x       return from procedure, use x as the result */
 	ERRC_O,
 };
 

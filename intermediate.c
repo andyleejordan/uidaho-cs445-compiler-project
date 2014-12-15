@@ -810,7 +810,12 @@ static char *print_opcode(enum opcode code)
 	switch (code) {
 		R(PROC_O);
 		R(END_O);
+		R(PARAM_O);
+		R(CALL_O);
+		R(RET_O);
 		R(LABEL_O);
+		R(GOTO_O);
+		R(NEW_O);
 		R(PINT_O);
 		R(PCHAR_O);
 		R(PBOOL_O);
@@ -832,8 +837,6 @@ static char *print_opcode(enum opcode code)
 		R(ADDR_O);
 		R(LCONT_O);
 		R(SCONT_O);
-		R(GOTO_O);
-		R(NEW_O);
 		R(LT_O);
 		R(FLT_O);
 		R(LE_O);
@@ -851,9 +854,6 @@ static char *print_opcode(enum opcode code)
 		R(IF_O);
 		R(NIF_O);
 		R(ARR_O);
-		R(PARAM_O);
-		R(CALL_O);
-		R(RET_O);
 		R(ERRC_O);
 	}
 	return NULL;
