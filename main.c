@@ -95,12 +95,41 @@ int main(int argc, char **argv)
 
 	argp_parse(&argp, argc, argv, 0, 0, &arguments);
 
+	char *objects = "";
 	/* parse each input file as a new 'program' */
 	for (int i = 0; arguments.input_files[i]; ++i) {
 		char *filename = realpath(arguments.input_files[i], NULL);
 		if (filename == NULL)
-			log_error("could not find input file: %s", arguments.input_files[i]);
+			log_error("could not find input file: %s",
+			          arguments.input_files[i]);
+		/* copy because Wormulon's basename modifies */
+		char *copy = strdup(filename);
+		const char *base = basename(copy);
+		free(copy);
+		/* append object name to end of objects */
+		char *temp;
+		asprintf(&temp, "%s %s.o", objects, base);
+		/* free if previously allocated */
+		if (strcmp(objects, "") != 0)
+			free(objects);
+		objects = temp;
 		parse_program(filename);
+	}
+
+	/* link object files */
+	if (!arguments.assemble && !arguments.compile) {
+		char *command;
+		asprintf(&command, "gcc -o %s%s", arguments.output, objects);
+		int status = system(command);
+		if (status != 0)
+			log_error("command failed: %s", command);
+		free(command);
+		/* remove object files */
+		asprintf(&command, "rm -f%s", objects);
+		status = system(command);
+		if (status != 0)
+			log_error("command failed: %s", command);
+		free(command);
 	}
 
 	return EXIT_SUCCESS;
