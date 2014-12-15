@@ -863,7 +863,7 @@ static char *print_opcode(enum opcode code)
 /*
  * Given an op, prints it and its memory addresses.
  */
-static void print_op(FILE *stream, struct op *op)
+void print_op(FILE *stream, struct op *op)
 {
 	fprintf(stream, "%-10s", print_opcode(op->code));
 	fprintf(stream, "%-24s", op->name ? op->name : "");

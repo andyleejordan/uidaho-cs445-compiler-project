@@ -59,6 +59,9 @@ void final_code(FILE *stream, struct list *code)
 
 static void map_instruction(FILE *stream, struct op *op)
 {
+	p("/*\n");
+	print_op(stream, op);
+	p("*/\n");
 	switch (op->code) {
 	case PROC_O:
 		p("L_%s:\n", op->name);

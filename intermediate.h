@@ -76,6 +76,7 @@ struct op {
 };
 
 void code_generate(struct tree *t);
+void print_op(FILE *stream, struct op *op);
 void print_code(FILE *stream, struct list *code);
 
 #endif /* INTERMEDIATE_H */
