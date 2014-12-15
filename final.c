@@ -37,11 +37,12 @@ void final_code(FILE *stream, struct list *code)
 			if (value->base == FUNCTION_T) {
 				if (strcmp(slot->key, "main") == 0)
 					continue;
-				p("%s %s(int);\n",
+				p("%s %s();\n",
 				  print_basetype(value->function.type), slot->key);
 			}
 		}
 	}
+	p("\n");
 
 	p("void _initialize_constants()\n{\n");
 	p("\t/* initializing constant region */\n");
@@ -57,7 +58,7 @@ void final_code(FILE *stream, struct list *code)
 			}
 		}
 	}
-	p("}\n");
+	p("}\n\n");
 
 	/* generate C instructions for list of TAC ops */
 	struct list_node *iter = list_head(code);
@@ -80,7 +81,7 @@ static void map_instruction(FILE *stream, struct op *op)
 	struct address c = op->address[2];
 	switch (op->code) {
 	case PROC_O:
-		p("%s %s(int n)\n{\n",
+		p("%s %s()\n{\n",
 		  print_basetype(c.type->function.type), op->name);
 		p("\tint param = %d;\n", a.offset);
 		p("\tchar local[%d];\n", b.offset);
@@ -90,11 +91,11 @@ static void map_instruction(FILE *stream, struct op *op)
 		p("\tmemcpy(local, stack, param); /* copy parameters */\n");
 		break;
 	case END_O:
-		p("}\n");
+		p("}\n\n");
 		break;
 	case PARAM_O:
 		/* save parameters into faux stack */
-		p("(*(%s %s*)(stack + %d))",
+		p("\t(*(%s %s*)(stack + %d))",
 		  print_basetype(a.type), a.type->pointer ? "*" : "", param_offset);
 		p(" = ");
 		map_address(stream, a);
@@ -109,7 +110,7 @@ static void map_instruction(FILE *stream, struct op *op)
 			map_address(stream, a);
 			p(" = ");
 		}
-		p("%s(%d);\n", op->name, b.offset);
+		p("%s();\n", op->name);
 		break;
 	case RET_O:
 		p("\treturn");
