@@ -180,6 +180,8 @@ static void map_instruction(FILE *stream, struct op *op)
 /* returns code to get value at address */
 static void map_address(FILE *stream, struct address a)
 {
+	if (a.region == UNKNOWN_R)
+		return;
 	/* if an immediate, use it */
 	if (a.region == CONST_R && !a.type->pointer
 	    && (a.type->base == INT_T

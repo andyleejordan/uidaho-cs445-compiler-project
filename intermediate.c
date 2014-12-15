@@ -545,7 +545,8 @@ void code_generate(struct tree *t)
 		}
 		/* get size of locals (including temps) */
 		struct address local = { CONST_R, offset, &int_type };
-		push_op(n, op_new(PROC_O, name, param, local, e));
+		struct address ret = { UNKNOWN_R, 0, f };
+		push_op(n, op_new(PROC_O, name, param, local, ret));
 		append_code(1);
 		push_op(n, op_new(END_O, NULL, e, e, e));
 		break;
@@ -572,7 +573,8 @@ void code_generate(struct tree *t)
 		}
 		/* get size of locals (including temps) */
 		struct address local = { CONST_R, offset, &int_type };
-		push_op(n, op_new(PROC_O, name, param, local, e));
+		struct address ret = { UNKNOWN_R, 0, f };
+		push_op(n, op_new(PROC_O, name, param, local, ret));
 		append_code(2);
 		push_op(n, op_new(END_O, NULL, e, e, e));
 		break;
