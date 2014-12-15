@@ -22,13 +22,16 @@ int main(int argc, char *argv[])
 	int fib;
 	do {
 		fib = fibonacci(c % 16 + 1);
-		cout << "fibonacci(" << c % 16 + 1 << ") = " << fib << '\n';
 		if (fib < 0) {
 			break;
 		} else {
 			fib = fibonacci(8);
 		}
 	} while (0);
+
+	c = 4;
+	fib = fibonacci(c);
+	cout << "The 4th Fibonacci number is " << fib << '\n';
 
 	return paramzzz('c', fib, 2);
 }
