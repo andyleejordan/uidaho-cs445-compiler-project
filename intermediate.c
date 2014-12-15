@@ -527,10 +527,16 @@ void code_generate(struct tree *t)
 		strcat(name, k);
 		struct typeinfo *f = scope_search(k);
 		log_assert(f);
-		struct address count = { CONST_R,
-		                         scope_size(f->function.symbols),
-		                         &int_type };
-		push_op(n, op_new(PROC_O, name, count, e, e));
+		/* get size of parameters */
+		struct address param = { CONST_R, 0, &int_type };
+		struct list_node *iter = list_head(f->function.parameters);
+		while (!list_end(iter)) {
+			param.offset += typeinfo_size(iter->data);
+			iter = iter->next;
+		}
+		/* get size of locals (including temps) */
+		struct address local = { CONST_R, offset, &int_type };
+		push_op(n, op_new(PROC_O, name, param, local, e));
 		append_code(1);
 		push_op(n, op_new(END_O, NULL, e, e, e));
 		break;
@@ -548,10 +554,16 @@ void code_generate(struct tree *t)
 		strcat(name, k);
 		struct typeinfo *f = scope_search(k);
 		log_assert(f);
-		struct address count = { CONST_R,
-		                         scope_size(f->function.symbols),
-		                         &int_type };
-		push_op(n, op_new(PROC_O, name, count, e, e));
+		/* get size of parameters */
+		struct address param = { CONST_R, 0, &int_type };
+		struct list_node *iter = list_head(f->function.parameters);
+		while (!list_end(iter)) {
+			param.offset += typeinfo_size(iter->data);
+			iter = iter->next;
+		}
+		/* get size of locals (including temps) */
+		struct address local = { CONST_R, offset, &int_type };
+		push_op(n, op_new(PROC_O, name, param, local, e));
 		append_code(2);
 		push_op(n, op_new(END_O, NULL, e, e, e));
 		break;
