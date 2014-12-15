@@ -152,6 +152,10 @@ void code_generate(struct tree *t)
 		append_code(1);
 		char *class = get_class(t);
 		if (class && !get_pointer(child(1))) {
+			if (strcmp(class, "ifstream") == 0
+			    || strcmp(class, "ofstream") == 0
+			    || strcmp(class, "string") == 0)
+				break;
 			struct address count = { CONST_R, 1, &int_type };
 			char *name = calloc(2 * strlen(class) + 3, sizeof(char));
 			strcat(name, class);
@@ -522,6 +526,10 @@ void code_generate(struct tree *t)
 	}
 	case CTOR_FUNCTION_DEF: { /* constructor function definition */
 		char *k = class_member(t);
+		if (strcmp(k, "ifstream") == 0
+			    || strcmp(k, "ofstream") == 0
+			    || strcmp(k, "string") == 0)
+				break;
 		char *name = calloc(2 * strlen(k) + 3, sizeof(char));
 		strcat(name, k);
 		strcat(name, "__");

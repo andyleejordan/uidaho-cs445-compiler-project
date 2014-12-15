@@ -11,4 +11,3 @@
 
 ifstream cin;
 ofstream cout;
-char endl = '\n';
