@@ -21,6 +21,7 @@ extern struct list *yyscopes;
 
 static void map_instruction(FILE *stream, struct op *op);
 static char *map_op(enum opcode code);
+static char *map_print(enum opcode code);
 static char *map_region(enum region r);
 static void map_address(FILE *stream, struct address a);
 
@@ -59,6 +60,15 @@ void final_code(FILE *stream, struct list *code)
 static void map_instruction(FILE *stream, struct op *op)
 {
 	switch (op->code) {
+	case PINT_O:
+	case PCHAR_O:
+	case PBOOL_O:
+	case PFLOAT_O:
+	case PSTR_O:
+		p("\tprintf(\"%s\", ", map_print(op->code));
+		map_address(stream, op->address[0]);
+		p(");\n");
+		break;
 	case ADD_O:
 	case FADD_O:
 	case SUB_O:
@@ -157,6 +167,22 @@ static char *map_op(enum opcode code)
 	}
 }
 
+/* returns conversion specifier string */
+static char *map_print(enum opcode code)
+{
+	switch (code) {
+	case PINT_O:
+	case PBOOL_O:
+		return "%d";
+	case PCHAR_O:
+		return "%c";
+	case PFLOAT_O:
+		return "%f";
+	case PSTR_O:
+		return "%s";
+	default:
+		return NULL;
+	}
 }
 
 /* returns name of region variable in generated code */
