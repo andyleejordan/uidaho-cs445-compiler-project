@@ -62,11 +62,14 @@ static void map_instruction(FILE *stream, struct op *op)
 	p("/*\n");
 	print_op(stream, op);
 	p("*/\n");
+	struct address a = op->address[0];
+	struct address b = op->address[1];
+	struct address c = op->address[2];
 	switch (op->code) {
 	case PROC_O:
 		p("L_%s:\n", op->name);
 		p("\tparam_ = param; /* save */\n");
-		p("\tparam = %d;\n", op->address[0].offset);
+		p("\tparam = %d;\n", a.offset);
 		p("\tlocal_ = local; /* save */\n");
 		p("\tlocal = calloc(%d, sizeof(char));\n",
 		  op->address[1].offset);
@@ -78,10 +81,10 @@ static void map_instruction(FILE *stream, struct op *op)
 		p("\n");
 		break;
 	case LABEL_O:
-		p("L_%d:\n", op->address[0].offset);
+		p("L_%d:\n", a.offset);
 		break;
 	case GOTO_O:
-		p("\tgoto L_%d;\n", op->address[0].offset);
+		p("\tgoto L_%d;\n", a.offset);
 		break;
 	case PINT_O:
 	case PCHAR_O:
@@ -89,7 +92,7 @@ static void map_instruction(FILE *stream, struct op *op)
 	case PFLOAT_O:
 	case PSTR_O:
 		p("\tprintf(\"%s\", ", map_print(op->code));
-		map_address(stream, op->address[0]);
+		map_address(stream, a);
 		p(");\n");
 		break;
 	case ADD_O:
@@ -116,24 +119,23 @@ static void map_instruction(FILE *stream, struct op *op)
 	case OR_O:
 	case AND_O:
 		p("\t");
-		map_address(stream, op->address[0]);
+		map_address(stream, a);
 		p(" = ");
-		map_address(stream, op->address[1]);
+		map_address(stream, b);
 		p(" %s ", map_op(op->code));
-		map_address(stream, op->address[2]);
+		map_address(stream, c);
 		p(";\n");
 		break;
 	case NEG_O:
 	case FNEG_O:
 	case NOT_O:
 	case ASN_O:
-	case ADDR_O:
 	case LCONT_O:
 		p("\t");
-		map_address(stream, op->address[0]);
+		map_address(stream, a);
 		p(" = ");
 		p("%s", map_op(op->code));
-		map_address(stream, op->address[1]);
+		map_address(stream, b);
 		p(";\n");
 		break;
 	case SCONT_O:
