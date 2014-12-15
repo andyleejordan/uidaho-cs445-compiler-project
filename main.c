@@ -239,6 +239,8 @@ void parse_program(char *filename)
 		log_error("could not save to output file: %s", output_file);
 
 	/* setup includes */
+	fprintf(fc, "#include <stdlib.h>\n");
+	fprintf(fc, "#include <stdbool.h>\n");
 	if (libs.usingstd && libs.iostream)
 		fprintf(fc, "#include <stdio.h>\n");
 
