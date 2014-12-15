@@ -241,12 +241,27 @@ void parse_program(char *filename)
 	/* setup includes */
 	fprintf(fc, "#include <stdlib.h>\n");
 	fprintf(fc, "#include <stdbool.h>\n");
+	fprintf(fc, "#include <string.h>\n");
 	if (libs.usingstd && libs.iostream)
 		fprintf(fc, "#include <stdio.h>\n");
 
-	/* setup constant and global region space */
+	/* get maximum param size for faux stack */
+	size_t max_param_size = 0;
+	struct list_node *iter = list_head(code);
+	while (!list_end(iter)) {
+		struct op *op = iter->data;
+		if (op->code == PROC_O) {
+			size_t param_size = op->address[0].offset;
+			if (param_size > max_param_size)
+				max_param_size = param_size;
+		}
+		iter = iter->next;
+	}
+
+	/* setup constant, global, and stack regions' space */
 	fprintf(fc, "char constant[%zu];\n", string_size);
 	fprintf(fc, "char global[%zu];\n", global->size);
+	fprintf(fc, "char stack[%zu];\n", max_param_size);
 
 	/* generate final code instructions */
 	final_code(fc, code);
