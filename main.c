@@ -13,6 +13,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <argp.h>
+#include <libgen.h>
 
 #include "args.h"
 #include "logger.h"
@@ -238,7 +239,12 @@ void parse_program(char *filename)
 	}
 
 	log_debug("generating final code");
-	asprintf(&output_file, "%s.c", filename);
+	/* copy because Wormulon */
+	char *copy = strdup(filename);
+	char *base = basename(copy);
+	free(copy);
+	char *output_file;
+	asprintf(&output_file, "%s.c", base);
 	FILE *fc = fopen(output_file, "w");
 	if (fc == NULL)
 		log_error("could not save to output file: %s", output_file);
@@ -280,6 +286,19 @@ void parse_program(char *filename)
 	/* generate final code instructions */
 	final_code(fc, code);
 	fclose(fc);
+
+	/* remove TAC-C "assembler" code */
+	if (!arguments.assemble) {
+		/* compile object files */
+		char *command;
+		asprintf(&command, "gcc -c %s", output_file);
+		int status = system(command);
+		if (status != 0)
+			log_error("command failed: %s", command);
+
+		remove(output_file);
+	}
+
 	free(output_file);
 
 	/* clean up */
