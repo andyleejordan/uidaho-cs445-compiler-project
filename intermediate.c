@@ -841,13 +841,6 @@ static char *print_opcode(enum opcode code)
 		R(DIV_O);
 		R(FDIV_O);
 		R(MOD_O);
-		R(NEG_O);
-		R(FNEG_O);
-		R(NOT_O);
-		R(ASN_O);
-		R(ADDR_O);
-		R(LCONT_O);
-		R(SCONT_O);
 		R(LT_O);
 		R(FLT_O);
 		R(LE_O);
@@ -862,8 +855,15 @@ static char *print_opcode(enum opcode code)
 		R(FNE_O);
 		R(OR_O);
 		R(AND_O);
-		R(IF_O);
+		R(NEG_O);
+		R(FNEG_O);
+		R(NOT_O);
+		R(LCONT_O);
+		R(SCONT_O);
+		R(ASN_O);
+		R(ADDR_O);
 		R(ARR_O);
+		R(IF_O);
 		R(ERRC_O);
 	}
 	return NULL;

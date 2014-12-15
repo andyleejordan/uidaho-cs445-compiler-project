@@ -43,13 +43,6 @@ enum opcode {
 	DIV_O,
 	FDIV_O,
 	MOD_O,
-	NEG_O,    /* x := -y      store result of integer neg operation on y to x */
-	FNEG_O,
-	NOT_O,    /* x := !y      store result of logical not operation on y to x */
-	ASN_O,    /* x := y       store y to x */
-	ADDR_O,   /* x := &y      store address of y to x */
-	LCONT_O,  /* x := *y      store contents pointed to by y to x */
-	SCONT_O,  /* *x := y      store y to location pointed to by x */
 	LT_O,    /* x < y */
 	FLT_O,
 	LE_O,    /* x <= y */
@@ -64,8 +57,15 @@ enum opcode {
 	FNE_O,
 	OR_O,    /* x || y */
 	AND_O,   /* x && y */
-	IF_O,    /* if x then goto L   unary conditional jump to L */
+	NEG_O,    /* x := -y      store result of integer neg operation on y to x */
+	FNEG_O,
+	NOT_O,    /* x := !y      store result of logical not operation on y to x */
+	LCONT_O,  /* x := *y      store contents pointed to by y to x */
+	SCONT_O,  /* *x := y      store y to location pointed to by x */
+	ADDR_O,   /* x := &y      store address of y to x */
+	ASN_O,    /* x := y       store y to x */
 	ARR_O,    /* x = array[y]      retrieve array element at index y */
+	IF_O,    /* if x then goto L   unary conditional jump to L */
 	ERRC_O,
 };
 
