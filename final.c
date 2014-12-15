@@ -8,6 +8,7 @@
  */
 
 #include <stdio.h>
+#include <string.h>
 
 #include "intermediate.h"
 #include "type.h"
@@ -28,6 +29,20 @@ static void map_address(FILE *stream, struct address a);
 void final_code(FILE *stream, struct list *code)
 {
 	p("int main()\n{\n");
+	struct hasht *global = list_index(yyscopes, 1)->data;
+	for (size_t i = 0; i < global->size; ++i) {
+		struct hasht_node *slot = global->table[i];
+		if (slot && !hasht_node_deleted(slot)) {
+			struct typeinfo *value = slot->value;
+			if (value->base == FUNCTION_T) {
+				if (strcmp(slot->key, "main") == 0)
+					continue;
+				p("%s %s(int);\n",
+				  print_basetype(value->function.type), slot->key);
+			}
+		}
+	}
+
 	p("\t/* initializing constant region */\n");
 	struct hasht *constant = list_front(yyscopes);
 	for (size_t i = 0; i < constant->size; ++i) {
