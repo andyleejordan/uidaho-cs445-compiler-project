@@ -98,7 +98,7 @@ scope.o: scope.h symbol.h list.h hasht.h
 
 intermediate.o: intermediate.h type.h symbol.h logger.h node.h list.h tree.h
 
-final.o: final.h type.h
+final.o: final.h intermediate.h type.h args.h list.h hasht.h
 
 list.o: list.h
 
