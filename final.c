@@ -12,6 +12,7 @@
 
 #include "intermediate.h"
 #include "type.h"
+#include "args.h"
 
 #include "list.h"
 #include "hasht.h"
@@ -68,9 +69,11 @@ void final_code(FILE *stream, struct list *code)
 
 static void map_instruction(FILE *stream, struct op *op)
 {
-	p("/*\n");
-	print_op(stream, op);
-	p("*/\n");
+	if (arguments.debug) {
+		p("/*\n");
+		print_op(stream, op);
+		p("*/\n");
+	}
 	static int param_offset = 0;
 	struct address a = op->address[0];
 	struct address b = op->address[1];
