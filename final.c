@@ -74,6 +74,12 @@ static void map_instruction(FILE *stream, struct op *op)
 		p("\tlocal = local_; /* restore */\n");
 		p("\n");
 		break;
+	case LABEL_O:
+		p("L_%d:\n", op->address[0].offset);
+		break;
+	case GOTO_O:
+		p("\tgoto L_%d;\n", op->address[0].offset);
+		break;
 	case PINT_O:
 	case PCHAR_O:
 	case PBOOL_O:
