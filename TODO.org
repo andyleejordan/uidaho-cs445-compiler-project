@@ -1,5 +1,6 @@
 * Required tasks
-** TODO Generate assembly code
+** TODO TAC-C for classes, new operator
+** TODO Update Makefile dependencies to support -j4
 * Additional tasks
 ** TODO Align memory addresses
 ** TODO Handle short-circuit booleans
@@ -19,3 +20,4 @@ than multiple complex comparisons.
 *** TODO =list_sort=
 ** TODO Respect include guards
 ** TODO Use flyweight pattern for repeated strings
+** TODO Generate assembly code
