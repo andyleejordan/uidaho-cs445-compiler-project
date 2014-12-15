@@ -18,6 +18,9 @@ struct arguments {
 	bool tree;
 	bool symbols;
 	bool checks;
+	bool assemble;
+	bool compile;
+	char *output;
 	char *include;
 	char **input_files;
 } arguments;

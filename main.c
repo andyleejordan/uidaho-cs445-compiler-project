@@ -44,14 +44,17 @@ static char doc[] = "Andrew Schwartzmeyer's 120++ compiler.\v"
 static char args_doc[] = "infile...";
 
 static struct argp_option options[] = {
-	{ "debug",   'd', 0,      0, "Print debug messages (scopes, mostly).\n"
+	{ "debug",    'd', 0,      0, "Print debug messages (scopes, mostly).\n"
 	  "Also disables exit on assertion failure."},
-	{ "tree",    't', 0,      0, "Print the syntax tree." },
-	{ "syntax",  't', 0,      OPTION_ALIAS },
-	{ "symbols", 's', 0,      0, "Print the populated symbols." },
-	{ "checks",  'c', 0,      0, "Print the performed type checks." },
-	{ "types",   'c', 0,      OPTION_ALIAS },
-	{ "include", 'I', "DIR",  0, "Search path for 'system' headers." },
+	{ "tree",     't', 0,      0, "Print the syntax tree." },
+	{ "syntax",   't', 0,      OPTION_ALIAS },
+	{ "symbols",  'y', 0,      0, "Print the populated symbols." },
+	{ "checks",   'k', 0,      0, "Print the performed type checks." },
+	{ "types",    'k', 0,      OPTION_ALIAS },
+	{ "include",  'I', "DIR",  0, "Search path for 'system' headers." },
+	{ "assemble", 's', 0,      0, "Generate assembler code." },
+	{ "compile",  'c', 0,      0, "Generate object code." },
+	{ "output",   'o', "FILE", 0, "Name of generated executable." },
 	{ 0 }
 };
 
@@ -84,6 +87,9 @@ int main(int argc, char **argv)
 	arguments.tree = false;
 	arguments.symbols = false;
 	arguments.checks = false;
+	arguments.assemble = false;
+	arguments.compile = false;
+	arguments.output = "a.out";
 	arguments.include = getcwd(NULL, 0);
 
 	argp_parse(&argp, argc, argv, 0, 0, &arguments);
@@ -297,14 +303,23 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
 	case 't':
 		arguments->tree = true;
 		break;
-	case 's':
+	case 'y':
 		arguments->symbols = true;
 		break;
-	case 'c':
+	case 'k':
 		arguments->checks = true;
 		break;
 	case 'I':
 		arguments->include = arg;
+		break;
+	case 's':
+		arguments->assemble = true;
+		break;
+	case 'c':
+		arguments->compile = true;
+		break;
+	case 'o':
+		arguments->output = arg;
 		break;
 
 	case ARGP_KEY_NO_ARGS:
