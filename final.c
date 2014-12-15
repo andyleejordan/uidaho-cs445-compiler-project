@@ -210,6 +210,12 @@ static void map_instruction(FILE *stream, struct op *op)
 		map_address(stream, c);
 		p("));\n");
 		break;
+	case IF_O:
+		p("\tif (");
+		map_address(stream, a);
+		p(")\n");
+		p("\t\tgoto L_%d;\n", b.offset);
+		break;
 	default:
 		break;
 	}
