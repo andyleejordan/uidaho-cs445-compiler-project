@@ -158,6 +158,20 @@ static void map_instruction(FILE *stream, struct op *op)
 		  b.region == LOCAL_R ? " + param" : "");
 		p(";\n");
 		break;
+	case ARR_O:
+		p("\t");
+		p("(*(%s %s**)(%s + %d%s))",
+		  print_basetype(a.type), a.type->pointer ? "*" : "",
+		  map_region(a.region), a.offset,
+		  a.region == LOCAL_R ? " + param" : "");
+		p(" = ");
+		p("((%s %s*)(%s + %d%s + ",
+		  print_basetype(b.type), b.type->pointer ? "*" : "",
+		  map_region(b.region), b.offset,
+		  b.region == LOCAL_R ? " + param" : "");
+		map_address(stream, c);
+		p("));\n");
+		break;
 	default:
 		break;
 	}
