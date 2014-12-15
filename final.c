@@ -114,6 +114,26 @@ static void map_instruction(FILE *stream, struct op *op)
 		map_address(stream, op->address[2]);
 		p(";\n");
 		break;
+	case NEG_O:
+	case FNEG_O:
+	case NOT_O:
+	case ASN_O:
+	case ADDR_O:
+	case LCONT_O:
+		p("\t");
+		map_address(stream, op->address[0]);
+		p(" = ");
+		p("%s", map_op(op->code));
+		map_address(stream, op->address[1]);
+		p(";\n");
+		break;
+	case SCONT_O:
+		p("\t*");
+		map_address(stream, op->address[0]);
+		p(" = ");
+		map_address(stream, op->address[1]);
+		p(";\n");
+		break;
 	default:
 		break;
 	}
@@ -176,6 +196,17 @@ static char *map_op(enum opcode code)
 		return "||";
 	case AND_O:
 		return "&&";
+	case NEG_O:
+	case FNEG_O:
+		return "-";
+	case NOT_O:
+		return "!";
+	case ASN_O:
+		return "";
+	case ADDR_O:
+		return "&";
+	case LCONT_O:
+		return "*";
 	default:
 		return NULL;
 	}
