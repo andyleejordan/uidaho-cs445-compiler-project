@@ -20,6 +20,7 @@
 extern struct list *yyscopes;
 
 static void map_instruction(FILE *stream, struct op *op);
+static char *map_op(enum opcode code);
 static char *map_region(enum region r);
 static void map_address(FILE *stream, struct address a);
 
@@ -57,6 +58,41 @@ void final_code(FILE *stream, struct list *code)
 
 static void map_instruction(FILE *stream, struct op *op)
 {
+	switch (op->code) {
+	case ADD_O:
+	case FADD_O:
+	case SUB_O:
+	case FSUB_O:
+	case MUL_O:
+	case FMUL_O:
+	case DIV_O:
+	case FDIV_O:
+	case MOD_O:
+	case LT_O:
+	case FLT_O:
+	case LE_O:
+	case FLE_O:
+	case GT_O:
+	case FGT_O:
+	case GE_O:
+	case FGE_O:
+	case EQ_O:
+	case FEQ_O:
+	case NE_O:
+	case FNE_O:
+	case OR_O:
+	case AND_O:
+		p("\t");
+		map_address(stream, op->address[0]);
+		p(" = ");
+		map_address(stream, op->address[1]);
+		p(" %s ", map_op(op->code));
+		map_address(stream, op->address[2]);
+		p(";\n");
+		break;
+	default:
+		break;
+	}
 }
 
 /* returns code to get value at address */
@@ -76,6 +112,49 @@ static void map_address(FILE *stream, struct address a)
 		  a.region == LOCAL_R ? " + param" : "");
 }
 
+/* returns string representation of binary operator */
+static char *map_op(enum opcode code)
+{
+	switch (code) {
+	case ADD_O:
+	case FADD_O:
+		return "+";
+	case SUB_O:
+	case FSUB_O:
+		return "-";
+	case MUL_O:
+	case FMUL_O:
+		return "*";
+	case DIV_O:
+	case FDIV_O:
+		return "/";
+	case MOD_O:
+		return "%";
+	case LT_O:
+	case FLT_O:
+		return "<";
+	case LE_O:
+	case FLE_O:
+		return "<=";
+	case GT_O:
+	case FGT_O:
+		return ">";
+	case GE_O:
+	case FGE_O:
+		return ">=";
+	case EQ_O:
+	case FEQ_O:
+		return "==";
+	case NE_O:
+	case FNE_O:
+		return "!=";
+	case OR_O:
+		return "||";
+	case AND_O:
+		return "&&";
+	default:
+		return NULL;
+	}
 }
 
 }
