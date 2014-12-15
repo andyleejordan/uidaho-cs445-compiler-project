@@ -1,3 +1,5 @@
+#include <iostream>
+using namespace std;
 /* for testing multiple parameters to functions */
 int paramzzz(char x, int y, int z);
 int fibonacci(int n);
@@ -19,7 +21,8 @@ int main(int argc, char *argv[])
 
 	int fib;
 	do {
-		fib = fibonacci(c % 16);
+		fib = fibonacci(c % 16 + 1);
+		cout << "fibonacci(" << c % 16 + 1 << ") = " << fib << '\n';
 		if (fib < 0) {
 			break;
 		} else {
@@ -37,10 +40,10 @@ int fibonacci(int n)
 	else if (n == 1)
 		return 1;
 	else
-		return fibonacci(n - 1) + fibonacci(n - 2);
+		return (fibonacci(n - 1) + fibonacci(n - 2));
 }
 
 int paramzzz(char x, int y, int z)
 {
-	return 2;
+	return 0;
 }

@@ -158,9 +158,6 @@ void parse_program(char *filename)
 	symbol_populate(yyprogram);
 	log_debug("global scope had %zu symbols", hasht_used(global));
 
-	/* setup constant region and offset */
-	log_debug("type checking");
-
 	/* constant symbol table put in front of stack for known location */
 	struct hasht *constant = hasht_new(32, true, NULL, NULL, &symbol_free);
 	log_assert(constant);
@@ -168,6 +165,7 @@ void parse_program(char *filename)
 
 	region = CONST_R;
 	offset = 0;
+	log_debug("type checking");
 	type_check(yyprogram);
 
 	/* generating intermediate code */

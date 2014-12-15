@@ -7,6 +7,7 @@ int main(int argc, char *argv[])
 	}
 
 	int anint = 4;
+	myarray[3] = anint;
 
 	int *myptr = &anint;
 	*myptr = 2;
