@@ -80,6 +80,7 @@ struct typeinfo {
 		struct functioninfo {
 			struct typeinfo *type; /* return */
 			struct list *parameters; /* typeinfo */
+			size_t param_size; /* total bytes of parameters */
 			struct hasht *symbols; /* NULL until defined */
 		} function;
 		struct classinfo {

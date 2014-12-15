@@ -207,16 +207,17 @@ struct typeinfo *typeinfo_new_function(struct tree *n, struct typeinfo *t, bool 
 
 	handle_param_list(n, local, params);
 
-	/* restore region and offset */
-	region = region_;
-	offset = offset_;
-
 	struct typeinfo *function = typeinfo_new(n);
 	function->base = FUNCTION_T;
 	function->pointer = false; /* 120++ does not have function pointers */
 	function->function.type = t;
 	function->function.parameters = params;
+	function->function.param_size = offset;
 	function->function.symbols = local;
+
+	/* restore region and offset */
+	region = region_;
+	offset = offset_;
 
 	return function;
 }

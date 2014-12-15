@@ -1119,7 +1119,7 @@ static void handle_function(struct typeinfo *t, struct tree *n, char *k)
 	enum region region_ = region;
 	size_t offset_ = offset;
 	region = LOCAL_R;
-	offset = 0;
+	offset = v->function.param_size;
 
 	/* recurse on children while in subscope */
 	log_debug("pushing function scope");
