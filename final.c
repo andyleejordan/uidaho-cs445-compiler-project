@@ -14,6 +14,8 @@
 #include "list.h"
 #include "hasht.h"
 
+#define p(...) fprintf(stream, __VA_ARGS__)
+
 extern struct list *yyscopes;
 
 static char *map_region(enum region r);
@@ -21,17 +23,17 @@ static void map_address(FILE *stream, struct address a);
 
 void final_code(FILE *stream, struct list *code)
 {
-	fprintf(stream, "int main()\n{\n");
-	fprintf(stream, "\t/* initializing constant region */\n");
+	p("int main()\n{\n");
+	p("\t/* initializing constant region */\n");
 	struct hasht *constant = list_front(yyscopes);
 	for (size_t i = 0; i < constant->size; ++i) {
 		struct hasht_node *slot = constant->table[i];
 		if (slot && !hasht_node_deleted(slot)) {
 			struct typeinfo *v = slot->value;
 			if (v->base == FLOAT_T || (v->base == CHAR_T && v->pointer)) {
-				fprintf(stream, "\t");
+				p("\t");
 				map_address(stream, v->place);
-				fprintf(stream, " = %s;\n", slot->key);
+				p(" = %s;\n", slot->key);
 			}
 		}
 	}
@@ -57,3 +59,5 @@ static char *map_region(enum region r)
 		return "unimplemented";
 	}
 }
+
+#undef p
