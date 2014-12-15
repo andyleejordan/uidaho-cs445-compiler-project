@@ -33,6 +33,7 @@ extern struct typeinfo bool_type;
 extern struct typeinfo void_type;
 extern struct typeinfo class_type;
 extern struct typeinfo unknown_type;
+extern struct typeinfo ptr_type;
 
 static enum opcode map_code(enum rule r, struct typeinfo *type);
 static struct op *op_new(enum opcode code, char *name,
@@ -421,7 +422,7 @@ void code_generate(struct tree *t)
 		break;
 	}
 	case UNARY_AMPERSAND: { /* address-of */
-		n->place = temp_new(&int_type);
+		n->place = temp_new(&ptr_type);
 		append_code(1);
 		push_op(n, op_new(ADDR_O, NULL, n->place, get_place(t, 1), e));
 		break;

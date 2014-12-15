@@ -31,6 +31,7 @@ struct typeinfo bool_type;
 struct typeinfo void_type;
 struct typeinfo class_type;
 struct typeinfo unknown_type;
+struct typeinfo ptr_type;
 
 /*
  * Initialize comparator types
@@ -60,6 +61,9 @@ void set_type_comparators()
 
 	unknown_type.base = UNKNOWN_T;
 	unknown_type.pointer = false;
+
+	ptr_type.base = VOID_T;
+	ptr_type.pointer = true;
 }
 
 /*
