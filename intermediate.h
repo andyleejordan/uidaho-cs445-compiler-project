@@ -18,8 +18,8 @@
 enum opcode {
 	/* pseudo opcodes */
 	PROC_O,   /* name, bytes of parameters, bytes of locals, in GLOBAL_R,  */
-	LABEL_O,  /* name (optional), in LABEL_R */
 	END_O,    /* declares end of current procedure */
+	LABEL_O,  /* name (optional), in LABEL_R */
 	/* psudeo opcodes for printing types with cout << thing */
 	PINT_O,
 	PCHAR_O,

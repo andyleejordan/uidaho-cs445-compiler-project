@@ -809,8 +809,8 @@ static char *print_opcode(enum opcode code)
 {
 	switch (code) {
 		R(PROC_O);
-		R(LABEL_O);
 		R(END_O);
+		R(LABEL_O);
 		R(PINT_O);
 		R(PCHAR_O);
 		R(PBOOL_O);
