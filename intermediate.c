@@ -554,12 +554,7 @@ void code_generate(struct tree *t)
 		struct typeinfo *f = scope_search(k);
 		log_assert(f);
 		/* get size of parameters */
-		struct address param = { CONST_R, 0, &int_type };
-		struct list_node *iter = list_head(f->function.parameters);
-		while (!list_end(iter)) {
-			param.offset += typeinfo_size(iter->data);
-			iter = iter->next;
-		}
+		struct address param = { CONST_R, f->function.param_size, &int_type };
 		/* get size of locals (including temps) */
 		struct address local = { CONST_R, offset, &int_type };
 		struct address ret = { UNKNOWN_R, 0, f };
@@ -582,12 +577,7 @@ void code_generate(struct tree *t)
 		struct typeinfo *f = scope_search(k);
 		log_assert(f);
 		/* get size of parameters */
-		struct address param = { CONST_R, 0, &int_type };
-		struct list_node *iter = list_head(f->function.parameters);
-		while (!list_end(iter)) {
-			param.offset += typeinfo_size(iter->data);
-			iter = iter->next;
-		}
+		struct address param = { CONST_R, f->function.param_size, &int_type };
 		/* get size of locals (including temps) */
 		struct address local = { CONST_R, offset, &int_type };
 		struct address ret = { UNKNOWN_R, 0, f };
