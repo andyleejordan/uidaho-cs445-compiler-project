@@ -178,7 +178,7 @@ void code_generate(struct tree *t)
 			struct address count = { CONST_R,
 			                         list_size(ctor->function.parameters),
 			                         &int_type };
-			class = typeinfo_copy(ctor->function.type);
+			class = typeinfo_copy(class);
 			class->pointer = true;
 			n->place = temp_new(class);
 			push_op(n, op_new(NEW_O, k, n->place, count, e));
