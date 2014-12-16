@@ -169,8 +169,7 @@ void code_generate(struct tree *t)
 	}
 	case NEW_EXPR: { /* explicit constructor call */
 		append_code(2); /* parameters */
-		/* terribly hacky grabbing of class name */
-		char *k = get_node(tree_index(child(1), 0), 0)->token->text;
+		char *k = get_class(t);
 		struct typeinfo *class = scope_search(k);
 		if (class) {
 			/* push a NEWC op with number of paramters */
