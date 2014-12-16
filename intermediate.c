@@ -220,7 +220,7 @@ void code_generate(struct tree *t)
 	}
 	case POSTFIX_CALL: { /* function invocation */
 		char *k = get_identifier(t);
-		char *name = NULL;
+		char *name;
 		struct typeinfo *f = scope_search(k);
 		enum rule child_rule = get_rule(child(0));
 		bool member_call = (child_rule == POSTFIX_DOT_FIELD ||
@@ -229,20 +229,21 @@ void code_generate(struct tree *t)
 			/* get name of field */
 			log_assert(f);
 			char *field = get_identifier(tree_index(child(0), 2));
-			asprintf(&name, "%s_%s", f->class.type, field);
+			asprintf(&name, "%s__%s", f->class.type, field);
 
+			/* get address of instance */
+			struct address instance;
+			if (f->pointer) {
+				instance = temp_new(&ptr_type);
+				push_op(n, op_new(RSTAR_O, NULL, instance, f->place, e));
+			} else {
+				instance = f->place;
+			}
+			/* get member function pointer */
 			struct typeinfo *class = scope_search(f->class.type);
 			f = hasht_search(class->class.public, field);
-			struct address instance;
-			struct address p = scope_search(k)->place;
-			if (child_rule == POSTFIX_ARROW_FIELD) {
-				struct typeinfo *type = typeinfo_copy(p.type);
-				type->pointer = false;
-				instance = temp_new(type);
-				push_op(n, op_new(LCONT_O, NULL, instance, p, e));
-			} else {
-				instance = p;
-			}
+
+			/* push class pointer */
 			push_op(n, op_new(PARAM_O, NULL, instance, e, e));
 		} else {
 			name = strdup(k);
