@@ -1,7 +1,12 @@
 * Required tasks
-** TODO TAC-C for classes, new operator
-** TODO Update Makefile dependencies to support -j4
+** TODO Final code for new operator
+** TODO Intermediate and final code for delete operator
+** TODO Test classes
 * Additional tasks
+** TODO Support C
+Pass <.*\.h> headers through; add faux headers with function
+prototypes. On call, if function is not defined (no symbol table),
+print call to library function.
 ** TODO Align memory addresses
 ** TODO Handle short-circuit booleans
 ** TODO Handle shortcut assignments (+= etc.)
@@ -21,3 +26,10 @@ than multiple complex comparisons.
 ** TODO Respect include guards
 ** TODO Use flyweight pattern for repeated strings
 ** TODO Generate assembly code
+** TODO Free copies with ref->delete(ref)
+Idea for an arbitrary reference handler. Push copies to a list, which
+can destroy itself and its members.
+** TODO Parallel buliding
+Update Makefile dependencies to support -j4 or use Autotools or Cmake.
+
+** TODO Change 'program' back to ' translation unit'
