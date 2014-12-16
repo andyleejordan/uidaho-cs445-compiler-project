@@ -207,6 +207,9 @@ struct typeinfo *typeinfo_new_function(struct tree *n, struct typeinfo *t, bool 
 
 	handle_param_list(n, local, params);
 
+	if (class_member(n))
+		offset += typeinfo_size(&ptr_type);
+
 	struct typeinfo *function = typeinfo_new(n);
 	function->base = FUNCTION_T;
 	function->pointer = false; /* 120++ does not have function pointers */

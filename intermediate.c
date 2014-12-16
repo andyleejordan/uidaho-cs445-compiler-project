@@ -105,6 +105,9 @@ void code_generate(struct tree *t)
 		/* manage memory regions */
 		region = LOCAL_R;
 		offset = scope_size(f->function.symbols);
+		/* class functions' scope size does not account for implicit pointer */
+		if (class)
+			offset += typeinfo_size(&ptr_type);
 
 		break;
 	}

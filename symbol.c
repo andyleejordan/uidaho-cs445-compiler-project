@@ -40,6 +40,7 @@ extern struct typeinfo bool_type;
 extern struct typeinfo void_type;
 extern struct typeinfo class_type;
 extern struct typeinfo unknown_type;
+extern struct typeinfo ptr_type;
 
 /* local functions */
 static void symbol_insert(char *k, struct typeinfo *v, struct tree *t,
@@ -126,6 +127,8 @@ static void symbol_insert(char *k, struct typeinfo *v, struct tree *t,
 			/* define the function */
 			if (e->function.symbols == NULL) {
 				e->function.symbols = l;
+				/* fixup param size since declarations forget it */
+				e->function.param_size = v->function.param_size;
 				log_check("function %s defined", k);
 			} else {
 				log_semantic(t, "function %s already defined", k);
