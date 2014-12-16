@@ -563,6 +563,8 @@ void code_generate(struct tree *t)
 		/* get size of locals (including temps) */
 		struct address local = { CONST_R, offset, &int_type };
 		struct address ret = { UNKNOWN_R, 0, f };
+		/* ctors in generated code have void type */
+		f->function.type = &void_type;
 		push_op(n, op_new(PROC_O, name, param, local, ret));
 		append_code(1);
 		push_op(n, op_new(END_O, NULL, e, e, e));
