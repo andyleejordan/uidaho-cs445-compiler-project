@@ -26,24 +26,28 @@ static char *map_op(enum opcode code);
 static char *map_print(enum opcode code);
 static char *map_region(enum region r);
 static void map_address(FILE *stream, struct address a);
+static void print_prototypes(FILE *stream, struct hasht *table, char *class);
 
 void final_code(FILE *stream, struct list *code)
 {
 	struct hasht *global = list_index(yyscopes, 1)->data;
+	print_prototypes(stream, global, NULL);
+
+	/* print typedefs and class functions */
+	p("typedef char* class;\n");
 	for (size_t i = 0; i < global->size; ++i) {
 		struct hasht_node *slot = global->table[i];
 		if (slot && !hasht_node_deleted(slot)) {
 			struct typeinfo *value = slot->value;
-			if (value->base == FUNCTION_T) {
-				if (strcmp(slot->key, "main") == 0)
-					continue;
-				p("%s %s();\n",
-				  print_basetype(value->function.type),
-				  (char *)slot->key);
+			char *key = slot->key;
+			if (value->base == CLASS_T && value->class.public) {
+				p("typedef char* %s;\n", key);
+				print_prototypes(stream, value->class.public, key);
+				if (value->class.private)
+					print_prototypes(stream, value->class.private, key);
 			}
 		}
 	}
-	p("\n");
 
 	p("void _initialize_constants()\n{\n");
 	p("\t/* initializing constant region */\n");
@@ -331,6 +335,29 @@ static char *map_region(enum region r)
 	default:
 		return "unimplemented";
 	}
+}
+
+/* print prototypes of functions in symbol table */
+static void print_prototypes(FILE *stream, struct hasht *table, char *class)
+{
+	for (size_t i = 0; i < table->size; ++i) {
+		struct hasht_node *slot = table->table[i];
+		if (slot && !hasht_node_deleted(slot)) {
+			struct typeinfo *value = slot->value;
+			char *key = slot->key;
+			if (value->base == FUNCTION_T
+			    && value->function.symbols) {
+				if (strcmp(slot->key, "main") == 0)
+					continue;
+				p("%s ", print_basetype(value->function.type));
+				if (class)
+					p("%s__%s();\n", class, key);
+				else
+					p("%s();\n", key);
+			}
+		}
+	}
+	p("\n");
 }
 
 #undef p
