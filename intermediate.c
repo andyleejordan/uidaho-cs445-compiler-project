@@ -163,7 +163,7 @@ void code_generate(struct tree *t)
 			char *name;
 			asprintf(&name, "%s__%s", class, class);
 			push_op(n, op_new(PARAM_O, NULL, n->place, e, e));
-			push_op(n, op_new(CALL_O, name, n->place, count, e));
+			push_op(n, op_new(CALL_O, name, e, count, e));
 		}
 		break;
 	}
@@ -215,7 +215,10 @@ void code_generate(struct tree *t)
 		}
 		log_assert(k && f);
 
-		n->place = temp_new(f);
+		if (typeinfo_compare(f->function.type, &void_type))
+			n->place = e;
+		else
+			n->place = temp_new(f);
 		/* count number of parameters */
 		struct address count = { CONST_R,
 		                         list_size(f->function.parameters),

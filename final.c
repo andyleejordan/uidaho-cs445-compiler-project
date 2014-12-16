@@ -110,7 +110,7 @@ static void map_instruction(FILE *stream, struct op *op)
 		/* reset parameter offset and call function, saving return */
 		param_offset = 0;
 		p("\t");
-		if (!(a.type->base == VOID_T && !a.type->pointer)) {
+		if (a.region != UNKNOWN_R) {
 			map_address(stream, a);
 			p(" = ");
 		}
