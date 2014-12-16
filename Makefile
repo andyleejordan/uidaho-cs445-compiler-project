@@ -33,8 +33,8 @@ SRCS = main.c type.c symbol.c node.c token.c rules.c scope.c intermediate.c fina
 OBJS = $(SRCS:.c=.o)
 
 TESTDIR = data/pass
-TESTDATA = array.cpp fibonacci.cpp logic.cpp hello_world.cpp
-TESTFLAGS =
+TESTDATA = $(TESTDIR)/array.cpp $(TESTDIR)/fibonacci.cpp $(TESTDIR)/logic.cpp $(TESTDIR)/hello_world.cpp
+TESTFLAGS = -s
 
 # targets
 .PHONY: all test smoke dist clean distclean
@@ -46,9 +46,8 @@ test: $(TESTS)
 	./test-tree
 	./test-hasht
 
-smoke: test all
-	for test in $(TESTDATA); do ./$(BIN) -o $$test.out $(TESTFLAGS) $(TESTDIR)/$$test; done
-	for test in $(TESTDATA); do ./$$test.out; done
+smoke: all
+	./$(BIN) $(TESTFLAGS) $(TESTDATA)
 
 TAGS: $(SRCS)
 	etags $(SRCS)
