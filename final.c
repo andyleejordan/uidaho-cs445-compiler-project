@@ -341,6 +341,7 @@ static char *map_region(enum region r)
 		return "constant";
 	case LOCAL_R:
 	case PARAM_R:
+	case CLASS_R:
 		return "local";
 	default:
 		return "unimplemented";
