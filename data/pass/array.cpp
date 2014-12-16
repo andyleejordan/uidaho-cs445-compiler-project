@@ -1,9 +1,12 @@
+#include <iostream>
+using namespace std;
 /* testing sizeof, array indexing, and assignments with pointers */
 int main(int argc, char *argv[])
 {
 	int myarray[11];
 	for (int i = 0; i < (sizeof(myarray) / sizeof(myarray[0])); ++i) {
 		myarray[i] = i;
+		cout << "myarray at " << i << " equals " << myarray[i] << '\n';
 	}
 
 	int anint = 4;

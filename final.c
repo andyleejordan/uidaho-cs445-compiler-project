@@ -168,7 +168,7 @@ static void map_instruction(FILE *stream, struct op *op)
 	case FNEG_O:
 	case NOT_O:
 	case ASN_O:
-	case LCONT_O:
+	case RSTAR_O:
 		p("\t");
 		map_address(stream, a);
 		p(" = ");
@@ -176,7 +176,7 @@ static void map_instruction(FILE *stream, struct op *op)
 		map_address(stream, b);
 		p(";\n");
 		break;
-	case SCONT_O:
+	case LSTAR_O:
 		p("\t");
 		p("(**(%s %s*)(%s + %d))",
 		  print_basetype(a.type), a.type->pointer ? "*" : "",
@@ -194,11 +194,19 @@ static void map_instruction(FILE *stream, struct op *op)
 		  map_region(b.region), b.offset);
 		p(";\n");
 		break;
-	case ARR_O:
+	case RARR_O:
 		p("\t");
-		p("(*(%s %s**)(%s + %d))",
-		  print_basetype(a.type), a.type->pointer ? "*" : "",
-		  map_region(a.region), a.offset);
+		map_address(stream, a);
+		p(" = ");
+		p("(*(%s %s*)(%s + %d + ",
+		  print_basetype(b.type), b.type->pointer ? "*" : "",
+		  map_region(b.region), b.offset);
+		map_address(stream, c);
+		p("));\n");
+		break;
+	case LARR_O:
+		p("\t");
+		map_address(stream, a);
 		p(" = ");
 		p("((%s %s*)(%s + %d + ",
 		  print_basetype(b.type), b.type->pointer ? "*" : "",
@@ -284,7 +292,7 @@ static char *map_op(enum opcode code)
 		return "";
 	case ADDR_O:
 		return "&";
-	case LCONT_O:
+	case RSTAR_O:
 		return "*";
 	default:
 		return NULL;

@@ -417,7 +417,7 @@ void code_generate(struct tree *t)
 		struct typeinfo *type = typeinfo_copy(get_place(t, 1).type);
 		type->pointer = false;
 		n->place = temp_new(type);
-		push_op(n, op_new(LCONT_O, NULL, n->place, get_place(t, 1), e));
+		push_op(n, op_new(RSTAR_O, NULL, n->place, get_place(t, 1), e));
 		break;
 	}
 	case UNARY_AMPERSAND: { /* address-of */
@@ -456,7 +456,7 @@ void code_generate(struct tree *t)
 			if (get_pointer(t))
 				type->pointer = false;
 			/* if accessing an index, use size of array element */
-			if (get_array(t) > 0) {
+			if (get_rule(child(1)) == POSTFIX_ARRAY_INDEX) {
 				struct typeinfo *temp = typeinfo_copy(type->array.type);
 				free(type);
 				type = temp;
@@ -479,12 +479,30 @@ void code_generate(struct tree *t)
 		n->place = size;
 		break;
 	}
-	case POSTFIX_ARRAY_INDEX: { /* array[index] */
+	case POSTFIX_ARRAY_INDEX: { /* get address of value at array[index] */
+		if (get_rule(t->parent) == UNARY_SIZEOF_EXPR)
+			break;
 		char *k = get_identifier(t);
 		struct typeinfo *array = scope_search(k);
 		struct address index = get_place(t, 2);
-		n->place = temp_new(array->array.type);
-		push_op(n, op_new(ARR_O, NULL, n->place, array->place, index));
+		char *name;
+		asprintf(&name, "%s[%d]", k, index.offset);
+		/* calculate real offset */
+		struct address offset = temp_new(&int_type);
+		struct address size = { CONST_R,
+		                        typeinfo_size(array->array.type),
+		                        &int_type };
+		push_op(n, op_new(MUL_O, NULL, offset, index, size));
+
+		if (get_rule(t->parent) == ASSIGN_EXPR) {
+			struct typeinfo *temp = typeinfo_copy(array->array.type);
+			temp->pointer = true;
+			n->place = temp_new(temp);
+			push_op(n, op_new(LARR_O, name, n->place, array->place, offset));
+		} else {
+			n->place = temp_new(array->array.type);
+			push_op(n, op_new(RARR_O, name, n->place, array->place, offset));
+		}
 		break;
 	}
 	case POSTFIX_PLUSPLUS:
@@ -501,10 +519,11 @@ void code_generate(struct tree *t)
 		append_code(2); /* right */
 		enum opcode code = ASN_O;
 		/* handle doing assignment with pointers */
-		if (get_rule(child(0)) == UNARY_STAR)
-			code = SCONT_O;
+		if (get_rule(child(0)) == UNARY_STAR
+		    || get_rule(child(0)) == POSTFIX_ARRAY_INDEX)
+			code = LSTAR_O;
 		else if (get_rule(child(2)) == UNARY_STAR)
-			code = LCONT_O;
+			code = RSTAR_O;
 		push_op(n, op_new(code, k, n->place, r, e));
 		break;
 	}
@@ -849,11 +868,12 @@ static char *print_opcode(enum opcode code)
 		R(NEG_O);
 		R(FNEG_O);
 		R(NOT_O);
-		R(LCONT_O);
-		R(SCONT_O);
+		R(LSTAR_O);
+		R(RSTAR_O);
 		R(ASN_O);
 		R(ADDR_O);
-		R(ARR_O);
+		R(LARR_O);
+		R(RARR_O);
 		R(IF_O);
 		R(ERRC_O);
 	}

@@ -19,11 +19,11 @@ enum opcode {
 	/* pseudo opcodes */
 	PROC_O,   /* name, bytes of parameters, bytes of locals, in GLOBAL_R,  */
 	END_O,    /* declares end of current procedure */
-	PARAM_O,  /* param x        store x as a parameter */
-	CALL_O,   /* call p, x, n   call procedure p with n parameters, store result in x */
-	RET_O,    /* return x       return from procedure, use x as the result */
+	PARAM_O,  /* param x          store x as a parameter */
+	CALL_O,   /* call p, x, n     call procedure p with n parameters, store result in x */
+	RET_O,    /* return x         return from procedure, use x as the result */
 	LABEL_O,  /* name (optional), in LABEL_R */
-	GOTO_O,   /* goto L         unconditional jump to L */
+	GOTO_O,   /* goto L           unconditional jump to L */
 	NEW_O,    /* x := new Foo, n  create a new instance of class named Foo,
 	                              store address to x, call constructor with
                                       n parameters */
@@ -60,12 +60,13 @@ enum opcode {
 	NEG_O,    /* x := -y      store result of integer neg operation on y to x */
 	FNEG_O,
 	NOT_O,    /* x := !y      store result of logical not operation on y to x */
-	LCONT_O,  /* x := *y      store contents pointed to by y to x */
-	SCONT_O,  /* *x := y      store y to location pointed to by x */
+	LSTAR_O,  /* *x := y      store y to location pointed to by x */
+	RSTAR_O,  /* x := *y      store contents pointed to by y to x */
 	ADDR_O,   /* x := &y      store address of y to x */
 	ASN_O,    /* x := y       store y to x */
-	ARR_O,    /* x = array[y]      retrieve array element at index y */
-	IF_O,    /* if x then goto L   unary conditional jump to L */
+	LARR_O,   /* array[x] = y store y at array index x */
+	RARR_O,   /* x = array[y] retrieve array element at index y */
+	IF_O,     /* if x then goto L  unary conditional jump to L */
 	ERRC_O,
 };
 
