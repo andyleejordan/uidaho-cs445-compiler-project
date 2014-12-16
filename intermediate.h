@@ -66,6 +66,8 @@ enum opcode {
 	ASN_O,    /* x := y       store y to x */
 	LARR_O,   /* array[x] = y store y at array index x */
 	RARR_O,   /* x = array[y] retrieve array element at index y */
+	LFIELD_O, /* class.field = x */
+	RFIELD_O, /* x = class.field */
 	IF_O,     /* if x then goto L  unary conditional jump to L */
 	ERRC_O,
 };

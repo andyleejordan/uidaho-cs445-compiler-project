@@ -218,6 +218,16 @@ static void map_instruction(FILE *stream, struct op *op)
 		map_address(stream, c);
 		p("));\n");
 		break;
+	case LFIELD_O:
+		p("\t");
+		map_address(stream, a);
+		p(" = ");
+		p("(%s *)((%s %s*)(%s + %d + ", print_basetype(a.type),
+		  print_basetype(b.type), b.type->pointer ? "*" : "",
+		  map_region(b.region), b.offset);
+		map_address(stream, c);
+		p("));\n");
+		break;
 	case IF_O:
 		p("\tif (");
 		map_address(stream, a);

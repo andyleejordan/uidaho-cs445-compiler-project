@@ -184,6 +184,40 @@ void code_generate(struct tree *t)
 		}
 		break;
 	}
+	case POSTFIX_ARROW_FIELD:
+	case POSTFIX_DOT_FIELD: { /* handle public field access */
+		if (get_rule(t->parent) == POSTFIX_CALL)
+			break;
+		char *k = get_identifier(child(0));
+		struct typeinfo *v = scope_search(k);
+		char *f = get_identifier(child(2));
+		struct typeinfo *class = scope_search(v->class.type);
+		struct typeinfo *field = hasht_search(class->class.public, f);
+		log_assert(field->base != FUNCTION_T);
+		struct address instance;
+		if (v->pointer) {
+			/* make temp class instance */
+			struct typeinfo *temp = typeinfo_copy(field);
+			temp->pointer = false;
+			instance = temp_new(temp);
+		} else {
+			instance = v->place;
+		}
+		struct address offset = { CONST_R, field->place.offset, &int_type };
+		char *name;
+		asprintf(&name, "%s%s%s", k,
+		         (n->rule == POSTFIX_DOT_FIELD) ? "." : "->", f);
+		if (get_rule(t->parent) == ASSIGN_EXPR) {
+			struct typeinfo *temp = typeinfo_copy(field);
+			temp->pointer = true;
+			n->place = temp_new(temp);
+			push_op(n, op_new(LFIELD_O, name, n->place, instance, offset));
+		} else {
+			n->place = temp_new(field);
+			push_op(n, op_new(RFIELD_O, name, n->place, instance, offset));
+		}
+		break;
+	}
 	case POSTFIX_CALL: { /* function invocation */
 		char *k = get_identifier(t);
 		char *name = NULL;
@@ -518,18 +552,30 @@ void code_generate(struct tree *t)
 	}
 	case ASSIGN_EXPR: { /* non-initializer assignment */
 		char *k = get_identifier(t);
+		char *name = k;
 		n->place = get_place(t, 0);
 		struct address r = get_place(t, 2);
 		append_code(0); /* left */
 		append_code(2); /* right */
 		enum opcode code = ASN_O;
+		enum rule c = get_rule(child(0));
 		/* handle doing assignment with pointers */
-		if (get_rule(child(0)) == UNARY_STAR
-		    || get_rule(child(0)) == POSTFIX_ARRAY_INDEX)
+		if (c == UNARY_STAR
+		    || c == POSTFIX_ARRAY_INDEX
+		    || c == POSTFIX_DOT_FIELD
+		    || c == POSTFIX_ARROW_FIELD)
 			code = LSTAR_O;
 		else if (get_rule(child(2)) == UNARY_STAR)
 			code = RSTAR_O;
-		push_op(n, op_new(code, k, n->place, r, e));
+
+		if (c == POSTFIX_ARRAY_INDEX)
+			asprintf(&name, "%s[]", k);
+		else if (c == POSTFIX_DOT_FIELD)
+			asprintf(&name, "%s.%s", k, get_identifier(tree_index(child(0), 2)));
+		else if (c == POSTFIX_ARROW_FIELD)
+			asprintf(&name, "%s->%s", k, get_identifier(tree_index(child(0), 2)));
+
+		push_op(n, op_new(code, name, n->place, r, e));
 		break;
 	}
 	case RETURN_STATEMENT: { /* return (optional expr) */
@@ -871,6 +917,8 @@ static char *print_opcode(enum opcode code)
 		R(ADDR_O);
 		R(LARR_O);
 		R(RARR_O);
+		R(LFIELD_O);
+		R(RFIELD_O);
 		R(IF_O);
 		R(ERRC_O);
 	}
