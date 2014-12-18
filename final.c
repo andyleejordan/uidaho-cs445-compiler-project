@@ -118,8 +118,10 @@ static void map_instruction(FILE *stream, struct op *op)
 		break;
 	case RET_O:
 		p("\treturn");
-		if (!(a.type->base == VOID_T && !a.type->pointer))
+		if (!(a.type->base == VOID_T && !a.type->pointer)) {
+			p("\t ");
 			map_address(stream, a);
+		}
 		p(";\n");
 		break;
 	case LABEL_O:
@@ -249,7 +251,7 @@ static void map_address(FILE *stream, struct address a)
 	    && (a.type->base == INT_T
 	        || a.type->base == CHAR_T
 	        || a.type->base == BOOL_T))
-		p("(%d)", a.offset);
+		p("%d", a.offset);
 	/* otherwise grab from region */
 	else
 		p("(*(%s %s*)(%s + %d))",
