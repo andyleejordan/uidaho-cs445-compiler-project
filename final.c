@@ -113,8 +113,9 @@ static void map_instruction(FILE *stream, struct op *op)
 		break;
 	case PARAM_O:
 		/* save parameters into faux stack */
-		p("\t(*(%s %s*)(stack + %d))",
-		  print_basetype(a.type), a.type->pointer ? "*" : "", param_offset);
+		p("\t(*(");
+		print_typeinfo(stream, "", a.type);
+		p("*)(stack + %d))", param_offset);
 		p(" = ");
 		map_address(stream, a);
 		p(";\n");
@@ -208,9 +209,9 @@ static void map_instruction(FILE *stream, struct op *op)
 		break;
 	case LSTAR_O:
 		p("\t");
-		p("(**(%s %s*)(%s + %d))",
-		  print_basetype(a.type), a.type->pointer ? "*" : "",
-		  map_region(a.region), a.offset);
+		p("(**(");
+		print_typeinfo(stream, "", typeinfo_return(a.type));
+		p("*)(%s + %d))", map_region(a.region), a.offset);
 		p(" = ");
 		map_address(stream, b);
 		p(";\n");
@@ -219,18 +220,18 @@ static void map_instruction(FILE *stream, struct op *op)
 		p("\t");
 		map_address(stream, a);
 		p(" = ");
-		p("((%s %s*)(%s + %d))",
-		  print_basetype(b.type), b.type->pointer ? "*" : "",
-		  map_region(b.region), b.offset);
+		p("((");
+		print_typeinfo(stream, "", b.type);
+		p("*)(%s + %d))", map_region(b.region), b.offset);
 		p(";\n");
 		break;
 	case RARR_O:
 		p("\t");
 		map_address(stream, a);
 		p(" = ");
-		p("(*(%s %s*)(%s + %d + ",
-		  print_basetype(b.type), b.type->pointer ? "*" : "",
-		  map_region(b.region), b.offset);
+		p("(*(");
+		print_typeinfo(stream, "", b.type);
+		p("*)(%s + %d + ", map_region(b.region), b.offset);
 		map_address(stream, c);
 		p("));\n");
 		break;
@@ -238,9 +239,9 @@ static void map_instruction(FILE *stream, struct op *op)
 		p("\t");
 		map_address(stream, a);
 		p(" = ");
-		p("((%s %s*)(%s + %d + ",
-		  print_basetype(b.type), b.type->pointer ? "*" : "",
-		  map_region(b.region), b.offset);
+		p("((");
+		print_typeinfo(stream, "", b.type);
+		p("*)(%s + %d + ", map_region(b.region), b.offset);
 		map_address(stream, c);
 		p("));\n");
 		break;
@@ -248,9 +249,9 @@ static void map_instruction(FILE *stream, struct op *op)
 		p("\t");
 		map_address(stream, a);
 		p(" = ");
-		p("(%s *)((*(%s %s**)(%s + %d) + ", print_basetype(a.type),
-		  print_basetype(b.type), b.type->pointer ? "*" : "",
-		  map_region(b.region), b.offset);
+		p("(%s *)((*(", print_basetype(a.type));
+		print_typeinfo(stream, "", b.type);
+		p("**)(%s + %d) + ", map_region(b.region), b.offset);
 		map_address(stream, c);
 		p("));\n");
 		break;
@@ -258,9 +259,9 @@ static void map_instruction(FILE *stream, struct op *op)
 		p("\t");
 		map_address(stream, a);
 		p(" = ");
-		p("(%s)(*(*(%s %s**)(%s + %d) + ", print_basetype(a.type),
-		  print_basetype(b.type), b.type->pointer ? "*" : "",
-		  map_region(b.region), b.offset);
+		p("(%s)(*(*(", print_basetype(a.type));
+		print_typeinfo(stream, "", b.type);
+		p("**)(%s + %d) + ", map_region(b.region), b.offset);
 		map_address(stream, c);
 		p("));\n");
 		break;
@@ -285,13 +286,14 @@ static void map_address(FILE *stream, struct address a)
 	if (a.region == CONST_R && !a.type->pointer
 	    && (a.type->base == INT_T
 	        || a.type->base == CHAR_T
-	        || a.type->base == BOOL_T))
+	        || a.type->base == BOOL_T)) {
 		p("%d", a.offset);
 	/* otherwise grab from region */
-	else
-		p("(*(%s %s*)(%s + %d))",
-		  print_basetype(a.type), a.type->pointer ? "*" : "",
-		  map_region(a.region), a.offset);
+	} else {
+		p("(*(");
+		print_typeinfo(stream, "", a.type);
+		p("*)(%s + %d))", map_region(a.region), a.offset);
+	}
 }
 
 /* returns string representation of binary operator */
