@@ -274,7 +274,7 @@ static void map_instruction(FILE *stream, struct op *op)
 		p(" = ");
 		p("(");
 		print_t(stream, a);
-		p("*)((*(");
+		p(")((*(");
 		print_t(stream, b);
 		p("**)(%s + %d) + ", map_region(b.region), b.offset);
 		map_address(stream, c);
