@@ -137,6 +137,11 @@ static void map_instruction(FILE *stream, struct op *op)
 		map_address(stream, a);
 		p(" = calloc(%d, sizeof(char));\n", b.offset);
 		break;
+	case DEL_O:
+		p("\tfree(");
+		map_address(stream, a);
+		p(");\n");
+		break;
 	case PINT_O:
 	case PCHAR_O:
 	case PBOOL_O:
