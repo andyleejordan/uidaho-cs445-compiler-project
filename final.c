@@ -248,7 +248,8 @@ static void map_instruction(FILE *stream, struct op *op)
 		p(")\n");
 		p("\t\tgoto L_%d;\n", b.offset);
 		break;
-	default:
+	case ERRC_O:
+		p("\texit(-1); /* operation error */");
 		break;
 	}
 }

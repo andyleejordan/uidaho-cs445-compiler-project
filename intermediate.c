@@ -763,6 +763,8 @@ static enum opcode map_code(enum rule r, struct typeinfo *t)
 			return PFLOAT_O;
 		else if (t->base == CHAR_T && t->pointer)
 			return PSTR_O;
+		else
+			return ERRC_O;
 	default:
 		return ERRC_O; /* unknown */
 	}
