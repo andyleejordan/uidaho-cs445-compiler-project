@@ -205,10 +205,10 @@ struct typeinfo *typeinfo_new_function(struct tree *n, struct typeinfo *t, bool 
 	region = PARAM_R;
 	offset = 0;
 
-	handle_param_list(n, local, params);
-
 	if (class_member(n))
 		offset += typeinfo_size(&ptr_type);
+
+	handle_param_list(n, local, params);
 
 	struct typeinfo *function = typeinfo_new(n);
 	function->base = FUNCTION_T;
