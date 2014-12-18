@@ -322,7 +322,6 @@ static void handle_quoted_include(const char *s)
 	/* copy because Wormulon's dirname modifies */
 	char *copy = strdup(current);
 	const char *dir = dirname(copy); /* do not pass to free */
-	free(copy);
 	log_debug("dirname: %s", dir);
 
 	/* append POSIX directory separator and include path */
@@ -333,6 +332,7 @@ static void handle_quoted_include(const char *s)
 	/* resolve abosolute path name */
 	handle_include(resolved);
 
+	free(copy);
 	free(resolved);
 	free(include);
 }
