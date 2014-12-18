@@ -135,7 +135,9 @@ static void map_instruction(FILE *stream, struct op *op)
 		p("\treturn");
 		if (!(a.type->base == VOID_T && !a.type->pointer)) {
 			p(" ");
-			map_address(stream, a);
+			p("((");
+			print_typeinfo(stream, "", a.type);
+			p(")(%s + %d))", map_region(a.region), a.offset);
 		}
 		p(";\n");
 		break;
