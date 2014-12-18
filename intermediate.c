@@ -192,8 +192,16 @@ void code_generate(struct tree *t)
 			                         &int_type };
 			push_op(n, op_new(PARAM_O, k, n->place, e, e));
 			push_op(n, op_new(CALL_O, name, e, count, e));
+		} else {
+			struct tree *type_spec = get_production(t, TYPE_SPEC_SEQ);
+			struct typeinfo *type = typeinfo_copy(type_check(tree_index(type_spec, 0)));
+			struct address size = { CONST_R,
+			                        typeinfo_size(type),
+			                        &int_type };
+			type->pointer = true;
+			n->place = temp_new(type);
+			push_op(n, op_new(NEW_O, NULL, n->place, size, e));
 		}
-		/* TODO: handle non class types */
 		break;
 	}
 	case DELETE_EXPR1: {
