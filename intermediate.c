@@ -146,6 +146,26 @@ void code_generate(struct tree *t)
 		struct node *init = get_node(t, 1);
 		if (init == NULL)
 			break;
+
+		char *k = get_identifier(t);
+		struct typeinfo *v = scope_search(k);
+		if (v->base == CLASS_T && strcmp(v->class.type, "string") == 0) {
+			log_debug("found class initializer");
+			struct address count = { CONST_R, 2, &int_type };
+			struct address pointer;
+			if (v->pointer) {
+				pointer = v->place;
+			} else {
+				struct typeinfo *temp = typeinfo_copy(v);
+				temp->pointer = true;
+				pointer = temp_new(temp);
+				push_op(n, op_new(ADDR_O, k, pointer, v->place, e));
+			}
+			push_op(n, op_new(PARAM_O, NULL, pointer, e, e));
+			push_op(n, op_new(PARAM_O, NULL, get_place(t, 1), e, e));
+			push_op(n, op_new(CALL_O, "string__string", e, count, e));
+			break;
+		}
 		append_code(1);
 
 		push_op(n, op_new(ASN_O, get_identifier(t), n->place, init->place, e));
@@ -432,7 +452,7 @@ void code_generate(struct tree *t)
 			                         1,
 			                         &int_type };
 			push_op(n, op_new(PARAM_O, NULL, p, e, e));
-			push_op(n, op_new(CALL_O, "c_str", temp, count, e));
+			push_op(n, op_new(CALL_O, "string__c_str", temp, count, e));
 			p = temp;
 		}
 		push_op(n, op_new(map_c(p.type), NULL, p, e, e));
@@ -620,10 +640,9 @@ void code_generate(struct tree *t)
 	}
 	case CTOR_FUNCTION_DEF: { /* constructor function definition */
 		char *k = class_member(t);
-		if (strcmp(k, "ifstream") == 0
-			    || strcmp(k, "ofstream") == 0
-			    || strcmp(k, "string") == 0)
-				break;
+		/* TODO: remember why I don't print these two */
+		if (strcmp(k, "ifstream") == 0 || strcmp(k, "ofstream") == 0)
+			break;
 		char *name;
 		asprintf(&name, "%s__%s", k, k);
 		struct typeinfo *f = scope_search(k);
