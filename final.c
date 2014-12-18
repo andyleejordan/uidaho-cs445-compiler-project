@@ -93,6 +93,8 @@ static void map_instruction(FILE *stream, struct op *op)
 			p("\t_initialize_constants();\n");
 		/* copy parameters from faux stack into front of local region */
 		p("\tmemcpy(local, stack, %d); /* copy parameters */\n", a.offset);
+		if (strstr(op->name, "__")) /* probably a class */
+			p("\tclass *instance = (class *)local;\n");
 		break;
 	case END_O:
 		p("}\n\n");
@@ -353,8 +355,9 @@ static char *map_region(enum region r)
 		return "constant";
 	case LOCAL_R:
 	case PARAM_R:
-	case CLASS_R:
 		return "local";
+	case CLASS_R:
+		return "*instance";
 	default:
 		return "unimplemented";
 	}
