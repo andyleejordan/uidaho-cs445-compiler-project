@@ -212,14 +212,14 @@ void code_generate(struct tree *t)
 		struct typeinfo *class = scope_search(v->class.type);
 		struct typeinfo *field = hasht_search(class->class.public, f);
 		log_assert(field->base != FUNCTION_T);
-		struct address instance;
+		struct address pointer;
 		if (v->pointer) {
-			/* make temp class instance */
-			struct typeinfo *temp = typeinfo_copy(field);
-			temp->pointer = false;
-			instance = temp_new(temp);
+			pointer = v->place;
 		} else {
-			instance = v->place;
+			struct typeinfo *temp = typeinfo_copy(v);
+			temp->pointer = true;
+			pointer = temp_new(temp);
+			push_op(n, op_new(ADDR_O, k, pointer, v->place, e));
 		}
 		struct address offset = { CONST_R, field->place.offset, &int_type };
 		char *name;
@@ -229,10 +229,10 @@ void code_generate(struct tree *t)
 			struct typeinfo *temp = typeinfo_copy(field);
 			temp->pointer = true;
 			n->place = temp_new(temp);
-			push_op(n, op_new(LFIELD_O, name, n->place, instance, offset));
+			push_op(n, op_new(LFIELD_O, name, n->place, pointer, offset));
 		} else {
 			n->place = temp_new(field);
-			push_op(n, op_new(RFIELD_O, name, n->place, instance, offset));
+			push_op(n, op_new(RFIELD_O, name, n->place, pointer, offset));
 		}
 		break;
 	}

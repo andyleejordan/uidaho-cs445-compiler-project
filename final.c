@@ -236,7 +236,7 @@ static void map_instruction(FILE *stream, struct op *op)
 		p("\t");
 		map_address(stream, a);
 		p(" = ");
-		p("(%s *)((%s %s*)(%s + %d + ", print_basetype(a.type),
+		p("(%s *)((*(%s %s**)(%s + %d) + ", print_basetype(a.type),
 		  print_basetype(b.type), b.type->pointer ? "*" : "",
 		  map_region(b.region), b.offset);
 		map_address(stream, c);
@@ -246,7 +246,7 @@ static void map_instruction(FILE *stream, struct op *op)
 		p("\t");
 		map_address(stream, a);
 		p(" = ");
-		p("(%s)(*(%s %s*)(%s + %d + ", print_basetype(a.type),
+		p("(%s)(*(*(%s %s**)(%s + %d) + ", print_basetype(a.type),
 		  print_basetype(b.type), b.type->pointer ? "*" : "",
 		  map_region(b.region), b.offset);
 		map_address(stream, c);
