@@ -153,6 +153,7 @@ void code_generate(struct tree *t)
 	case SIMPLE_DECL: { /* default constructor call if class declaration */
 		n->place = get_place(t, 1);
 		append_code(1);
+		char *k = get_identifier(t);
 		char *class = get_class(t);
 		if (class && !get_pointer(child(1))) {
 			if (strcmp(class, "ifstream") == 0
@@ -162,7 +163,9 @@ void code_generate(struct tree *t)
 			struct address count = { CONST_R, 1, &int_type };
 			char *name;
 			asprintf(&name, "%s__%s", class, class);
-			push_op(n, op_new(PARAM_O, NULL, n->place, e, e));
+			struct address pointer = temp_new(&ptr_type);
+			push_op(n, op_new(ADDR_O, k, pointer, n->place, e));
+			push_op(n, op_new(PARAM_O, k, pointer, e, e));
 			push_op(n, op_new(CALL_O, name, e, count, e));
 		}
 		break;
@@ -231,25 +234,26 @@ void code_generate(struct tree *t)
 			char *field = get_identifier(tree_index(child(0), 2));
 			asprintf(&name, "%s__%s", f->class.type, field);
 
-			/* get address of instance */
-			struct address instance;
+			/* get address of pointer to class instance */
+			struct address pointer;
 			if (f->pointer) {
-				instance = temp_new(&ptr_type);
-				push_op(n, op_new(RSTAR_O, NULL, instance, f->place, e));
+				pointer = f->place;
 			} else {
-				instance = f->place;
+				pointer = temp_new(&ptr_type);
+				push_op(n, op_new(ADDR_O, k, pointer, f->place, e));
 			}
 			/* get member function pointer */
 			struct typeinfo *class = scope_search(f->class.type);
 			f = hasht_search(class->class.public, field);
 
 			/* push class pointer */
-			push_op(n, op_new(PARAM_O, NULL, instance, e, e));
+			push_op(n, op_new(PARAM_O, k, pointer, e, e));
 		} else {
 			name = strdup(k);
 		}
 		log_assert(k && f);
 
+		/* make a temp if returning something */
 		if (typeinfo_compare(f->function.type, &void_type))
 			n->place = e;
 		else
