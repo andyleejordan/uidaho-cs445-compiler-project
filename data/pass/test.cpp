@@ -20,8 +20,9 @@ public:
 	TestClass(int, double);
 	void writeMethod(ofstream file, char *message);
 	string data;
+	double *pubData();
 private:
-	double *hiddenData();
+	int hiddenData();
 };
 
 void lots_o_types(bool p, int i)
@@ -30,7 +31,9 @@ void lots_o_types(bool p, int i)
 	short quick = i;
 	long big = i;
 	double pi = 3.14159;
+	cout << "Pi is " << pi << '\n';
 	double zero = .0000000001;
+	cout << "Floating point zero is " << zero << '\n';
 	float one = 1.;
 
 	string empty = "";
@@ -62,6 +65,8 @@ int main(int argc, char *argv[])
 	char *loremipsum = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque tincidunt id velit nec laoreet. Maecenas feugiat cursus finibus. Ut convallis volutpat urna, nec cursus nisl. Nullam malesuada sapien et maximus ultricies. Suspendisse ut justo dui. Nulla bibendum id turpis sed lobortis. Sed vitae turpis vitae arcu pulvinar aliquet. Nam a faucibus mi. Integer rutrum mattis nisl, facilisis pharetra lorem dapibus finibus. Aenean eget lacus non augue faucibus lobortis et a sapien. Duis eleifend maximus cras amet.";
 	char *nullsucks = "A string with \0 i.e. escaped null (\0) a couple times";
 
+	cout << "Let's see what null does: " << nullsucks << '\n';
+
 	switch (c) {
 	case 'C': {
 		break;
@@ -84,6 +89,10 @@ int main(int argc, char *argv[])
 		tick = '`';
 	}
 
+	double *dub = myclass->pubData();
+	cout << "A long, returned, allocated pi is " << *dub << '\n';
+
+
 	delete myclass;
 
 	return 0;
@@ -96,12 +105,18 @@ void TestClass::writeMethod(ofstream file, char *message)
 	return;
 }
 
-double *TestClass::hiddenData()
+int TestClass::hiddenData()
 {
 	for (int i = 0; i < 2; ++i)
 		bool ha = true;
+	return 0;
+}
 
+double *TestClass::pubData()
+{
 	double *pi = new double;
+
+	*pi = 3.14159265358979;
 
 	return pi;
 }

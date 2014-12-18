@@ -33,7 +33,8 @@ SRCS = main.c type.c symbol.c node.c token.c rules.c scope.c intermediate.c fina
 OBJS = $(SRCS:.c=.o)
 
 TESTDIR = data/pass
-TESTDATA = $(TESTDIR)/array.cpp $(TESTDIR)/fibonacci.cpp $(TESTDIR)/logic.cpp $(TESTDIR)/hello_world.cpp $(TESTDIR)/class.cpp
+TESTDATA = $(TESTDIR)/array.cpp $(TESTDIR)/fibonacci.cpp $(TESTDIR)/logic.cpp \
+	$(TESTDIR)/hello_world.cpp $(TESTDIR)/class.cpp $(TESTDIR)/test.cpp
 TESTFLAGS = -s
 
 # targets
