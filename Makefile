@@ -19,6 +19,7 @@ CFLAGS = -O -Wall -Werror -std=gnu99 -D_GNU_SOURCE -Wno-unused-result
 LDFLAGS = -g
 FLEXFLAGS =
 BISONFLAGS = -Wall -Werror
+120FLAGS = -Wno-return-type
 
 # git archive option
 GITREF = $(shell git tag | tail -n 1)
@@ -49,6 +50,12 @@ test: $(TESTS)
 
 smoke: all
 	./$(BIN) $(TESTFLAGS) $(TESTDATA)
+	$(CC) $(CDEBUG) $(120FLAGS) -o array array.cpp.c && ./array
+	$(CC) $(CDEBUG) $(120FLAGS) -o fibonacci fibonacci.cpp.c && ./fibonacci
+	$(CC) $(CDEBUG) $(120FLAGS) -o logic logic.cpp.c && ./logic
+	$(CC) $(CDEBUG) $(120FLAGS) -o hello_world hello_world.cpp.c && ./hello_world
+	$(CC) $(CDEBUG) $(120FLAGS) -o class class.cpp.c && ./class
+	$(CC) $(CDEBUG) $(120FLAGS) -o test test.cpp.c && ./test
 
 TAGS: $(SRCS)
 	etags $(SRCS)
