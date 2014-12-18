@@ -731,8 +731,11 @@ static void backpatch(struct list *code, struct op *first, struct op *follow)
 /*
  * Maps a production rule to an opcode if supported.
  */
-static enum opcode map_code(enum rule r, struct typeinfo *t)
+static enum opcode map_code(enum rule r, struct typeinfo *type)
 {
+	/* handle return types of functions */
+	struct typeinfo *t = typeinfo_return(type);
+
 	bool floating = t->base == FLOAT_T;
 	switch (r) {
 	case REL_LT:
