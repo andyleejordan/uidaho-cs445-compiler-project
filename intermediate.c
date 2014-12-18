@@ -147,6 +147,7 @@ void code_generate(struct tree *t)
 		if (init == NULL)
 			break;
 		append_code(1);
+
 		push_op(n, op_new(ASN_O, get_identifier(t), n->place, init->place, e));
 		break;
 	}
@@ -277,10 +278,10 @@ void code_generate(struct tree *t)
 		log_assert(k && f);
 
 		/* make a temp if returning something */
-		if (typeinfo_compare(f->function.type, &void_type))
+		if (typeinfo_compare(typeinfo_return(f), &void_type))
 			n->place = e;
 		else
-			n->place = temp_new(f);
+			n->place = temp_new(typeinfo_return(f));
 		/* count number of parameters */
 		struct address count = { CONST_R,
 		                         list_size(f->function.parameters),
