@@ -31,18 +31,30 @@ static void print_prototypes(FILE *stream, struct hasht *table, char *class);
 void final_code(FILE *stream, struct list *code)
 {
 	struct hasht *global = list_index(yyscopes, 1)->data;
-	print_prototypes(stream, global, NULL);
 
-	/* print typedefs and class functions */
+	/* print typedefs */
 	p("typedef char* class;\n");
 	for (size_t i = 0; i < global->size; ++i) {
 		struct hasht_node *slot = global->table[i];
 		if (slot && !hasht_node_deleted(slot)) {
 			struct typeinfo *value = slot->value;
 			char *key = slot->key;
-			if (value->base == CLASS_T && value->class.public) {
+			if (value->base == CLASS_T)
 				p("typedef char* %s;\n", key);
-				print_prototypes(stream, value->class.public, key);
+		}
+	}
+
+	print_prototypes(stream, global, NULL);
+
+	/* print class prototypes */
+	for (size_t i = 0; i < global->size; ++i) {
+		struct hasht_node *slot = global->table[i];
+		if (slot && !hasht_node_deleted(slot)) {
+			struct typeinfo *value = slot->value;
+			char *key = slot->key;
+			if (value->base == CLASS_T) {
+				if (value->class.public)
+					print_prototypes(stream, value->class.public, key);
 				if (value->class.private)
 					print_prototypes(stream, value->class.private, key);
 			}
@@ -86,8 +98,8 @@ static void map_instruction(FILE *stream, struct op *op)
 	struct address c = op->address[2];
 	switch (op->code) {
 	case PROC_O:
-		p("%s %s()\n{\n",
-		  print_basetype(c.type->function.type), op->name);
+		print_typeinfo(stream, "", typeinfo_return(c.type));
+		p("%s()\n{\n", op->name);
 		p("\tchar local[%d];\n", b.offset);
 		if (strcmp(op->name, "main") == 0)
 			p("\t_initialize_constants();\n");
@@ -121,7 +133,7 @@ static void map_instruction(FILE *stream, struct op *op)
 	case RET_O:
 		p("\treturn");
 		if (!(a.type->base == VOID_T && !a.type->pointer)) {
-			p("\t ");
+			p(" ");
 			map_address(stream, a);
 		}
 		p(";\n");
@@ -382,15 +394,18 @@ static void print_prototypes(FILE *stream, struct hasht *table, char *class)
 		if (slot && !hasht_node_deleted(slot)) {
 			struct typeinfo *value = slot->value;
 			char *key = slot->key;
-			if (value->base == FUNCTION_T
-			    && value->function.symbols) {
+			if (value->base == FUNCTION_T && value->function.symbols) {
 				if (strcmp(slot->key, "main") == 0)
 					continue;
-				p("%s ", print_basetype(value->function.type));
+				print_typeinfo(stream, "", typeinfo_return(value));
 				if (class)
 					p("%s__%s();\n", class, key);
 				else
 					p("%s();\n", key);
+			} else if (value->base == FUNCTION_T && class) {
+				print_typeinfo(stream, "", typeinfo_return(value));
+				p("%s__%s() { } /* noop function */\n",
+				  class, key);
 			}
 		}
 	}
