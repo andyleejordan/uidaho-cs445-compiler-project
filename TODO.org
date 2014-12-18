@@ -1,18 +1,16 @@
-* Required tasks
-** TODO Final code for new operator
-** TODO Intermediate and final code for delete operator
-** TODO Test classes
-* Additional tasks
+* Tasks
 ** TODO Support C
 Pass <.*\.h> headers through; add faux headers with function
 prototypes. On call, if function is not defined (no symbol table),
 print call to library function.
-** TODO Align memory addresses
+
 ** TODO Handle short-circuit booleans
+Needs labels generated after each sub-expression plus back patching.
 ** TODO Handle shortcut assignments (+= etc.)
 Will require additional grammar rules
 
 ** TODO Support class instance initializers
+Like =Class::Class(a, b, c): A(a), B(b), C(c) {...}=
 ** TODO Refactor type checking
 With type promotion supported via (=typeinfo_compatible(a, b)=) rather
 than multiple complex comparisons.
@@ -23,7 +21,6 @@ than multiple complex comparisons.
 *** TODO =struct list *list_copy=
 *** TODO =list_split=
 *** TODO =list_sort=
-** TODO Respect include guards
 ** TODO Use flyweight pattern for repeated strings
 ** TODO Generate assembly code
 ** TODO Free copies with ref->delete(ref)
@@ -32,4 +29,9 @@ can destroy itself and its members.
 ** TODO Parallel buliding
 Update Makefile dependencies to support -j4 or use Autotools or Cmake.
 
-** TODO Change 'program' back to ' translation unit'
+** TODO Change 'program' back to 'translation unit'
+** TODO Align memory addresses
+Not really necessary, just a maybe.
+** DONE Respect include guards
+I keep track of a list of parsed files and refuse
+duplicates. Essentially does the job of include guards without them.
