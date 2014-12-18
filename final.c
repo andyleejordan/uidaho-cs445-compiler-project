@@ -132,6 +132,11 @@ static void map_instruction(FILE *stream, struct op *op)
 	case GOTO_O:
 		p("\tgoto L_%d;\n", a.offset);
 		break;
+	case NEW_O:
+		p("\t");
+		map_address(stream, a);
+		p(" = calloc(%d, sizeof(char));\n", b.offset);
+		break;
 	case PINT_O:
 	case PCHAR_O:
 	case PBOOL_O:

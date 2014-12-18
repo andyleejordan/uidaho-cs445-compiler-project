@@ -175,15 +175,23 @@ void code_generate(struct tree *t)
 		char *k = get_class(t);
 		struct typeinfo *class = scope_search(k);
 		if (class) {
-			/* push a NEWC op with number of paramters */
+			struct address size = { CONST_R,
+			                        scope_size(class->class.public)
+			                        + scope_size(class->class.private),
+			                        &int_type };
+			class = typeinfo_copy(class);
+			class->pointer = true;
+			n->place = temp_new(class);
+			push_op(n, op_new(NEW_O, k, n->place, size, e));
+
+			char *name;
+			asprintf(&name, "%s__%s", k, k);
 			struct typeinfo *ctor = hasht_search(class->class.public, k);
 			struct address count = { CONST_R,
 			                         list_size(ctor->function.parameters),
 			                         &int_type };
-			class = typeinfo_copy(class);
-			class->pointer = true;
-			n->place = temp_new(class);
-			push_op(n, op_new(NEW_O, k, n->place, count, e));
+			push_op(n, op_new(PARAM_O, k, n->place, e, e));
+			push_op(n, op_new(CALL_O, name, e, count, e));
 		}
 		/* TODO: handle non class types */
 		break;
