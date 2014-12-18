@@ -24,9 +24,8 @@ enum opcode {
 	RET_O,    /* return x         return from procedure, use x as the result */
 	LABEL_O,  /* name (optional), in LABEL_R */
 	GOTO_O,   /* goto L           unconditional jump to L */
-	NEW_O,    /* x := new Foo, n  create a new instance of class named Foo,
-	                              store address to x, call constructor with
-                                      n parameters */
+	NEW_O,    /* x := new Foo, n  create a new instance of class Foo of size n */
+	DEL_O,    /* delete object    free memory allocated for object */
 	/* psudeo opcodes for printing types with cout << thing */
 	PINT_O,
 	PCHAR_O,

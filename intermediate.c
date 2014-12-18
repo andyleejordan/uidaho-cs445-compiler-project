@@ -185,6 +185,13 @@ void code_generate(struct tree *t)
 			n->place = temp_new(class);
 			push_op(n, op_new(NEW_O, k, n->place, count, e));
 		}
+		/* TODO: handle non class types */
+		break;
+	}
+	case DELETE_EXPR1: {
+		append_code(1);
+		char *k = get_class(t);
+		push_op(n, op_new(DEL_O, k, get_place(t, 1), e, e));
 		break;
 	}
 	case POSTFIX_ARROW_FIELD:
@@ -887,6 +894,7 @@ static char *print_opcode(enum opcode code)
 		R(LABEL_O);
 		R(GOTO_O);
 		R(NEW_O);
+		R(DEL_O);
 		R(PINT_O);
 		R(PCHAR_O);
 		R(PBOOL_O);
