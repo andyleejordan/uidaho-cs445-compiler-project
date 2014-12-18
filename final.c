@@ -147,7 +147,9 @@ static void map_instruction(FILE *stream, struct op *op)
 		        || a.type->base == BOOL_T)) {
 			p(" %d", a.offset);
 		} else if (!(a.type->base == VOID_T && !a.type->pointer)) {
-			if (a.type->pointer) {
+			if (a.type->base == CHAR_T && a.type->pointer) {
+				/* TODO: no idea why this is a special
+				   case and other primitives are not */
 				p(" ((");
 				print_t(stream, a);
 				p(")(%s + %d))", map_region(a.region), a.offset);
