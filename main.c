@@ -245,6 +245,7 @@ void parse_program(char *filename)
 				    || (v->base == CHAR_T && v->pointer)) {
 					fprintf(ic, "    ");
 					print_typeinfo(ic, slot->key, v);
+					fprintf(ic, "\n");
 				}
 			}
 		}
@@ -258,6 +259,7 @@ void parse_program(char *filename)
 				if (value->base != FUNCTION_T) {
 					fprintf(ic, "    ");
 					print_typeinfo(ic, slot->key, value);
+					fprintf(ic, "\n");
 				}
 			}
 		}

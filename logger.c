@@ -163,4 +163,5 @@ void log_symbol(const char *k, struct typeinfo *v)
 	fprintf(stderr, "Inserting symbol into %s/%zu: ",
 	        print_region(region), offset);
 	print_typeinfo(stderr, k, v);
+	fprintf(stderr, "\n");
 }

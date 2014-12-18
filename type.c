@@ -427,8 +427,6 @@ void print_typeinfo(FILE *stream, const char *k, struct typeinfo *v)
 			fprintf(stream, "[%zu]", v->array.size);
 		else
 			fprintf(stream, "[]");
-		if (k)
-			fprintf(stream, "\n");
 		return;
 	}
 	case FUNCTION_T: {
@@ -445,7 +443,7 @@ void print_typeinfo(FILE *stream, const char *k, struct typeinfo *v)
 			if (!list_end(iter))
 				fprintf(stream, ", ");
 		}
-		fprintf(stream, ")\n");
+		fprintf(stream, ")");
 		return;
 	}
 	case CLASS_T: {
@@ -458,5 +456,5 @@ void print_typeinfo(FILE *stream, const char *k, struct typeinfo *v)
 	}
 	}
 	if (k)
-		fprintf(stream, " %s%s\n", (v->pointer) ? "*" : "", k);
+		fprintf(stream, " %s%s", (v->pointer) ? "*" : "", k);
 }
