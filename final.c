@@ -40,7 +40,7 @@ void final_code(FILE *stream, struct list *code)
 			struct typeinfo *value = slot->value;
 			char *key = slot->key;
 			if (value->base == CLASS_T)
-				p("typedef char* %s;\n", key);
+				p("typedef char *%s;\n", key);
 		}
 	}
 
@@ -85,6 +85,12 @@ void final_code(FILE *stream, struct list *code)
 	}
 }
 
+static void print_t(FILE *stream, struct address a)
+{
+	fprintf(stream, "%s%s", print_basetype(a.type),
+	        a.type->pointer ? " *" : "");
+}
+
 static void map_instruction(FILE *stream, struct op *op)
 {
 	if (arguments.debug) {
@@ -99,7 +105,7 @@ static void map_instruction(FILE *stream, struct op *op)
 	switch (op->code) {
 	case PROC_O:
 		print_typeinfo(stream, "", typeinfo_return(c.type));
-		p("%s()\n{\n", op->name);
+		p(" %s()\n{\n", op->name);
 		p("\tchar local[%d];\n", b.offset);
 		if (strcmp(op->name, "main") == 0)
 			p("\t_initialize_constants();\n");
@@ -114,7 +120,7 @@ static void map_instruction(FILE *stream, struct op *op)
 	case PARAM_O:
 		/* save parameters into faux stack */
 		p("\t(*(");
-		print_typeinfo(stream, "", a.type);
+		print_t(stream, a);
 		p("*)(stack + %d))", param_offset);
 		p(" = ");
 		map_address(stream, a);
@@ -133,11 +139,24 @@ static void map_instruction(FILE *stream, struct op *op)
 		break;
 	case RET_O:
 		p("\treturn");
-		if (!(a.type->base == VOID_T && !a.type->pointer)) {
-			p(" ");
-			p("((");
-			print_typeinfo(stream, "", a.type);
-			p(")(%s + %d))", map_region(a.region), a.offset);
+		/* if an immediate, use it */
+		if (a.region == UNKNOWN_R) {
+		} else if (a.region == CONST_R && !a.type->pointer
+		    && (a.type->base == INT_T
+		        || a.type->base == CHAR_T
+		        || a.type->base == BOOL_T)) {
+			p(" %d", a.offset);
+		} else if (!(a.type->base == VOID_T && !a.type->pointer)) {
+			if (a.type->pointer) {
+				p(" ((");
+				print_t(stream, a);
+				p(")(%s + %d))", map_region(a.region), a.offset);
+			}
+			else {
+				p(" (*(");
+				print_t(stream, a);
+				p("*)(%s + %d))", map_region(a.region), a.offset);
+			}
 		}
 		p(";\n");
 		break;
@@ -212,7 +231,7 @@ static void map_instruction(FILE *stream, struct op *op)
 	case LSTAR_O:
 		p("\t");
 		p("(**(");
-		print_typeinfo(stream, "", typeinfo_return(a.type));
+		print_t(stream, a);
 		p("*)(%s + %d))", map_region(a.region), a.offset);
 		p(" = ");
 		map_address(stream, b);
@@ -223,7 +242,7 @@ static void map_instruction(FILE *stream, struct op *op)
 		map_address(stream, a);
 		p(" = ");
 		p("((");
-		print_typeinfo(stream, "", b.type);
+		print_t(stream, b);
 		p("*)(%s + %d))", map_region(b.region), b.offset);
 		p(";\n");
 		break;
@@ -232,7 +251,7 @@ static void map_instruction(FILE *stream, struct op *op)
 		map_address(stream, a);
 		p(" = ");
 		p("(*(");
-		print_typeinfo(stream, "", b.type);
+		print_t(stream, b);
 		p("*)(%s + %d + ", map_region(b.region), b.offset);
 		map_address(stream, c);
 		p("));\n");
@@ -242,7 +261,7 @@ static void map_instruction(FILE *stream, struct op *op)
 		map_address(stream, a);
 		p(" = ");
 		p("((");
-		print_typeinfo(stream, "", b.type);
+		print_t(stream, b);
 		p("*)(%s + %d + ", map_region(b.region), b.offset);
 		map_address(stream, c);
 		p("));\n");
@@ -251,8 +270,10 @@ static void map_instruction(FILE *stream, struct op *op)
 		p("\t");
 		map_address(stream, a);
 		p(" = ");
-		p("(%s *)((*(", print_basetype(a.type));
-		print_typeinfo(stream, "", b.type);
+		p("(");
+		print_t(stream, a);
+		p("*)((*(");
+		print_t(stream, b);
 		p("**)(%s + %d) + ", map_region(b.region), b.offset);
 		map_address(stream, c);
 		p("));\n");
@@ -261,8 +282,10 @@ static void map_instruction(FILE *stream, struct op *op)
 		p("\t");
 		map_address(stream, a);
 		p(" = ");
-		p("(%s)(*(*(", print_basetype(a.type));
-		print_typeinfo(stream, "", b.type);
+		p("(");
+		print_t(stream, a);
+		p(")(*(*(");
+		print_t(stream, b);
 		p("**)(%s + %d) + ", map_region(b.region), b.offset);
 		map_address(stream, c);
 		p("));\n");
@@ -293,7 +316,7 @@ static void map_address(FILE *stream, struct address a)
 	/* otherwise grab from region */
 	} else {
 		p("(*(");
-		print_typeinfo(stream, "", a.type);
+		print_t(stream, a);
 		p("*)(%s + %d))", map_region(a.region), a.offset);
 	}
 }
@@ -403,13 +426,12 @@ static void print_prototypes(FILE *stream, struct hasht *table, char *class)
 					continue;
 				print_typeinfo(stream, "", typeinfo_return(value));
 				if (class)
-					p("%s__%s();\n", class, key);
+					p(" %s__%s();\n", class, key);
 				else
-					p("%s();\n", key);
+					p(" %s();\n", key);
 			} else if (value->base == FUNCTION_T && class) {
-				print_typeinfo(stream, "", typeinfo_return(value));
-				p("%s__%s() { } /* noop function */\n",
-				  class, key);
+				print_typeinfo(stream, NULL, typeinfo_return(value));
+				p(" %s__%s() { } /* noop function */\n", class, key);
 			}
 		}
 	}
