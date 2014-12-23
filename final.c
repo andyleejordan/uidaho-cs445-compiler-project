@@ -33,7 +33,7 @@ void final_code(FILE *stream, struct list *code)
 	struct hasht *global = list_index(yyscopes, 1)->data;
 
 	/* print typedefs */
-	p("typedef char* class;\n");
+	p("typedef char *class;\n");
 	for (size_t i = 0; i < global->size; ++i) {
 		struct hasht_node *slot = global->table[i];
 		if (slot && !hasht_node_deleted(slot)) {
@@ -88,7 +88,7 @@ void final_code(FILE *stream, struct list *code)
 static void print_t(FILE *stream, struct address a)
 {
 	fprintf(stream, "%s%s", print_basetype(a.type),
-	        a.type->pointer ? " *" : "");
+	        a.type->pointer ? " *" : " ");
 }
 
 static void map_instruction(FILE *stream, struct op *op)
@@ -105,7 +105,7 @@ static void map_instruction(FILE *stream, struct op *op)
 	switch (op->code) {
 	case PROC_O:
 		print_typeinfo(stream, "", typeinfo_return(c.type));
-		p(" %s()\n{\n", op->name);
+		p("%s()\n{\n", op->name);
 		p("\tchar local[%d];\n", b.offset);
 		if (strcmp(op->name, "main") == 0)
 			p("\t_initialize_constants();\n");
