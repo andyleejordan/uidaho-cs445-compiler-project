@@ -68,10 +68,13 @@ void final_code(FILE *stream, struct list *code)
 		struct hasht_node *slot = constant->table[i];
 		if (slot && !hasht_node_deleted(slot)) {
 			struct typeinfo *v = slot->value;
-			if (v->base == FLOAT_T || (v->base == CHAR_T && v->pointer)) {
+			if (v->base == FLOAT_T) {
 				p("\t");
 				map_address(stream, v->place);
-				p(" = %s;\n", (char *)slot->key);
+				p(" = %s;\n", v->token->text);
+			} else if (v->base == CHAR_T && v->pointer) {
+				p("\tmemcpy(constant + %d, %s, %zu);\n",
+				  v->place.offset, v->token->text, v->token->ssize);
 			}
 		}
 	}
