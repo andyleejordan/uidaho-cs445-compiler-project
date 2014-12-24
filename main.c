@@ -35,12 +35,28 @@ const char *argp_program_version = "120++ hw5";
 const char *argp_program_bug_address = "<andrew@schwartzmeyer.com>";
 
 static char doc[] = "Andrew Schwartzmeyer's 120++ compiler.\v"
+
 	"University of Idaho - Department of Computer Science\n"
-	"CS 445: Compiler and Translator Design, by Dr. Clinton Jeffery\n\n"
-	"This is a work-in-progress old-school compiler using Flex and Bison\n"
-	"for a subset of C++, dubbed '120++' as it should work for most code\n"
-	"written in CS 120, including basic classes.\n\n"
-	"This repo is located at: https://github.com/andschwa/uidaho-cs445";
+	"CS 445: Compiler and Translator Design, by Dr. Clinton Jeffery"
+	"\n\n"
+
+	"This is a complete old-school compiler using Flex and Bison for a "
+	"subset of C++ and C, dubbed '120++' as it should work for most code "
+	"written in our CS 120 course, including basic classes. Notable "
+	"exceptions include exceptions, templates, virtual semantics, "
+	"namespaces, variadics, casting, conversions, typedefs, access and "
+	"storage qualifiers, operator overloading, and assembly code "
+	"generation. The final output is three-address C code, compilable by "
+	"GCC, which demonstrates the correctness of the lexer, parser, "
+	"semantic analysis, memory layout, and intermediate code generation. "
+	"See the 'data/pass' folder for examples of valid code, and run "
+	"`make smoke` to see their output."
+	"\n\n"
+
+	"This repo is located at: https://github.com/andschwa/uidaho-cs445"
+	"\n\n"
+
+	"This program is licensed under the AGPLv3, see the LICENSE file.\n";
 
 static char args_doc[] = "infile...";
 
