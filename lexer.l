@@ -390,13 +390,10 @@ void handle_c()
  */
 static void handle_fstream()
 {
-	char *header = "include_fstream.h";
-	char *buffer = calloc(strlen(header) + strlen(arguments.include) + 2, sizeof(char));
-	strcpy(buffer, arguments.include);
-	strcpy(buffer, "/");
-	strcpy(buffer, header);
-	handle_include(buffer);
-	free(buffer);
+	char *path;
+	asprintf(&path, "%s/include_fstream.h", arguments.include);
+	handle_include(path);
+	free(path);
 }
 
 /*
@@ -404,13 +401,10 @@ static void handle_fstream()
  */
 static void handle_iostream()
 {
-	char *header = "include_iostream.h";
-	char *buffer = calloc(strlen(header) + strlen(arguments.include) + 2, sizeof(char));
-	strcpy(buffer, arguments.include);
-	strcpy(buffer, "/");
-	strcpy(buffer, header);
-	handle_include(buffer);
-	free(buffer);
+	char *path;
+	asprintf(&path, "%s/include_iostream.h", arguments.include);
+	handle_include(path);
+	free(path);
 }
 
 /*
@@ -418,13 +412,10 @@ static void handle_iostream()
  */
 static void handle_string()
 {
-	char *header = "include_string.h";
-	char *buffer = calloc(strlen(header) + strlen(arguments.include) + 2, sizeof(char));
-	strcpy(buffer, arguments.include);
-	strcpy(buffer, "/");
-	strcpy(buffer, header);
-	handle_include(buffer);
-	free(buffer);
+	char *path;
+	asprintf(&path, "%s/include_string.h", arguments.include);
+	handle_include(path);
+	free(path);
 }
 
 /*
