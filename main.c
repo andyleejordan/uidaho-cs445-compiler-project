@@ -291,7 +291,7 @@ void parse_program(char *filename)
 	fprintf(fc, " *\n");
 	fprintf(fc, " */\n\n");
 
-	/* setup includes */
+	/* setup necessary includes */
 	fprintf(fc, "#include <stdlib.h>\n");
 	fprintf(fc, "#include <stdbool.h>\n");
 	fprintf(fc, "#include <string.h>\n");
@@ -303,7 +303,7 @@ void parse_program(char *filename)
 	fprintf(fc, "/* Source-file C headers */\n");
 	struct list_node *iter = list_head(yyclibs);
 	while (!list_end(iter)) {
-		fprintf(fc, "#include %s\n", iter->data);
+		fprintf(fc, "#include %s\n", (char *)iter->data);
 		iter = iter->next;
 	}
 
