@@ -23,10 +23,11 @@ int main(int argc, char *argv[])
 
 	TestClass myclass;
 
-	cout << "Testing\n";
+	cout << "Testing moredata: ";
 	myclass.moredata = 2;
 	cout << myclass.moredata << '\n';
 	myclass.setData(3);
+	cout << "Testing set data: ";
 	cout << myclass.getData(1) << '\n';
 
 	TestClass *myaddress = &myclass;

@@ -1,5 +1,6 @@
 #include <iostream>
 using namespace std;
+
 /* testing sizeof, array indexing, and assignments with pointers */
 int main(int argc, char *argv[])
 {
