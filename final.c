@@ -336,14 +336,17 @@ static void map_address(FILE *stream, struct address a)
 {
 	if (a.region == UNKNOWN_R)
 		return;
-	/* if an immediate, use it */
 	if (a.region == CONST_R && !a.type->pointer
 	    && (a.type->base == INT_T
 	        || a.type->base == CHAR_T
 	        || a.type->base == BOOL_T)) {
+		/* use an immediate directly */
 		p("%d", a.offset);
-	/* otherwise grab from region */
+	} else if (a.region == CONST_R && a.type->base == CHAR_T && a.type->pointer) {
+		/* use constant string directly */
+		p("(char *)(%s + %d)", map_region(a.region), a.offset);
 	} else {
+		/* grab value from region */
 		p("(*(");
 		print_t(stream, a);
 		p("*)(%s + %d))", map_region(a.region), a.offset);
