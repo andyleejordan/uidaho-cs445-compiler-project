@@ -270,9 +270,9 @@ static void map_instruction(FILE *stream, struct list_node *iter)
 		p("\t");
 		map_address(stream, a);
 		p(" = ");
-		p("((");
+		p("(");
 		print_t(stream, b);
-		p("*)(%s + %d))", map_region(b.region), b.offset);
+		p("*)(%s + %d)", map_region(b.region), b.offset);
 		p(";\n");
 		break;
 	case RARR_O:
@@ -289,11 +289,11 @@ static void map_instruction(FILE *stream, struct list_node *iter)
 		p("\t");
 		map_address(stream, a);
 		p(" = ");
-		p("((");
+		p("(");
 		print_t(stream, b);
 		p("*)(%s + %d + ", map_region(b.region), b.offset);
 		map_address(stream, c);
-		p("));\n");
+		p(");\n");
 		break;
 	case LFIELD_O:
 		p("\t");
@@ -301,11 +301,11 @@ static void map_instruction(FILE *stream, struct list_node *iter)
 		p(" = ");
 		p("(");
 		print_t(stream, a);
-		p(")((*(");
+		p(")(*(");
 		print_t(stream, b);
 		p("**)(%s + %d) + ", map_region(b.region), b.offset);
 		map_address(stream, c);
-		p("));\n");
+		p(");\n");
 		break;
 	case RFIELD_O:
 		p("\t");
