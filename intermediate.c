@@ -302,6 +302,7 @@ void code_generate(struct tree *t)
 			n->place = e;
 		else
 			n->place = temp_new(typeinfo_return(f));
+
 		/* count number of parameters */
 		struct address count = { CONST_R,
 		                         list_size(f->function.parameters),
@@ -309,7 +310,10 @@ void code_generate(struct tree *t)
 		if (member_call)
 			++count.offset;
 		append_code(1); /* parameters */
-		push_op(n, op_new(CALL_O, name, n->place, count, e));
+		if (f->function.symbols)
+			push_op(n, op_new(CALL_O, name, n->place, count, e));
+		else
+			push_op(n, op_new(CALLC_O, name, n->place, count, e));
 		break;
 	}
 	case EXPR_LIST: { /* recursive list of parameters */
@@ -929,6 +933,7 @@ static char *print_opcode(enum opcode code)
 		R(END_O);
 		R(PARAM_O);
 		R(CALL_O);
+		R(CALLC_O);
 		R(RET_O);
 		R(LABEL_O);
 		R(GOTO_O);

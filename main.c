@@ -76,6 +76,7 @@ size_t offset;
 static void parse_program(char *filename);
 
 /* from lexer */
+void handle_c();
 void free_typename(struct hasht_node *t);
 
 /* from parser */
@@ -153,6 +154,9 @@ void parse_program(char *filename)
 
 	/* push buffer state for lexer */
 	yypush_buffer_state(yy_create_buffer(yyin, YY_BUF_SIZE));
+
+	/* add C prototypes */
+	handle_c();
 
 	/* setup yytypes table for lexer */
 	yytypes = hasht_new(8, true, NULL, NULL, &free_typename);

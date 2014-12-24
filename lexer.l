@@ -375,6 +375,17 @@ static void handle_include(char *s)
 }
 
 /*
+ * Insert C prototypes.
+ */
+void handle_c()
+{
+	char *path;
+	asprintf(&path, "%s/include_c.h", arguments.include);
+	handle_include(path);
+	free(path);
+}
+
+/*
  * Insert "ifstream" and "ofstream" types.
  */
 static void handle_fstream()

@@ -21,6 +21,7 @@ enum opcode {
 	END_O,    /* declares end of current procedure */
 	PARAM_O,  /* param x          store x as a parameter */
 	CALL_O,   /* call p, x, n     call procedure p with n parameters, store result in x */
+	CALLC_O,  /* call built-in (or otherwise linked) C function */
 	RET_O,    /* return x         return from procedure, use x as the result */
 	LABEL_O,  /* name (optional), in LABEL_R */
 	GOTO_O,   /* goto L           unconditional jump to L */

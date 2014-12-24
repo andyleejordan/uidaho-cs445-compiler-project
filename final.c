@@ -21,7 +21,7 @@
 
 extern struct list *yyscopes;
 
-static void map_instruction(FILE *stream, struct op *op);
+static void map_instruction(FILE *stream, struct list_node *iter);
 static char *map_op(enum opcode code);
 static char *map_print(enum opcode code);
 static char *map_region(enum region r);
@@ -83,7 +83,7 @@ void final_code(FILE *stream, struct list *code)
 	/* generate C instructions for list of TAC ops */
 	struct list_node *iter = list_head(code);
 	while (!list_end(iter)) {
-		map_instruction(stream, iter->data);
+		map_instruction(stream, iter);
 		iter = iter->next;
 	}
 }
@@ -94,8 +94,9 @@ static void print_t(FILE *stream, struct address a)
 	        a.type->pointer ? " *" : " ");
 }
 
-static void map_instruction(FILE *stream, struct op *op)
+static void map_instruction(FILE *stream, struct list_node *iter)
 {
+	struct op *op = iter->data;
 	if (arguments.debug) {
 		p("/*\n");
 		print_op(stream, op);
@@ -139,6 +140,26 @@ static void map_instruction(FILE *stream, struct op *op)
 			p(" = ");
 		}
 		p("%s();\n", op->name);
+		break;
+	case CALLC_O:
+		param_offset = 0;
+		p("\t");
+		if (a.region != UNKNOWN_R) {
+			map_address(stream, a);
+			p(" = ");
+		}
+		p("%s(", op->name);
+		/* add parameters */
+		iter = iter->prev;
+		for (int i = 0; i < b.offset; ++i) {
+			struct op *param = iter->data;
+			map_address(stream, param->address[0]);
+			/* append separator */
+			if (i != b.offset - 1)
+				p(", ");
+			iter = iter->prev;
+		}
+		p(");\n");
 		break;
 	case RET_O:
 		p("\treturn");
