@@ -206,13 +206,10 @@ static void map_instruction(FILE *stream, struct list_node *iter)
 	case PCHAR_O:
 	case PBOOL_O:
 	case PFLOAT_O:
+	case PSTR_O:
 		p("\tprintf(\"%s\", ", map_print(op->code));
 		map_address(stream, a);
 		p(");\n");
-		break;
-	case PSTR_O:
-		p("\tprintf(\"%%s\", (char *)(%s + %d));\n",
-		  map_region(a.region), a.offset);
 		break;
 	case ADD_O:
 	case FADD_O:
@@ -420,6 +417,8 @@ static char *map_print(enum opcode code)
 		return "%c";
 	case PFLOAT_O:
 		return "%f";
+	case PSTR_O:
+		return "%s";
 	default:
 		return NULL;
 	}
