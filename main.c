@@ -66,6 +66,7 @@ static struct argp argp = { options, parse_opt, args_doc, doc };
 struct tree *yyprogram;
 struct list *yyscopes;
 struct list *yyfiles;
+struct list *yyclibs;
 struct hasht *yyincludes;
 struct hasht *yytypes;
 size_t yylabels;
@@ -76,7 +77,6 @@ size_t offset;
 static void parse_program(char *filename);
 
 /* from lexer */
-void handle_c();
 void free_typename(struct hasht_node *t);
 
 /* from parser */
@@ -143,9 +143,12 @@ void parse_program(char *filename)
 	yyfiles = list_new(NULL, &free);
 	log_assert(yyfiles);
 	list_push_back(yyfiles, filename);
+	yyclibs = list_new(NULL, &free);
+	log_assert(yyclibs);
 
 	yyincludes = hasht_new(8, true, NULL, NULL, NULL);
 	log_assert(yyincludes);
+
 
 	/* open file for lexer */
 	yyin = fopen(filename, "r");
@@ -154,9 +157,6 @@ void parse_program(char *filename)
 
 	/* push buffer state for lexer */
 	yypush_buffer_state(yy_create_buffer(yyin, YY_BUF_SIZE));
-
-	/* add C prototypes */
-	handle_c();
 
 	/* setup yytypes table for lexer */
 	yytypes = hasht_new(8, true, NULL, NULL, &free_typename);
@@ -299,9 +299,17 @@ void parse_program(char *filename)
 		fprintf(fc, "#include <stdio.h>\n");
 	fprintf(fc, "\n");
 
+	/* include passed-through C headers */
+	fprintf(fc, "/* Source-file C headers */\n");
+	struct list_node *iter = list_head(yyclibs);
+	while (!list_end(iter)) {
+		fprintf(fc, "#include %s\n", iter->data);
+		iter = iter->next;
+	}
+
 	/* get maximum param size for faux stack */
 	size_t max_param_size = 0;
-	struct list_node *iter = list_head(code);
+	iter = list_head(code);
 	while (!list_end(iter)) {
 		struct op *op = iter->data;
 		if (op->code == PROC_O) {
@@ -343,6 +351,7 @@ void parse_program(char *filename)
 	hasht_free(yytypes);
 	free(yyincludes); /* values all referenced elsewhere */
 	list_free(yyfiles);
+	list_free(yyclibs);
 	list_free(yyscopes);
 }
 

@@ -35,7 +35,7 @@ OBJS = $(SRCS:.c=.o)
 
 TESTDIR = data/pass
 TESTDATA = $(TESTDIR)/array.cpp $(TESTDIR)/fibonacci.cpp $(TESTDIR)/logic.cpp \
-	$(TESTDIR)/hello_world.cpp $(TESTDIR)/class.cpp $(TESTDIR)/test.cpp
+	$(TESTDIR)/hello_world.cpp $(TESTDIR)/class.cpp $(TESTDIR)/test.cpp $(TESTDIR)/math.cpp
 TESTFLAGS = -s
 
 # targets
@@ -56,6 +56,7 @@ smoke: all
 	$(CC) $(CDEBUG) $(120FLAGS) -o hello_world hello_world.cpp.c && ./hello_world
 	$(CC) $(CDEBUG) $(120FLAGS) -o class class.cpp.c && ./class
 	$(CC) $(CDEBUG) $(120FLAGS) -o test test.cpp.c && ./test
+	$(CC) $(CDEBUG) $(120FLAGS) -o math math.cpp.c && ./math
 
 TAGS: $(SRCS)
 	etags $(SRCS)

@@ -6,6 +6,9 @@
  * This file released under the AGPLv3.
  *
  */
+
+#include <string.h>
+
 class string {
 public:
 	string(char *);

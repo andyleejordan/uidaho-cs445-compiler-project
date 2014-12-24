@@ -1,12 +1,4 @@
 * Tasks
-** DONE memcpy constant strings
-This now works, but assignments of strings (like in std::string ctor)
-need to actually copy the string, not just the pointer. Best solution
-is to support C.
-** TODO Support C
-Pass <.*\.h> headers through; add faux headers with function
-prototypes. On call, if function is not defined (no symbol table),
-print call to library function.
 ** TODO Cleanup lexer includes
 ** TODO Handle short-circuit booleans
 Needs labels generated after each sub-expression plus back patching.

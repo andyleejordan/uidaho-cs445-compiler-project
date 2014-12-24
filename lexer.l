@@ -44,6 +44,7 @@ IS       (u|U|l|L)*
 
 /* from main */
 extern struct list *yyfiles;
+extern struct list *yyclibs;
 extern struct hasht *yyincludes;
 extern struct hasht *yytypes;
 
@@ -55,6 +56,7 @@ static struct token *yytoken;
 static void prepare_token(int category);
 
 /* handle #include libraries */
+static void handle_c();
 static void handle_fstream();
 static void handle_iostream();
 static void handle_string();
@@ -97,8 +99,13 @@ static int check_identifier(const char *s);
         "<iostream>"    { libs.iostream = true; handle_iostream(); BEGIN(INITIAL); }
         "<string>"      { libs.string   = true; handle_string(); BEGIN(INITIAL); }
         "<iomanip>"     { libs.iomanip  = true; BEGIN(INITIAL); }
-        \"[^\"]+\"      { handle_quoted_include(yytext); BEGIN(INITIAL); }
-        "<"[^<>]*">"    { log_lexical("unrecognized library: %s", yytext); }
+        "<ctype.h>"     |
+        "<math.h>"      |
+        "<stdlib.h>"    |
+        "<string.h>"    |
+        "<time.h>"      { list_push_back(yyclibs, strdup(yytext)); BEGIN(INITIAL); handle_c(); }
+        \"[^<>\n\"]+\"  { handle_quoted_include(yytext); BEGIN(INITIAL); }
+        "<"[^<>]+">"    { log_lexical("unrecognized library: %s", yytext); }
         <<EOF>>         { log_lexical("unexpected EOF"); }
         .               { log_lexical("unrecognized token: %s"); }
 }
@@ -377,7 +384,7 @@ static void handle_include(char *s)
 /*
  * Insert C prototypes.
  */
-void handle_c()
+static void handle_c()
 {
 	char *path;
 	asprintf(&path, "%s/include_c.h", arguments.include);

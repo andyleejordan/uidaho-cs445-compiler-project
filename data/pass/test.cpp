@@ -1,5 +1,5 @@
 /*
- * test.cpp - Valid C++ code for testing parser.
+ * test.cpp - Valid C++ code for testing compiler.
  *
  * Copyright (C) 2014 Andrew Schwartzmeyer
  *
