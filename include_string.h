@@ -6,7 +6,6 @@
  * This file released under the AGPLv3.
  *
  */
-
 class string {
 public:
 	string(char *);
@@ -17,7 +16,7 @@ private:
 
 string::string(char *s)
 {
-	data = s;
+	data = strdup(s);
 }
 
 char *string::c_str()
