@@ -20,6 +20,6 @@ int main(int argc, char *argv[])
 {
 	double pi = 3.141592653;
 	double tau = 2. * pi;
-	cout << "The smaller of pi and tau is: " << fmin(pi, tau);
+	cout << "The smaller of pi and tau is: " << fmin(pi, tau) << '\n';
 	return 0;
 }

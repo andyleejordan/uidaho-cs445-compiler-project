@@ -14,6 +14,7 @@
 #include <unistd.h>
 #include <argp.h>
 #include <libgen.h>
+#include <time.h>
 
 #include "args.h"
 #include "logger.h"
@@ -53,7 +54,7 @@ static char doc[] = "Andrew Schwartzmeyer's 120++ compiler.\v"
 	"`make smoke` to see their output."
 	"\n\n"
 
-	"This repo is located at: https://github.com/andschwa/uidaho-cs445"
+	"This repo is located @ https://github.com/andschwa/uidaho-cs445"
 	"\n\n"
 
 	"This program is licensed under the AGPLv3, see the LICENSE file.\n";
@@ -300,14 +301,19 @@ void parse_program(char *filename)
 	if (fc == NULL)
 		log_error("could not save to output file: %s", output_file);
 
+	time_t t = time(NULL);
+	struct tm *local = localtime(&t);
+	char timestamp[60];
+	strftime(timestamp, sizeof(timestamp), "%F %T", local);
 	fprintf(fc, "/*\n");
-	fprintf(fc, " * 120++ Generated Three Address C Code\n");
+	fprintf(fc, " * %s - 120++ Three-Address C Code\n", output_file);
+	fprintf(fc, " * Generated @ %s\n", timestamp);
 	fprintf(fc, " *\n");
-	fprintf(fc, " * Copyright (C) 2014 Andrew Schwartzmeyer\n");
-	fprintf(fc, " *\n");
+	fprintf(fc, " * Created by Andrew Schwartzmeyer's 120++ Compiler\n");
+	fprintf(fc, " * Project located @ https://github.com/andschwa/uidaho-cs445\n");
 	fprintf(fc, " */\n\n");
 
-	/* setup necessary includes */
+	fprintf(fc, "/* Required includes for TAC-C */\n");
 	fprintf(fc, "#include <stdlib.h>\n");
 	fprintf(fc, "#include <stdbool.h>\n");
 	fprintf(fc, "#include <string.h>\n");
@@ -322,6 +328,7 @@ void parse_program(char *filename)
 		fprintf(fc, "#include %s\n", (char *)iter->data);
 		iter = iter->next;
 	}
+	fprintf(fc, "\n");
 
 	/* get maximum param size for faux stack */
 	size_t max_param_size = 0;
@@ -336,13 +343,13 @@ void parse_program(char *filename)
 		iter = iter->next;
 	}
 
-	/* setup constant, global, and stack regions' space */
+	fprintf(fc, "/* Memory regions */\n");
 	fprintf(fc, "char constant[%zu];\n", string_size);
 	fprintf(fc, "char global[%zu];\n", global->size);
 	fprintf(fc, "char stack[%zu];\n", max_param_size);
 	fprintf(fc, "\n");
 
-	/* generate final code instructions */
+	fprintf(fc, "/* Final Three-Address C Generated Code */\n");
 	final_code(fc, code);
 	fclose(fc);
 
