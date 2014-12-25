@@ -1,5 +1,5 @@
 /*
- * test/list.c - Unit test code for doubly linked list with sentinel.
+ * test_list.c - Unit test code for doubly linked list with sentinel.
  *
  * Copyright (C) 2014 Andrew Schwartzmeyer
  *

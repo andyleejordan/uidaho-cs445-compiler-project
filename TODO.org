@@ -13,10 +13,6 @@ than multiple complex comparisons.
 ** TODO Expand type checking
 *** pass by reference
 *** ternary operator
-** TODO Expand list library
-*** TODO =struct list *list_copy=
-*** TODO =list_split=
-*** TODO =list_sort=
 ** TODO Use flyweight pattern for repeated strings
 ** TODO Generate assembly code
 ** TODO Free copies with ref->delete(ref)
