@@ -56,7 +56,7 @@ smoke: all
 	$(CC) $(CDEBUG) $(120FLAGS) -o hello_world hello_world.cpp.c && ./hello_world
 	$(CC) $(CDEBUG) $(120FLAGS) -o class class.cpp.c && ./class
 	$(CC) $(CDEBUG) $(120FLAGS) -o test test.cpp.c && ./test
-	$(CC) $(CDEBUG) $(120FLAGS) -o math -lm math.cpp.c && ./math
+	$(CC) $(CDEBUG) $(120FLAGS) -o math math.cpp.c -lm && ./math
 
 TAGS: $(SRCS)
 	etags $(SRCS)
